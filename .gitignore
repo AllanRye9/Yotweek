@@ -1,0 +1,27 @@
+# Dependencies
+**/node_modules
+
+# Env files - never commit real secrets
+**/.env
+**/.env.local
+**/.env.*.local
+!**/.env.example
+
+# Build output
+backend/dist
+frontend/.next
+frontend/out
+*.tsbuildinfo
+
+# Logs
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
+
+# Prisma
+backend/prisma/dev.db

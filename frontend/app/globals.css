@@ -1,0 +1,27 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sunset-500: #f97316;
+}
+
+body {
+  @apply bg-orange-50/30 text-savanna-900 antialiased;
+}
+
+.container-page {
+  @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-full bg-sunset-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sunset-700 disabled:opacity-50;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-full border border-savanna-900/15 bg-white px-5 py-2.5 text-sm font-semibold text-savanna-900 transition hover:bg-orange-50;
+}
+
+.card {
+  @apply rounded-2xl border border-black/5 bg-white shadow-sm;
+}

@@ -1,0 +1,527 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ─────────────────────────────────────────────────────────────
+
+enum Role {
+  USER          // regular registered user (can attend, review, and post if they choose to become an organizer)
+  AGENT
+  COMPANY
+  ORGANIZATION
+  ADMIN
+}
+
+enum EventScope {
+  LOCAL
+  INTERNATIONAL
+}
+
+enum PriceType {
+  FREE
+  PAID
+}
+
+enum EventStatus {
+  PENDING    // awaiting admin review
+  APPROVED   // live on the site
+  REJECTED
+  HIDDEN     // pulled after being flagged / reported
+  COMPLETED
+  CANCELLED
+}
+
+enum EventCategory {
+  FESTIVAL
+  CONFERENCE
+  CONCERT
+  SPORTS
+  CULTURAL_HERITAGE
+  NIGHTLIFE
+  WORKSHOP
+  GUIDED_TOUR
+  ADVENTURE_OUTDOOR
+  WILDLIFE_SAFARI
+  FOOD_DRINK
+  RELIGIOUS
+  EXHIBITION
+  OTHER
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CARD
+  MOBILE_MONEY
+  BANK_TRANSFER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+enum ReportReason {
+  SPAM
+  DUPLICATE
+  SCAM_OR_FRAUD
+  MISLEADING_INFO
+  INAPPROPRIATE
+  OTHER
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationType {
+  LISTING_APPROVED
+  LISTING_REJECTED
+  EVENT_REMINDER
+  BOOKING_CONFIRMED
+  PAYMENT_RECEIVED
+  REVIEW_POSTED
+  REPORT_RECEIVED
+  SYSTEM
+}
+
+enum BusinessStatus {
+  PENDING    // awaiting admin review
+  APPROVED   // live on the site
+  REJECTED
+  HIDDEN     // pulled after being flagged / reported
+  CLOSED     // permanently closed, kept for historical reviews
+}
+
+enum PriceRange {
+  BUDGET      // $
+  MODERATE    // $$
+  EXPENSIVE   // $$$
+  LUXURY      // $$$$
+}
+
+// ─── Core models ───────────────────────────────────────────────────────
+
+model User {
+  id                String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  passwordHash      String
+  phone             String?
+  role              Role     @default(USER)
+  country           String?
+  city              String?
+  avatarUrl         String?
+  organizationName  String?  // display name for Company/Agent/Organization posters
+  isVerifiedOrganizer Boolean @default(false) // admin-granted "verified organizer" badge
+  isEmailVerified   Boolean  @default(false)
+  isSuspended       Boolean  @default(false)
+  preferredLanguage String   @default("en")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  events        Event[]        @relation("OrganizerEvents")
+  bookings      Booking[]
+  reviews       Review[]
+  reports       Report[]       @relation("ReporterReports")
+  itineraries   Itinerary[]
+  notifications Notification[]
+  savedEvents   SavedEvent[]
+
+  businesses       Business[]
+  businessReviews  BusinessReview[]
+  businessReports  BusinessReport[]
+  savedBusinesses  SavedBusiness[]
+  testimonials     Testimonial[]
+  posts            Post[]
+
+  @@index([role])
+}
+
+model Event {
+  id            String        @id @default(uuid())
+  title         String
+  slug          String        @unique
+  description   String
+  category      EventCategory
+  scope         EventScope    @default(LOCAL)
+  priceType     PriceType     @default(FREE)
+  price         Decimal?      @db.Decimal(12, 2)
+  currency      String        @default("UGX")
+  commissionPct Decimal       @default(5.0) @db.Decimal(5, 2) // platform service fee %
+
+  startDate DateTime
+  endDate   DateTime?
+  timezone  String    @default("Africa/Kampala")
+
+  venueName String?
+  address   String?
+  city      String
+  country   String
+  latitude  Float?
+  longitude Float?
+
+  coverImageUrl String?
+  galleryUrls   String[] @default([])
+  languages     String[] @default(["en"])
+  tags          String[] @default([])
+
+  capacity    Int?
+  ticketsSold Int         @default(0)
+  status      EventStatus @default(PENDING)
+  viewCount   Int         @default(0)
+
+  // spam / authenticity signals
+  isFlagged      Boolean  @default(false)
+  flagReason     String?
+  duplicateOfId  String?
+  reportCount    Int      @default(0)
+
+  organizerId String
+  organizer   User   @relation("OrganizerEvents", fields: [organizerId], references: [id])
+
+  approvedAt DateTime?
+  approvedBy String?
+  rejectedReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings       Booking[]
+  reviews        Review[]
+  reports        Report[]
+  itineraryItems ItineraryItem[]
+  savedBy        SavedEvent[]
+
+  @@index([status])
+  @@index([category])
+  @@index([city, country])
+  @@index([startDate])
+}
+
+model Booking {
+  id         String        @id @default(uuid())
+  eventId    String
+  event      Event         @relation(fields: [eventId], references: [id])
+  userId     String
+  user       User          @relation(fields: [userId], references: [id])
+  quantity   Int           @default(1)
+  totalAmount Decimal      @db.Decimal(12, 2)
+  currency   String        @default("UGX")
+  status     BookingStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
+
+  payment Payment?
+
+  @@index([eventId])
+  @@index([userId])
+}
+
+model Payment {
+  id                     String        @id @default(uuid())
+  bookingId              String        @unique
+  booking                Booking       @relation(fields: [bookingId], references: [id])
+  amount                 Decimal       @db.Decimal(12, 2)
+  currency               String
+  commissionAmount       Decimal       @db.Decimal(12, 2)
+  organizerPayoutAmount  Decimal       @db.Decimal(12, 2)
+  method                 PaymentMethod
+  status                 PaymentStatus @default(PENDING)
+  transactionRef         String?       @unique
+  paidAt                 DateTime?
+  createdAt              DateTime      @default(now())
+}
+
+model Review {
+  id        String       @id @default(uuid())
+  eventId   String
+  event     Event        @relation(fields: [eventId], references: [id])
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  rating    Int          // 1-5
+  comment   String?
+  status    ReviewStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+
+  @@unique([eventId, userId])
+  @@index([eventId])
+}
+
+model Report {
+  id         String       @id @default(uuid())
+  eventId    String
+  event      Event        @relation(fields: [eventId], references: [id])
+  reporterId String
+  reporter   User         @relation("ReporterReports", fields: [reporterId], references: [id])
+  reason     ReportReason
+  details    String?
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  resolvedAt DateTime?
+
+  @@index([eventId])
+  @@index([status])
+}
+
+model Itinerary {
+  id        String          @id @default(uuid())
+  userId    String
+  user      User            @relation(fields: [userId], references: [id])
+  title     String
+  startDate DateTime
+  endDate   DateTime
+  createdAt DateTime        @default(now())
+  items     ItineraryItem[]
+}
+
+model ItineraryItem {
+  id          String    @id @default(uuid())
+  itineraryId String
+  itinerary   Itinerary @relation(fields: [itineraryId], references: [id])
+  eventId     String?
+  event       Event?    @relation(fields: [eventId], references: [id])
+  customTitle String?
+  day         Int       // day 1, 2, 3...
+  startTime   String?   // "09:00"
+  notes       String?
+  sortOrder   Int       @default(0)
+}
+
+model SavedEvent {
+  userId  String
+  eventId String
+  user    User   @relation(fields: [userId], references: [id])
+  event   Event  @relation(fields: [eventId], references: [id])
+  savedAt DateTime @default(now())
+
+  @@id([userId, eventId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId, read])
+}
+
+// ─── Landing-page / traffic analytics ───────────────────────────────────
+
+model VisitorLog {
+  id        String   @id @default(uuid())
+  ipHash    String   // SHA-256 hashed IP, never store raw IP
+  day       DateTime // truncated to date, used for daily-unique dedupe
+  country   String?
+  createdAt DateTime @default(now())
+
+  @@unique([ipHash, day])
+  @@index([day])
+}
+
+model SiteCounter {
+  key   String @id // e.g. "total_visitors", "total_events_completed"
+  value Int    @default(0)
+}
+
+// ─── Business directory (yotweek core search taxonomy) ──────────────────
+// A general local-business/services directory that sits alongside Events.
+// Categories are a self-referencing tree (top-level categories like "Food",
+// with nested subcategories like "Food" -> "Restaurants" -> "Pizza
+// Restaurants"), so the taxonomy can grow without schema changes.
+
+model Category {
+  id        String   @id @default(uuid())
+  name      String
+  slug      String   @unique
+  icon      String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+
+  parentId String?
+  parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryChildren")
+
+  businesses Business[]
+
+  @@index([parentId])
+}
+
+model Business {
+  id          String      @id @default(uuid())
+  name        String
+  slug        String      @unique
+  description String
+
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
+
+  phone      String?
+  email      String?
+  website    String?
+  priceRange PriceRange?
+
+  address   String?
+  city      String
+  country   String
+  latitude  Float?
+  longitude Float?
+
+  coverImageUrl String?
+  galleryUrls   String[] @default([])
+  tags          String[] @default([])
+  hours         Json? // e.g. {"mon": "09:00-18:00", "tue": "09:00-18:00", ...}
+
+  status      BusinessStatus @default(PENDING)
+  isVerified  Boolean        @default(false)
+  viewCount   Int            @default(0)
+
+  // authenticity / moderation signals, same pattern as Event
+  isFlagged   Boolean @default(false)
+  flagReason  String?
+  reportCount Int     @default(0)
+
+  ownerId String
+  owner   User   @relation(fields: [ownerId], references: [id])
+
+  approvedAt     DateTime?
+  approvedBy     String?
+  rejectedReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  reviews BusinessReview[]
+  reports BusinessReport[]
+  savedBy SavedBusiness[]
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([city, country])
+}
+
+model BusinessReview {
+  id         String       @id @default(uuid())
+  businessId String
+  business   Business     @relation(fields: [businessId], references: [id])
+  userId     String
+  user       User         @relation(fields: [userId], references: [id])
+  rating     Int // 1-5
+  comment    String?
+  status     ReviewStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+
+  @@unique([businessId, userId])
+  @@index([businessId])
+}
+
+model BusinessReport {
+  id         String       @id @default(uuid())
+  businessId String
+  business   Business     @relation(fields: [businessId], references: [id])
+  reporterId String
+  reporter   User         @relation(fields: [reporterId], references: [id])
+  reason     ReportReason
+  details    String?
+  status     ReportStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  resolvedAt DateTime?
+
+  @@index([businessId])
+  @@index([status])
+}
+
+model SavedBusiness {
+  userId     String
+  businessId String
+  user       User     @relation(fields: [userId], references: [id])
+  business   Business @relation(fields: [businessId], references: [id])
+  savedAt    DateTime @default(now())
+
+  @@id([userId, businessId])
+}
+
+// ─── Testimonials, homepage highlights, and creator content (PAAS) ──────
+
+model Testimonial {
+  id         String       @id @default(uuid())
+  userId     String
+  user       User         @relation(fields: [userId], references: [id])
+  content    String
+  rating     Int? // optional 1-5
+  status     ReviewStatus @default(PENDING)
+  isFeatured Boolean      @default(false)
+  createdAt  DateTime     @default(now())
+
+  @@index([status])
+}
+
+enum HighlightMediaType {
+  IMAGE
+  VIDEO
+}
+
+model Highlight {
+  id        String             @id @default(uuid())
+  title     String
+  subtitle  String?
+  mediaUrl  String
+  mediaType HighlightMediaType @default(IMAGE)
+  linkUrl   String?
+  sortOrder Int                @default(0)
+  isActive  Boolean            @default(true)
+  createdAt DateTime           @default(now())
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// Travel blog / content-creator posts - the PAAS layer for creators and
+// event planners to share written + visual travel content.
+model Post {
+  id            String     @id @default(uuid())
+  authorId      String
+  author        User       @relation(fields: [authorId], references: [id])
+  title         String
+  slug          String     @unique
+  excerpt       String?
+  body          String
+  coverImageUrl String?
+  images        String[]   @default([])
+  tags          String[]   @default([])
+  status        PostStatus @default(DRAFT)
+  viewCount     Int        @default(0)
+  publishedAt   DateTime?
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([status])
+  @@index([authorId])
+}
