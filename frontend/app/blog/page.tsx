@@ -1,61 +1,52 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { format } from "date-fns";
 import { api } from "../../lib/api";
 import { Post } from "../../lib/types";
-import { useAuth } from "../../context/AuthContext";
+import { SkeletonCard } from "../../components/SkeletonCard";
+import { recordSignal } from "../../lib/preferences";
 
-export default function BlogListPage() {
-  const { user } = useAuth();
+export default function BlogPage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get("/posts").then((res) => setPosts(res.data.posts)).finally(() => setLoading(false));
-  }, []);
+  useEffect(() => { api.get("/posts", { params:{pageSize:24} }).then(r => setPosts(r.data.posts||[])).finally(() => setLoading(false)); }, []);
 
   return (
-    <div className="container-page py-10">
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="font-display text-3xl font-bold">Traveler stories</h1>
-          <p className="mt-1 text-sm text-savanna-900/60">
-            Written by travelers, content creators, and event organizers on yotweek.
-          </p>
+    <div className="animate-fade-in">
+      <div className="page-header">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="font-extrabold text-2xl sm:text-3xl mb-1">Travel Blog</h1>
+          <p className="text-white/70 text-sm">Stories, guides, and inspiration from our community.</p>
         </div>
-        {user && (
-          <Link href="/blog/create" className="btn-primary">
-            Write a story
-          </Link>
+      </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+        {loading ? (
+          <div className="listing-grid-3">{[...Array(6)].map((_,i) => <SkeletonCard key={i} />)}</div>
+        ) : posts.length===0 ? (
+          <div className="card-base p-12 text-center"><p className="text-4xl mb-3">✍️</p><p className="font-semibold text-gray-700">No posts yet</p></div>
+        ) : (
+          <div className="listing-grid-3 stagger">
+            {posts.map(p => (
+              <Link key={p.id} href={`/blog/${p.slug}`} onClick={() => recordSignal({ postId:p.id, action:"view", tags:p.tags })}
+                className="card-base card-hover shine group overflow-hidden flex flex-col">
+                <div className="aspect-[16/9] overflow-hidden bg-slate-100 relative">
+                  {p.coverImageUrl
+                    // eslint-disable-next-line @next/next/no-img-element
+                    ? <img src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    : <div className="absolute inset-0 flex items-center justify-center text-4xl">✍️</div>}
+                </div>
+                <div className="p-4 flex flex-col flex-1">
+                  {p.tags?.length > 0 && <div className="flex flex-wrap gap-1 mb-2">{p.tags.slice(0,2).map(t => <span key={t} className="badge bg-sky-50 text-sky-600">#{t}</span>)}</div>}
+                  <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1.5 group-hover:text-sky-600 transition-colors flex-1">{p.title}</h3>
+                  {p.excerpt && <p className="text-xs text-gray-400 line-clamp-2 mb-2">{p.excerpt}</p>}
+                  <p className="text-[10px] text-gray-300 mt-auto">By {p.author.name}{p.publishedAt ? ` · ${format(new Date(p.publishedAt),"d MMM yyyy")}` : ""}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
         )}
       </div>
-
-      {loading ? (
-        <p className="text-sm text-savanna-900/50">Loading…</p>
-      ) : posts.length === 0 ? (
-        <p className="text-sm text-savanna-900/50">No stories published yet — be the first to share one.</p>
-      ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {posts.map((p) => (
-            <Link key={p.id} href={`/blog/${p.slug}`} className="card overflow-hidden">
-              <div className="h-40 w-full bg-gradient-to-br from-sunset-300 to-sunset-500">
-                {p.coverImageUrl && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.coverImageUrl} alt={p.title} className="h-full w-full object-cover" />
-                )}
-              </div>
-              <div className="p-4">
-                <h2 className="font-display text-lg font-bold line-clamp-2">{p.title}</h2>
-                {p.excerpt && <p className="mt-1 text-sm text-savanna-900/60 line-clamp-2">{p.excerpt}</p>}
-                <p className="mt-3 text-xs font-semibold text-savanna-900/50">
-                  {p.author.organizationName || p.author.name}
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
