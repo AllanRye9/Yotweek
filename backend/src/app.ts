@@ -28,19 +28,39 @@ import { errorHandler, notFound } from "./middleware/errorHandler";
 
 const app = express();
 
-app.use(helmet());
+// ── CORS ────────────────────────────────────────────────────────────────
+// Accept localhost dev + any domains listed in FRONTEND_URL (comma-separated)
+// plus the hardcoded production domain. Add your Railway URL to FRONTEND_URL.
+const extraOrigins = (process.env.FRONTEND_URL || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const ALLOWED_ORIGINS = new Set([
+  "http://localhost:3000",
+  "http://127.0.0.1:3000",
+  "https://yotweek.com",
+  "https://www.yotweek.com",
+  ...extraOrigins,
+]);
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, cb) => {
+      // No origin = curl / Postman / server-to-server — allow it.
+      if (!origin) return cb(null, true);
+      if (ALLOWED_ORIGINS.has(origin)) return cb(null, true);
+      cb(new Error(`CORS: origin "${origin}" not in allowlist`));
+    },
     credentials: true,
   })
 );
+
+app.use(helmet());
 app.use(compression());
 app.use(express.json({ limit: "5mb" }));
 app.use(morgan("tiny"));
 
-// Generous general limiter; a tighter limiter is applied to the write-heavy
-// listing-creation route inside events.ts to slow down spam posting.
 app.use(
   rateLimit({
     windowMs: 15 * 60 * 1000,
@@ -50,7 +70,7 @@ app.use(
   })
 );
 
-app.get("/health", (_req, res) => res.json({ status: "ok" }));
+app.get("/health", (_req, res) => res.json({ status: "ok", ts: new Date().toISOString() }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);

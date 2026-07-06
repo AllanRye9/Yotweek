@@ -10,6 +10,10 @@ import { VisitorTracker } from "../components/VisitorTracker";
 export const metadata: Metadata = {
   title: { default: "yotweek — Discover Events, Businesses & Destinations", template: "%s | yotweek" },
   description: "Find and book local and international events, businesses, and tourism destinations. Smart recommendations powered by your interests.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
