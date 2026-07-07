@@ -32,12 +32,17 @@ router.post(
       }
 
       const passwordHash = await bcrypt.hash(password, 10);
+
+      // The very first person to ever register becomes the platform admin,
+      // regardless of what role they selected on the sign-up form.
+      const isFirstUser = (await prisma.user.count()) === 0;
+
       const user = await prisma.user.create({
         data: {
           name,
           email,
           passwordHash,
-          role: (role as any) || "USER",
+          role: isFirstUser ? "ADMIN" : (role as any) || "USER",
           organizationName: organizationName || null,
           country,
           city,

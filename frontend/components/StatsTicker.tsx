@@ -12,7 +12,6 @@ const FALLBACK = [
   { icon:"📅", label:"Visitors Today", value:"—" },
   { icon:"🎉", label:"Events Held", value:"—" },
   { icon:"🟢", label:"Active Events", value:"—" },
-  { icon:"👥", label:"Members", value:"—" },
 ];
 export function StatsTicker() {
   const [items, setItems] = useState(FALLBACK);
@@ -24,7 +23,6 @@ export function StatsTicker() {
         { icon:"📅", label:"Visitors Today", value:fmt(d.dailyVisitors) },
         { icon:"🎉", label:"Events Held", value:fmt(d.totalEventsHeld) },
         { icon:"🟢", label:"Active Events", value:fmt(d.activeEvents) },
-        { icon:"👥", label:"Members", value:fmt(d.totalRegisteredUsers) },
       ]);
     }).catch(() => {});
   }, []);

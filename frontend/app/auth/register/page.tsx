@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
@@ -13,14 +13,20 @@ const ROLES = [
 ];
 
 export default function RegisterPage() {
-  const { register } = useAuth(); const router = useRouter(); const toast = useToast();
+  const { register, user, loading: authLoading } = useAuth(); const router = useRouter(); const toast = useToast();
   const [form, setForm] = useState({ name:"", email:"", password:"", role:"USER", organizationName:"", country:"Uganda", city:"" });
   const [loading, setLoading] = useState(false);
   function u(k: string, v: string) { setForm(f => ({...f,[k]:v})); }
 
+  useEffect(() => {
+    if (!authLoading && user) router.replace("/dashboard");
+  }, [authLoading, user, router]);
+
+  if (authLoading || user) return null;
+
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setLoading(true);
-    try { await register(form); toast.success("Welcome to yotweek! 🎉"); router.push("/"); }
+    try { await register(form); toast.success("Welcome to yotweek! 🎉"); router.push("/dashboard"); }
     catch (err: any) { toast.error(err?.response?.data?.error || "Could not create account."); }
     finally { setLoading(false); }
   }

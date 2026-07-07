@@ -1,16 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
 
 export default function LoginPage() {
-  const { login } = useAuth(); const router = useRouter(); const toast = useToast();
+  const { login, user, loading: authLoading } = useAuth(); const router = useRouter(); const toast = useToast();
   const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [loading, setLoading] = useState(false);
+
+  // Already signed in - don't show the sign-in form again, go straight to the dashboard.
+  useEffect(() => {
+    if (!authLoading && user) router.replace("/dashboard");
+  }, [authLoading, user, router]);
+
+  if (authLoading || user) return null;
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setLoading(true);
-    try { await login(email, password); toast.success("Welcome back!"); router.push("/"); }
+    try { await login(email, password); toast.success("Welcome back!"); router.push("/dashboard"); }
     catch (err: any) { toast.error(err?.response?.data?.error || "Invalid email or password."); }
     finally { setLoading(false); }
   }
