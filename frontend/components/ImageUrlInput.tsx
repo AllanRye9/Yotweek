@@ -1,11 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import { api } from "../lib/api";
+import { useToast } from "./Toast";
+
+const ACCEPTED = "image/jpeg,image/png,image/webp,image/gif";
+const MAX_BYTES = 8 * 1024 * 1024;
+
+async function uploadImage(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("image", file);
+  const r = await api.post("/uploads/image", formData);
+  return r.data.url as string;
+}
 
 /**
- * Cover image + photo gallery input for listing forms (events, businesses).
- * There's no file-upload/storage backend wired up yet, so this takes direct
- * media URLs (host on Cloudinary/S3/your CDN and paste the link) — same
- * pattern already used for the admin hero slideshow.
+ * Cover image + photo gallery uploader for listing forms (events,
+ * businesses). Uploads real files to the backend (POST /api/uploads/image),
+ * which stores them on disk and returns a public URL — no external
+ * hosting/paste-a-link step required.
  */
 export function ImageUrlInput({
   coverImageUrl, onCoverChange, galleryUrls, onGalleryChange,
@@ -15,16 +27,54 @@ export function ImageUrlInput({
   galleryUrls: string[];
   onGalleryChange: (v: string[]) => void;
 }) {
-  const [newGalleryUrl, setNewGalleryUrl] = useState("");
-  const [coverError, setCoverError] = useState(false);
+  const toast = useToast();
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingGallery, setUploadingGallery] = useState(false);
 
-  function addGalleryUrl() {
-    const url = newGalleryUrl.trim();
-    if (!url) return;
-    if (galleryUrls.includes(url)) { setNewGalleryUrl(""); return; }
-    onGalleryChange([...galleryUrls, url]);
-    setNewGalleryUrl("");
+  function validate(file: File): string | null {
+    if (!file.type.startsWith("image/")) return "Please choose an image file.";
+    if (file.size > MAX_BYTES) return "Image is too large (max 8MB).";
+    return null;
   }
+
+  async function handleCoverPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (coverInputRef.current) coverInputRef.current.value = "";
+    if (!file) return;
+    const problem = validate(file);
+    if (problem) { toast.error(problem); return; }
+    setUploadingCover(true);
+    try {
+      const url = await uploadImage(file);
+      onCoverChange(url);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not upload image.");
+    } finally {
+      setUploadingCover(false);
+    }
+  }
+
+  async function handleGalleryPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []);
+    if (galleryInputRef.current) galleryInputRef.current.value = "";
+    if (files.length === 0) return;
+    setUploadingGallery(true);
+    const uploaded: string[] = [];
+    for (const file of files) {
+      const problem = validate(file);
+      if (problem) { toast.error(`${file.name}: ${problem}`); continue; }
+      try {
+        uploaded.push(await uploadImage(file));
+      } catch (err: any) {
+        toast.error(`${file.name}: ${err?.response?.data?.error || "upload failed"}`);
+      }
+    }
+    if (uploaded.length) onGalleryChange([...galleryUrls, ...uploaded]);
+    setUploadingGallery(false);
+  }
+
   function removeGalleryUrl(url: string) {
     onGalleryChange(galleryUrls.filter(u => u !== url));
   }
@@ -35,47 +85,42 @@ export function ImageUrlInput({
         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
           Cover image <span className="text-gray-400 font-normal">(optional but recommended)</span>
         </label>
-        <div className="flex gap-3 items-start">
-          <input
-            type="url"
-            value={coverImageUrl}
-            onChange={e => { onCoverChange(e.target.value); setCoverError(false); }}
-            className="input-base flex-1"
-            placeholder="https://…/photo.jpg"
-          />
+        <div className="flex gap-3 items-center">
           <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
-            {coverImageUrl && !coverError ? (
+            {uploadingCover ? (
+              <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+            ) : coverImageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={coverImageUrl} alt="Cover preview" className="w-full h-full object-cover" onError={() => setCoverError(true)} />
+              <img src={coverImageUrl} alt="Cover preview" className="w-full h-full object-cover" />
             ) : (
               <span className="text-xl text-gray-300">🖼️</span>
             )}
           </div>
+          <input ref={coverInputRef} type="file" accept={ACCEPTED} onChange={handleCoverPick} className="hidden" id="cover-upload-input" />
+          <label htmlFor="cover-upload-input" className="btn-secondary cursor-pointer !px-4 !py-2 !text-sm">
+            {uploadingCover ? "Uploading…" : coverImageUrl ? "Change photo" : "Upload photo"}
+          </label>
+          {coverImageUrl && !uploadingCover && (
+            <button type="button" onClick={() => onCoverChange("")} className="btn-ghost !px-3 !py-2 !text-xs">Remove</button>
+          )}
         </div>
-        <p className="text-xs text-gray-400 mt-1">Paste a direct image link (from Cloudinary, S3, Google Photos share, etc). This shows on cards and at the top of your listing.</p>
+        <p className="text-xs text-gray-400 mt-1.5">JPEG, PNG, WEBP, or GIF — up to 8MB. Shows on cards and at the top of your listing.</p>
       </div>
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
           Photo gallery <span className="text-gray-400 font-normal">(optional)</span>
         </label>
-        <div className="flex gap-2">
-          <input
-            type="url"
-            value={newGalleryUrl}
-            onChange={e => setNewGalleryUrl(e.target.value)}
-            onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addGalleryUrl(); } }}
-            className="input-base flex-1"
-            placeholder="https://…/another-photo.jpg"
-          />
-          <button type="button" onClick={addGalleryUrl} className="btn-secondary !px-4 shrink-0">+ Add</button>
-        </div>
+        <input ref={galleryInputRef} type="file" accept={ACCEPTED} multiple onChange={handleGalleryPick} className="hidden" id="gallery-upload-input" />
+        <label htmlFor="gallery-upload-input" className="btn-secondary cursor-pointer inline-flex !px-4 !py-2 !text-sm">
+          {uploadingGallery ? "Uploading…" : "+ Add photos"}
+        </label>
         {galleryUrls.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {galleryUrls.map(url => (
               <div key={url} className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="Gallery preview" className="w-full h-full object-cover" onError={e => { (e.target as HTMLImageElement).style.opacity = "0.15"; }} />
+                <img src={url} alt="Gallery preview" className="w-full h-full object-cover" />
                 <button type="button" onClick={() => removeGalleryUrl(url)}
                   className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
                   Remove
@@ -84,7 +129,7 @@ export function ImageUrlInput({
             ))}
           </div>
         )}
-        <p className="text-xs text-gray-400 mt-1">Add a few extra photos — these appear as a scrollable gallery on your listing page.</p>
+        <p className="text-xs text-gray-400 mt-1.5">Add a few extra photos — these appear as a scrollable gallery on your listing page.</p>
       </div>
     </div>
   );

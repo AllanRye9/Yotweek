@@ -42,16 +42,36 @@ completely independent of the ordinary user login/register:
   suspend/reinstate, change role), `/const/highlights` (manage the homepage hero slideshow —
   add/edit/reorder/hide/remove slides).
 
-**3. Images on listings**
-Both the event and business listing forms (`/events/create`, `/businesses/create`) have a
-"Photos" section (`frontend/components/ImageUrlInput.tsx`) with a cover image field (live
-thumbnail preview) and a multi-photo gallery (add/remove, thumbnail grid). There's no file
-storage wired up yet, so this takes direct **image URLs** — host on Cloudinary, S3, or any CDN
-and paste the link — the same pattern already used for the admin hero slideshow. The backend
+**3. Images on listings — real upload, not paste-a-link**
+Both the event and business listing forms (`/events/create`, `/businesses/create`), plus the
+admin hero slideshow (`/const/highlights`), have a "Photos" section
+(`frontend/components/ImageUrlInput.tsx`) that uploads actual image files: click to pick a
+photo (JPEG/PNG/WEBP/GIF, up to 8MB), it uploads immediately to `POST /api/uploads/image`
+(`backend/src/routes/uploads.ts`, multer + disk storage), and the returned URL is what gets
+saved on the listing. Cover image has a live thumbnail; the gallery is a multi-file picker with
+a thumbnail grid and per-photo remove. The backend
 (`coverImageUrl` / `galleryUrls String[]` on both `Event` and `Business` in `schema.prisma`)
-already supported these fields; only the forms were missing the inputs. Cover images show on
-listing cards and at the top of the detail page; the gallery renders as a horizontal scroll
-strip beneath the cover image. See **Suggested next steps** for wiring real file upload.
+already had these fields; only the forms and the upload endpoint itself were missing. Cover
+images show on listing cards and at the top of the detail page; the gallery renders as a
+horizontal scroll strip beneath the cover image.
+
+**Where uploaded files live, and the one thing to set up before you deploy:**
+Files are written to `UPLOAD_DIR` (defaults to `<project root>/uploads`) and served back at
+`GET /uploads/<filename>`. Locally this just works — nothing to configure. **In production,**
+most hosts (Railway included) run your container on an ephemeral filesystem: anything written
+to disk disappears on the next deploy or restart. Before going live, either:
+- **Railway**: attach a [Volume](https://docs.railway.app/reference/volumes) to the backend
+  service, mount it at e.g. `/app/uploads`, and set `UPLOAD_DIR=/app/uploads`. This is the
+  minimum-effort option and keeps uploads persistent across deploys.
+- **Any host, more durable**: swap the multer disk storage in `routes/uploads.ts` for an S3 /
+  Cloudflare R2 client (`multer-s3` or a manual `PutObjectCommand` after `multer.memoryStorage()`)
+  and return the bucket's public URL instead of a local one. This is the better long-term
+  answer since it also gets you CDN caching and doesn't tie image durability to your compute
+  host at all.
+
+If you skip both, uploads will work perfectly in the demo/testing session and then vanish on
+the next deploy — not a bug, just what "no persistent disk" means. It's called out here
+explicitly so it isn't a surprise.
 
 **4. Location detection & personalization**
 The homepage and browse page ask the browser for GPS location (`navigator.geolocation`) via
@@ -123,23 +143,48 @@ the regular `/auth/login`). If you skip the seed step, visit **`/const/register`
 create the platform's first admin account (it locks itself the moment an admin exists).
 Seeded organizer login: `organizer@example.com` / `Password123!` (regular `/auth/login`).
 
-> Note: `prisma generate`'s query-engine binary can't be downloaded from a fully offline
-> sandbox, so this repo's `npm run build` for the backend couldn't be run end-to-end here.
-> To compensate, the initial `prisma/migrations/` SQL was hand-verified by running it against
-> a real local PostgreSQL 16 instance (types, defaults, array columns, enums, unique
-> constraints, and every foreign key were all confirmed to match `schema.prisma` exactly), and
-> a Prisma+Express typing bug (implicit-`any` handler params caused by mixing an
-> `express-validator` array with other route middleware) was found via an isolated compile
-> test and fixed across all four affected routes. The frontend was built end-to-end with
-> `npm run build` and compiles clean. Run `npm install && npx prisma generate` in your own
-> environment (or let Railway's Docker build do it) to generate the Prisma Client.
+## What's been verified, and how
+
+This sandbox can't reach `binaries.prisma.sh` (network-restricted), so `prisma generate` can
+produce TypeScript types but not the actual query-engine binary — meaning nothing here could
+be run against a live Postgres database from within this environment. Everything below is what
+*was* actually checked, so it's clear where the real gap is:
+
+- **Frontend**: full `npm install && npx tsc --noEmit` (zero errors) and `npm run build`
+  (24/24 routes compile, including Next's own type-check + lint pass) — both run clean from a
+  fresh install, not just once.
+- **Backend**: `npx tsc --noEmit` — zero errors in every file touched this session
+  (`routes/auth.ts`, `routes/uploads.ts`, `routes/admin.ts`, `app.ts`, `utils/uploadDir.ts`).
+  The rest of the codebase shows 27 pre-existing `implicit any` warnings in files untouched
+  here (`bookings.ts`, `businesses.ts`, `categories.ts`, `events.ts`, `itineraries.ts`,
+  `recommendations.ts`, `users.ts`, `spamDetection.ts`) — these are unrelated tech debt, not
+  something introduced or fixed in this session, and are surfaced only because the missing
+  query-engine binary leaves some Prisma-derived types incomplete.
+- **Route wiring, checked programmatically, not by eye**: a script cross-referenced all 65
+  frontend `api.*()` calls against all 94 backend route definitions (method + path) — every
+  call matches a real route. A second script cross-referenced every internal `<Link href>`
+  against the actual Next.js page tree (24 routes, including dynamic segments) — every link
+  resolves. A third check confirmed every Prisma field used in code
+  (`isSuspended`, `isVerifiedOrganizer`, `coverImageUrl`, `galleryUrls`, `categoryId`, the
+  `Role` enum values, etc.) actually exists in `schema.prisma`.
+- **Image upload**: since it needs no database, this one *was* run live — a minimal server
+  mounting only `routes/uploads.ts` was started, then tested with real `curl` requests: a
+  valid image upload (201 + working URL), a missing-auth request (401), a non-image file
+  (400), and fetching the returned URL back and diffing it byte-for-byte against the original
+  file (identical). Re-run a second time after later changes to confirm nothing regressed.
+- **What's still unverified**: anything that requires an actual database round-trip —
+  registration, login, the admin bootstrap/promotion flow, listing creation/approval — was
+  checked by careful manual reading of the logic (types, route order, middleware application)
+  rather than by executing it. If you want that last gap closed, `npm run dev` in both
+  `backend/` and `frontend/` against a real `DATABASE_URL`, then walking through
+  `/const/register` → `/const/login` → creating a listing once, would confirm it end-to-end.
 
 ## Suggested next steps
 
 - Wire a real payment provider's checkout + webhook into `bookings.ts`
-- Add real file upload (S3/Cloudflare R2 — 3R-Elite's `upload.ts` pattern is a good reference)
-  to replace the current URL-paste image inputs on `/events/create` and `/businesses/create`
-  with actual drag-and-drop uploads
+- Move image storage from local disk to S3/R2 (see the callout in "Images on listings" above)
+  — needed before a real production launch, not just for durability across deploys but for a
+  CDN in front of user-uploaded content
 - Build out full `next-intl` translations for the multilingual requirement
 - Add map pins to the itinerary builder and event detail page (Google Maps/Mapbox)
 - Push notifications (web push or a mobile app) for the event-reminder cron, which currently
@@ -203,11 +248,13 @@ you'll create three things in one Railway project:
 cp .env.example .env   # fill in POSTGRES_PASSWORD, JWT_SECRET, real domain
 docker compose up -d --build
 ```
-`docker-compose.yml` brings up Postgres, the backend (auto-runs migrations on boot), and the
-frontend. Use `nginx/nginx.conf.example` as a single-point reverse proxy on `yotweek.com` so
-the frontend is served at `/` and backend API calls are proxied to `/api`.
-Obtain certificates for `yotweek.com` with `certbot --nginx -d yotweek.com`, or swap in
-Caddy/Traefik if you prefer automatic HTTPS.
+`docker-compose.yml` brings up Postgres, the backend (auto-runs migrations on boot, published
+on `127.0.0.1:4000`), and the frontend (published on `127.0.0.1:3000`) — it does **not** set up
+a public domain or HTTPS on its own. `nginx/nginx.conf.example` is a ready-to-copy config that
+runs on the host (not inside docker-compose) and fronts those two ports as one public domain:
+`/` → frontend, `/api/*` and `/uploads/*` → backend. Full copy-paste setup steps (including the
+`certbot --nginx` command for HTTPS) are in the comment header at the top of that file. Swap in
+Caddy or Traefik instead if you'd rather have automatic HTTPS with less manual config.
 
 **Either way, before going live:**
 - Set a strong, unique `JWT_SECRET`

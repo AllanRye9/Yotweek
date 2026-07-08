@@ -1,0 +1,70 @@
+# Reverse proxy for a self-hosted VPS deploy (docker-compose Option B in the
+# main README). Run this ON THE HOST (not inside docker-compose) so certbot
+# can manage TLS for it directly:
+#
+#   sudo apt install nginx certbot python3-certbot-nginx
+#   sudo cp nginx/nginx.conf.example /etc/nginx/sites-available/yotweek
+#   sudo sed -i 's/yotweek.com/yourdomain.com/g' /etc/nginx/sites-available/yotweek
+#   sudo ln -s /etc/nginx/sites-available/yotweek /etc/nginx/sites-enabled/
+#   sudo nginx -t && sudo systemctl reload nginx
+#   sudo certbot --nginx -d yotweek.com -d www.yotweek.com
+#
+# This assumes `docker compose up -d` is already running, which publishes the
+# frontend on 127.0.0.1:3000 and the backend on 127.0.0.1:4000 (see
+# docker-compose.yml) — nginx here just fronts those two ports with one
+# public domain and HTTPS.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name yotweek.com www.yotweek.com;
+
+    # Uploaded listing/hero photos can be up to 8MB (see backend/src/routes/uploads.ts);
+    # nginx's default 1MB limit would reject those before they ever reach the API.
+    client_max_body_size 10m;
+
+    # Backend API — everything under /api/*
+    location /api/ {
+        proxy_pass http://127.0.0.1:4000/api/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Uploaded images are served by the backend directly at /uploads/*, not
+    # under /api — see backend/src/app.ts. This must be proxied too, or every
+    # <img> pointing at an uploaded photo will 404.
+    location /uploads/ {
+        proxy_pass http://127.0.0.1:4000/uploads/;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_valid 200 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+    }
+
+    # Backend health check, handy for uptime monitors
+    location /health {
+        proxy_pass http://127.0.0.1:4000/health;
+    }
+
+    # Everything else — the Next.js frontend
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+# After running certbot above, it will generate a second `server { listen 443
+# ssl; ... }` block (and a port-80-to-443 redirect) automatically — nothing
+# further to add here by hand.

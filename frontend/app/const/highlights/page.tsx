@@ -16,6 +16,7 @@ export default function AdminHighlightsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<typeof EMPTY>(EMPTY);
   const [saving, setSaving] = useState(false);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
 
   function load() {
     setFetching(true);
@@ -30,6 +31,25 @@ export default function AdminHighlightsPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
   function cancelEdit() { setEditingId(null); setForm(EMPTY); }
+
+  async function handleImagePick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file."); return; }
+    if (file.size > 8 * 1024 * 1024) { toast.error("Image is too large (max 8MB)."); return; }
+    setUploadingMedia(true);
+    try {
+      const formData = new FormData();
+      formData.append("image", file);
+      const r = await api.post("/uploads/image", formData);
+      u("mediaUrl", r.data.url);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not upload image.");
+    } finally {
+      setUploadingMedia(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -113,9 +133,35 @@ export default function AdminHighlightsPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Media URL</label>
-            <input required value={form.mediaUrl} onChange={e => u("mediaUrl", e.target.value)} className="input-base" placeholder="https://…/image.jpg or .mp4" />
-            <p className="text-xs text-gray-400 mt-1">Upload your image/video to any hosting (e.g. Cloudinary, S3, or your CDN) and paste the direct URL here.</p>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              {form.mediaType === "IMAGE" ? "Slide image" : "Video URL"}
+            </label>
+            {form.mediaType === "IMAGE" ? (
+              <>
+                <div className="flex gap-3 items-center">
+                  <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+                    {uploadingMedia ? (
+                      <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                    ) : form.mediaUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={form.mediaUrl} alt="Slide preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xl text-gray-300">🖼️</span>
+                    )}
+                  </div>
+                  <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" onChange={handleImagePick} className="hidden" id="highlight-image-input" />
+                  <label htmlFor="highlight-image-input" className="btn-secondary cursor-pointer !px-4 !py-2 !text-sm">
+                    {uploadingMedia ? "Uploading…" : form.mediaUrl ? "Change photo" : "Upload photo"}
+                  </label>
+                </div>
+                <p className="text-xs text-gray-400 mt-1">JPEG, PNG, WEBP, or GIF — up to 8MB.</p>
+              </>
+            ) : (
+              <>
+                <input required value={form.mediaUrl} onChange={e => u("mediaUrl", e.target.value)} className="input-base" placeholder="https://…/video.mp4" />
+                <p className="text-xs text-gray-400 mt-1">Video upload isn't wired up yet — paste a hosted video URL (Cloudinary, S3, your CDN).</p>
+              </>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Link URL <span className="text-gray-400 font-normal">(optional)</span></label>
