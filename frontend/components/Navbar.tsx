@@ -216,7 +216,7 @@ export function Navbar() {
                         </Link>
                       ))}
                       {user.role === "ADMIN" && (
-                        <Link href="/admin" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-violet-700 hover:bg-violet-50 transition-colors">
+                        <Link href="/const" className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-violet-700 hover:bg-violet-50 transition-colors">
                           <span>⚙️</span> Admin Panel
                         </Link>
                       )}
@@ -304,7 +304,7 @@ export function Navbar() {
             </Link>
           ))}
           {user?.role === "ADMIN" && (
-            <Link href="/admin" className="flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-violet-700 hover:bg-violet-50 border-b border-gray-50 transition-colors">
+            <Link href="/const" className="flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-violet-700 hover:bg-violet-50 border-b border-gray-50 transition-colors">
               <span style={{fontSize:"1.3rem",lineHeight:1,width:"1.6rem",textAlign:"center",display:"inline-block"}}>⚙️</span> Admin Panel
             </Link>
           )}

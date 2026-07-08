@@ -13,16 +13,15 @@ const ROLES = [
 ];
 
 export default function RegisterPage() {
-  const { register, user, loading: authLoading } = useAuth(); const router = useRouter(); const toast = useToast();
+  const { user, loading: authLoading, register } = useAuth(); const router = useRouter(); const toast = useToast();
   const [form, setForm] = useState({ name:"", email:"", password:"", role:"USER", organizationName:"", country:"Uganda", city:"" });
   const [loading, setLoading] = useState(false);
   function u(k: string, v: string) { setForm(f => ({...f,[k]:v})); }
 
+  // Already signed in — skip the sign-up form entirely.
   useEffect(() => {
     if (!authLoading && user) router.replace("/dashboard");
   }, [authLoading, user, router]);
-
-  if (authLoading || user) return null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setLoading(true);
@@ -31,6 +30,7 @@ export default function RegisterPage() {
     finally { setLoading(false); }
   }
 
+  if (authLoading || user) return null;
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10 animate-fade-in bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50">
       <div className="w-full max-w-md">

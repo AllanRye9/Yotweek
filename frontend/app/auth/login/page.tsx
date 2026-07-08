@@ -6,21 +6,23 @@ import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
 
 export default function LoginPage() {
-  const { login, user, loading: authLoading } = useAuth(); const router = useRouter(); const toast = useToast();
+  const { user, loading: authLoading, login } = useAuth(); const router = useRouter(); const toast = useToast();
   const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [loading, setLoading] = useState(false);
 
-  // Already signed in - don't show the sign-in form again, go straight to the dashboard.
+  // Already signed in — there's no reason to show the login form or
+  // re-prompt for credentials, so send them straight to the dashboard.
   useEffect(() => {
     if (!authLoading && user) router.replace("/dashboard");
   }, [authLoading, user, router]);
 
-  if (authLoading || user) return null;
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setLoading(true);
     try { await login(email, password); toast.success("Welcome back!"); router.push("/dashboard"); }
     catch (err: any) { toast.error(err?.response?.data?.error || "Invalid email or password."); }
     finally { setLoading(false); }
   }
+
+  if (authLoading || user) return null;
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-10 animate-fade-in bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50">
       <div className="w-full max-w-md">

@@ -88,6 +88,36 @@ router.post("/events/:id/hide", async (req, res, next) => {
   }
 });
 
+// GET /api/admin/users - list/search all users for the admin's user
+// management page (verify organizers, suspend accounts, etc).
+router.get("/users", async (req, res, next) => {
+  try {
+    const { q, role } = req.query as { q?: string; role?: string };
+    const users = await prisma.user.findMany({
+      where: {
+        ...(role ? { role: role as any } : {}),
+        ...(q
+          ? {
+              OR: [
+                { name: { contains: q, mode: "insensitive" } },
+                { email: { contains: q, mode: "insensitive" } },
+                { organizationName: { contains: q, mode: "insensitive" } },
+              ],
+            }
+          : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true, name: true, email: true, role: true, organizationName: true,
+        country: true, city: true, isVerifiedOrganizer: true, isSuspended: true, createdAt: true,
+      },
+    });
+    res.json({ users });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // Grant/revoke the "verified organizer" trust badge.
 router.post("/users/:id/verify", async (req, res, next) => {
   try {
@@ -97,6 +127,18 @@ router.post("/users/:id/verify", async (req, res, next) => {
       data: { isVerifiedOrganizer: Boolean(verified) },
     });
     res.json({ user: { id: user.id, name: user.name, isVerifiedOrganizer: user.isVerifiedOrganizer } });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const ASSIGNABLE_ROLES = ["USER", "AGENT", "COMPANY", "ORGANIZATION", "ADMIN"];
+router.put("/users/:id/role", async (req, res, next) => {
+  try {
+    const { role } = req.body;
+    if (!ASSIGNABLE_ROLES.includes(role)) return res.status(400).json({ error: "Invalid role" });
+    const user = await prisma.user.update({ where: { id: req.params.id }, data: { role } });
+    res.json({ user: { id: user.id, role: user.role } });
   } catch (err) {
     next(err);
   }

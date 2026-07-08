@@ -79,7 +79,7 @@ export interface Testimonial {
 export interface Highlight {
   id: string; title: string; subtitle?: string | null;
   mediaUrl: string; mediaType: "IMAGE" | "VIDEO";
-  linkUrl?: string | null; sortOrder: number;
+  linkUrl?: string | null; sortOrder: number; isActive?: boolean;
 }
 
 export interface Post {
