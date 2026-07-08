@@ -67,6 +67,17 @@ export default function BusinessDetailPage() {
               </div>
             </div>
 
+            {/* Gallery */}
+            {business.galleryUrls && business.galleryUrls.length > 0 && (
+              <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
+                {business.galleryUrls.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={i} src={url} alt={`${business.name} photo ${i + 1}`}
+                    className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                ))}
+              </div>
+            )}
+
             {/* Info */}
             <div className="card-base p-5 sm:p-7">
               {business.category && <span className="text-[11px] font-bold uppercase tracking-widest text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full">{business.category.name}</span>}

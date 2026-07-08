@@ -5,12 +5,13 @@ import Link from "next/link";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
+import { ImageUrlInput } from "../../../components/ImageUrlInput";
 
 const CATS = ["FESTIVAL","CONFERENCE","CONCERT","SPORTS","CULTURAL_HERITAGE","NIGHTLIFE",
   "WORKSHOP","GUIDED_TOUR","ADVENTURE_OUTDOOR","WILDLIFE_SAFARI","FOOD_DRINK","RELIGIOUS","EXHIBITION","OTHER"];
 const INIT = { title:"",description:"",category:"FESTIVAL",scope:"LOCAL",priceType:"FREE",
   price:"",currency:"UGX",startDate:"",endDate:"",venueName:"",address:"",city:"",country:"Uganda",
-  latitude:"",longitude:"",capacity:"",languages:"en",tags:"" };
+  latitude:"",longitude:"",capacity:"",languages:"en",tags:"",coverImageUrl:"" };
 
 function Field({ label,required,hint,children }: { label:string;required?:boolean;hint?:string;children:React.ReactNode }) {
   return (
@@ -25,6 +26,7 @@ function Field({ label,required,hint,children }: { label:string;required?:boolea
 export default function CreateEventPage() {
   const { user, loading } = useAuth(); const router = useRouter(); const toast = useToast();
   const [form, setForm] = useState(INIT); const [submitting, setSubmitting] = useState(false); const [step, setStep] = useState(1);
+  const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   function u(k: string, v: string) { setForm(f => ({...f,[k]:v})); }
 
   async function submit(e: React.FormEvent) {
@@ -37,6 +39,8 @@ export default function CreateEventPage() {
         capacity: form.capacity ? parseInt(form.capacity,10) : undefined,
         languages: form.languages.split(",").map(s=>s.trim()).filter(Boolean),
         tags: form.tags.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean),
+        coverImageUrl: form.coverImageUrl.trim() || undefined,
+        galleryUrls,
       };
       await api.post("/events", payload);
       toast.success("Submitted for review! You'll be notified when approved."); router.push("/dashboard");
@@ -108,6 +112,15 @@ export default function CreateEventPage() {
               <Field label="Capacity" hint="Leave blank for unlimited"><input type="number" min="1" value={form.capacity} onChange={e=>u("capacity",e.target.value)} className="input-base" placeholder="500" /></Field>
               <Field label="Languages" hint="Comma-separated, e.g. en, sw, ach"><input value={form.languages} onChange={e=>u("languages",e.target.value)} className="input-base" /></Field>
               <Field label="Tags" hint="Comma-separated — helps recommendations"><input value={form.tags} onChange={e=>u("tags",e.target.value)} className="input-base" placeholder="family-friendly, outdoor, music" /></Field>
+              <div className="pt-1 border-t border-gray-100">
+                <p className="text-sm font-bold text-gray-900 mb-3 mt-4">📸 Photos</p>
+                <ImageUrlInput
+                  coverImageUrl={form.coverImageUrl}
+                  onCoverChange={v => u("coverImageUrl", v)}
+                  galleryUrls={galleryUrls}
+                  onGalleryChange={setGalleryUrls}
+                />
+              </div>
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs text-amber-700 flex gap-2">
                 <span>⚠️</span><p>Your listing will be reviewed before going live. You'll receive a notification once approved.</p>
               </div>

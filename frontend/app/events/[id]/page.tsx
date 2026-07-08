@@ -136,6 +136,17 @@ export default function EventDetailPage() {
               </div>
             </div>
 
+            {/* Gallery */}
+            {event.galleryUrls && event.galleryUrls.length > 0 && (
+              <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
+                {event.galleryUrls.map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={i} src={url} alt={`${event.title} photo ${i + 1}`}
+                    className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                ))}
+              </div>
+            )}
+
             {/* Info card */}
             <div className="card-base p-5 sm:p-7">
               <span className="text-[11px] font-bold uppercase tracking-widest text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full">
