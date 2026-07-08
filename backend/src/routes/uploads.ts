@@ -2,7 +2,7 @@ import { Router, Response, NextFunction } from "express";
 import multer from "multer";
 import path from "path";
 import crypto from "crypto";
-import { requireAuth, AuthRequest } from "../middleware/auth";
+import { requireAuth, canUploadEventVideos, AuthRequest } from "../middleware/auth";
 import { UPLOAD_DIR } from "../utils/uploadDir";
 
 const router = Router();
@@ -55,6 +55,51 @@ router.post("/image", requireAuth, (req: AuthRequest, res: Response, next: NextF
     // server; otherwise this falls back to the request's own host, which is
     // correct behind Railway/any reverse proxy as long as `trust proxy` is
     // set (it is, in app.ts) so req.protocol reflects the real https scheme.
+    const base = (process.env.PUBLIC_UPLOAD_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+    res.status(201).json({ url: `${base}/uploads/${req.file.filename}` });
+  });
+});
+
+const ALLOWED_VIDEO_MIME: Record<string, string> = {
+  "video/mp4": ".mp4",
+  "video/webm": ".webm",
+  "video/quicktime": ".mov",
+};
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+
+const videoStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+  filename: (_req, file, cb) => {
+    const ext = ALLOWED_VIDEO_MIME[file.mimetype] || path.extname(file.originalname).toLowerCase() || ".mp4";
+    cb(null, `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`);
+  },
+});
+
+const uploadVideo = multer({
+  storage: videoStorage,
+  limits: { fileSize: MAX_VIDEO_SIZE, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (!ALLOWED_VIDEO_MIME[file.mimetype]) {
+      return cb(new Error("Only MP4, WEBM, or MOV videos are allowed."));
+    }
+    cb(null, true);
+  },
+});
+
+// POST /api/uploads/video - restricted to admins and admin-approved
+// (isVerifiedOrganizer) organizers, since video storage is heavier than the
+// image path above. Used for the homepage past/upcoming events slider.
+router.post("/video", requireAuth, canUploadEventVideos, (req: AuthRequest, res: Response, next: NextFunction) => {
+  uploadVideo.single("video")(req, res, (err: any) => {
+    if (err) {
+      const message =
+        err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE"
+          ? "Video is too large (max 50MB)."
+          : err.message || "Upload failed.";
+      return res.status(400).json({ error: message });
+    }
+    if (!req.file) return res.status(400).json({ error: "No video file provided." });
+
     const base = (process.env.PUBLIC_UPLOAD_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
     res.status(201).json({ url: `${base}/uploads/${req.file.filename}` });
   });

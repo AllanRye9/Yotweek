@@ -7,6 +7,7 @@ import { EventCard } from "../components/EventCard";
 import { BusinessCard } from "../components/BusinessCard";
 import { SkeletonCard } from "../components/SkeletonCard";
 import { HighlightSlider } from "../components/HighlightSlider";
+import { EventVideoSlider } from "../components/EventVideoSlider";
 import { LocationSelector } from "../components/LocationSelector";
 import { useLocation } from "../lib/geolocation";
 import { useAuth } from "../context/AuthContext";
@@ -111,24 +112,30 @@ export default function HomePage() {
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5 animate-float pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{animationDelay:"2s"}} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-20">
-          <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3">Events · Businesses · Destinations</p>
-          <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl mb-4">
-            Discover<span className="text-sky-300"> what&apos;s happening</span><br className="hidden sm:block" />
-            around you — and the world
-          </h1>
-          <p className="text-white/70 text-sm sm:text-base max-w-xl mb-6 leading-relaxed">
-            Verified events, local businesses, and tourism destinations. Smart recommendations that learn from your interests — the more you explore, the better it gets.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-4 mb-8">
-            <LocationSelector />
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-[minmax(280px,340px)_1fr] gap-8 lg:gap-10 items-center">
+          <div>
+            <EventVideoSlider />
           </div>
 
-          <div className="flex flex-wrap gap-3">
-            <Link href="/events" className="btn-primary !px-7 !py-3 !text-base !rounded-xl shadow-glow-lg">Browse events</Link>
-            <Link href="/businesses" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">Find businesses</Link>
-            <Link href="/search" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">🔍 Search</Link>
+          <div>
+            <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3">Events · Businesses · Destinations</p>
+            <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl mb-4">
+              Discover<span className="text-sky-300"> what&apos;s happening</span><br className="hidden sm:block" />
+              around you — and the world
+            </h1>
+            <p className="text-white/70 text-sm sm:text-base max-w-xl mb-6 leading-relaxed">
+              Verified events, local businesses, and tourism destinations. Smart recommendations that learn from your interests — the more you explore, the better it gets.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-4 mb-8">
+              <LocationSelector />
+            </div>
+
+            <div className="flex flex-wrap gap-3">
+              <Link href="/events" className="btn-primary !px-7 !py-3 !text-base !rounded-xl shadow-glow-lg">Browse events</Link>
+              <Link href="/businesses" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">Find businesses</Link>
+              <Link href="/search" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">🔍 Search</Link>
+            </div>
           </div>
         </div>
       </section>

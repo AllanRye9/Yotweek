@@ -82,6 +82,17 @@ export interface Highlight {
   linkUrl?: string | null; sortOrder: number; isActive?: boolean;
 }
 
+export type EventVideoTiming = "PAST" | "UPCOMING";
+export type EventVideoStatus = "PENDING" | "APPROVED" | "REJECTED";
+
+export interface EventVideo {
+  id: string; title: string; caption?: string | null;
+  videoUrl: string; thumbnailUrl?: string | null;
+  timing: EventVideoTiming; eventId?: string | null;
+  uploaderId: string; status: EventVideoStatus;
+  sortOrder: number; isActive?: boolean; createdAt?: string;
+}
+
 export interface Post {
   id: string; title: string; slug: string; excerpt?: string | null; body: string;
   coverImageUrl?: string | null; images: string[]; tags: string[];

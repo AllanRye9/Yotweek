@@ -155,6 +155,7 @@ model User {
   savedBusinesses  SavedBusiness[]
   testimonials     Testimonial[]
   posts            Post[]
+  uploadedVideos   EventVideo[]
 
   @@index([role])
 }
@@ -213,6 +214,7 @@ model Event {
   reports        Report[]
   itineraryItems ItineraryItem[]
   savedBy        SavedEvent[]
+  videos         EventVideo[]
 
   @@index([status])
   @@index([category])
@@ -495,6 +497,39 @@ model Highlight {
   sortOrder Int                @default(0)
   isActive  Boolean            @default(true)
   createdAt DateTime           @default(now())
+}
+
+enum EventVideoTiming {
+  PAST
+  UPCOMING
+}
+
+enum EventVideoStatus {
+  PENDING   // awaiting admin review (submitted by a verified organizer)
+  APPROVED  // live in the homepage video slider
+  REJECTED
+}
+
+// Short clips shown in the homepage "past / upcoming events" video slider.
+// Anyone with isVerifiedOrganizer (or an ADMIN) can submit one; ADMIN
+// submissions go live immediately, everyone else's start PENDING.
+model EventVideo {
+  id           String           @id @default(uuid())
+  title        String
+  caption      String?
+  videoUrl     String
+  thumbnailUrl String?
+  timing       EventVideoTiming
+  eventId      String?
+  event        Event?           @relation(fields: [eventId], references: [id])
+  uploaderId   String
+  uploader     User             @relation(fields: [uploaderId], references: [id])
+  status       EventVideoStatus @default(PENDING)
+  sortOrder    Int              @default(0)
+  isActive     Boolean          @default(true)
+  createdAt    DateTime         @default(now())
+
+  @@index([timing, status, isActive])
 }
 
 enum PostStatus {

@@ -450,6 +450,45 @@ router.delete("/highlights/:id", async (req, res, next) => {
   }
 });
 
+// ─── Homepage event videos (past/upcoming events slider) ─────────────────
+// Submission (POST /api/event-videos) lives outside this admin-only router
+// since verified organizers, not just admins, are allowed to submit; these
+// routes cover the admin review/approval queue and full management.
+
+router.get("/event-videos", async (_req, res, next) => {
+  try {
+    const videos = await prisma.eventVideo.findMany({
+      orderBy: [{ status: "asc" }, { sortOrder: "asc" }],
+      include: { uploader: { select: { id: true, name: true, email: true, role: true, isVerifiedOrganizer: true } } },
+    });
+    res.json({ videos });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/event-videos/:id", async (req, res, next) => {
+  try {
+    const { title, caption, videoUrl, thumbnailUrl, timing, eventId, status, sortOrder, isActive } = req.body;
+    const video = await prisma.eventVideo.update({
+      where: { id: req.params.id },
+      data: { title, caption, videoUrl, thumbnailUrl, timing, eventId, status, sortOrder, isActive },
+    });
+    res.json({ video });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/event-videos/:id", async (req, res, next) => {
+  try {
+    await prisma.eventVideo.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── Content moderation (PAAS posts) ─────────────────────────────────────
 
 router.get("/posts/flagged", async (_req, res, next) => {

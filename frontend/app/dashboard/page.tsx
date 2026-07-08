@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import { EventCard } from "../../components/EventCard";
 import { SkeletonCard } from "../../components/SkeletonCard";
 import { buildProfile } from "../../lib/preferences";
+import { useToast } from "../../components/Toast";
 
 const SP: Record<string,string> = {
   PENDING:"bg-amber-100 text-amber-700", APPROVED:"bg-emerald-100 text-emerald-700",
@@ -16,13 +17,54 @@ const SP: Record<string,string> = {
 
 export default function DashboardPage() {
   const { user, loading } = useAuth();
+  const toast = useToast();
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [savedEvents, setSavedEvents] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
-  const [tab, setTab] = useState<"listings"|"bookings"|"saved"|"interests"|"payouts">("listings");
+  const [tab, setTab] = useState<"listings"|"bookings"|"saved"|"interests"|"payouts"|"videos">("listings");
   const profile = buildProfile();
+  const canUploadVideos = user?.role === "ADMIN" || user?.isVerifiedOrganizer;
+
+  const VIDEO_EMPTY = { title: "", caption: "", videoUrl: "", timing: "UPCOMING" as "PAST"|"UPCOMING" };
+  const [videoForm, setVideoForm] = useState(VIDEO_EMPTY);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
+  const [submittingVideo, setSubmittingVideo] = useState(false);
+
+  async function handleVideoPick(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!file.type.startsWith("video/")) { toast.error("Please choose a video file."); return; }
+    if (file.size > 50 * 1024 * 1024) { toast.error("Video is too large (max 50MB)."); return; }
+    setUploadingVideo(true);
+    try {
+      const formData = new FormData();
+      formData.append("video", file);
+      const r = await api.post("/uploads/video", formData);
+      setVideoForm(f => ({ ...f, videoUrl: r.data.url }));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not upload video.");
+    } finally {
+      setUploadingVideo(false);
+    }
+  }
+
+  async function submitVideo(e: React.FormEvent) {
+    e.preventDefault();
+    if (!videoForm.title.trim() || !videoForm.videoUrl.trim()) { toast.error("Title and video are required."); return; }
+    setSubmittingVideo(true);
+    try {
+      await api.post("/event-videos", videoForm);
+      toast.success(user?.role === "ADMIN" ? "Clip added to the homepage slider." : "Clip submitted for admin review.");
+      setVideoForm(VIDEO_EMPTY);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not submit clip.");
+    } finally {
+      setSubmittingVideo(false);
+    }
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -51,6 +93,7 @@ export default function DashboardPage() {
     { key:"saved",    label:"Saved", icon:"❤️", count:savedEvents.length },
     { key:"interests",label:"My Interests", icon:"🎯", count:null },
     ...(user.role !== "USER" ? [{ key:"payouts", label:"Payouts", icon:"💰", count:null }] : []),
+    ...(canUploadVideos ? [{ key:"videos", label:"Event Videos", icon:"🎬", count:null }] : []),
   ] as const;
 
   return (
@@ -196,6 +239,60 @@ export default function DashboardPage() {
                     <div className="text-right shrink-0"><p className="font-bold text-emerald-600">{p.currency} {Number(p.organizerPayoutAmount).toLocaleString()}</p><p className="text-xs text-gray-400">after {Number(p.commissionAmount).toLocaleString()} fee</p></div>
                   </div>
                 ))}
+              </div>
+            )}
+
+            {tab==="videos" && canUploadVideos && (
+              <div className="card-base p-6 max-w-lg">
+                <h2 className="font-bold text-gray-900 mb-1">Submit a clip for the homepage slider</h2>
+                <p className="text-gray-400 text-sm mb-4">
+                  {user.role === "ADMIN"
+                    ? "As an admin, your clips go live immediately."
+                    : "Your clips are reviewed by an admin before they appear on the homepage."}
+                </p>
+                <form onSubmit={submitVideo} className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title</label>
+                    <input required value={videoForm.title} onChange={e => setVideoForm(f => ({ ...f, title: e.target.value }))} className="input-base" placeholder="Gulu Cultural Festival highlights" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Caption <span className="text-gray-400 font-normal">(optional)</span></label>
+                    <input value={videoForm.caption} onChange={e => setVideoForm(f => ({ ...f, caption: e.target.value }))} className="input-base" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Timing</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {(["UPCOMING","PAST"] as const).map(t => (
+                        <button key={t} type="button" onClick={() => setVideoForm(f => ({ ...f, timing: t }))}
+                          className={`py-2 rounded-xl border-2 text-xs font-semibold transition-all ${videoForm.timing===t ? "border-sky-500 bg-sky-50 text-sky-700" : "border-gray-200 text-gray-600 hover:border-sky-200"}`}>
+                          {t === "UPCOMING" ? "🎬 Upcoming" : "📼 Past"}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Video</label>
+                    <div className="flex gap-3 items-center">
+                      <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
+                        {uploadingVideo ? (
+                          <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                        ) : videoForm.videoUrl ? (
+                          <video src={videoForm.videoUrl} muted className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-xl text-gray-300">🎬</span>
+                        )}
+                      </div>
+                      <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleVideoPick} className="hidden" id="dashboard-video-input" />
+                      <label htmlFor="dashboard-video-input" className="btn-secondary cursor-pointer !px-4 !py-2 !text-sm">
+                        {uploadingVideo ? "Uploading…" : videoForm.videoUrl ? "Change video" : "Upload video"}
+                      </label>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">MP4, WEBM, or MOV — up to 50MB.</p>
+                  </div>
+                  <button type="submit" disabled={submittingVideo} className="btn-primary !px-5 !py-2.5 w-full !justify-center">
+                    {submittingVideo ? "Submitting…" : "Submit clip"}
+                  </button>
+                </form>
               </div>
             )}
           </>
