@@ -15,6 +15,15 @@ function SearchContent() {
   const [loading, setLoading] = useState(false);
   const [tab, setTab] = useState<"events"|"businesses"|"posts">("events");
 
+  // The Navbar search box always router.push()es to /search?q=..., which
+  // keeps this component mounted rather than remounting it — so without
+  // this, searching again while already on /search silently did nothing.
+  useEffect(() => {
+    const urlQ = sp.get("q") || "";
+    setQ(urlQ);
+    setInput(urlQ);
+  }, [sp]);
+
   useEffect(() => {
     if (!q || q.length < 2) return;
     setLoading(true);

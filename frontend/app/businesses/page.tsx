@@ -24,6 +24,23 @@ function Content() {
     api.get("/categories").then(r => setCategories(r.data.categories)).catch(()=>{});
   }, []);
 
+  // Nav links (e.g. /businesses?category=food) pass a category *slug*, but
+  // filtering/the API works off categoryId. Flatten the tree once loaded and
+  // resolve slug -> id. Also re-run on every URL change (not just once at
+  // mount) so clicking a different category link while already on this page
+  // actually updates the filter instead of silently doing nothing.
+  useEffect(() => {
+    const slug = sp.get("category");
+    setSearch(sp.get("search") || "");
+    setSearchInput(sp.get("search") || "");
+    setPage(1);
+    if (!slug) { setCategoryId(""); return; }
+    if (categories.length === 0) return; // resolve once categories arrive
+    const flatten = (nodes: any[]): any[] => nodes.flatMap(n => [n, ...flatten(n.children || [])]);
+    const match = flatten(categories).find(c => c.slug === slug);
+    setCategoryId(match?.id || "");
+  }, [sp, categories]);
+
   useEffect(() => {
     const params: any = { pageSize:24, page };
     if (search) params.search = search;

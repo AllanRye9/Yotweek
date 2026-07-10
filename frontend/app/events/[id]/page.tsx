@@ -9,6 +9,7 @@ import { EventCard } from "../../../components/EventCard";
 import { SkeletonCard } from "../../../components/SkeletonCard";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
+import { isVideoUrl } from "../../../lib/media";
 import { WeatherWidget } from "../../../components/WeatherWidget";
 import { ReviewSection } from "../../../components/ReviewSection";
 import { ShareButtons } from "../../../components/ShareButtons";
@@ -140,9 +141,14 @@ export default function EventDetailPage() {
             {event.galleryUrls && event.galleryUrls.length > 0 && (
               <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
                 {event.galleryUrls.map((url, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={i} src={url} alt={`${event.title} photo ${i + 1}`}
-                    className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                  isVideoUrl(url) ? (
+                    <video key={i} src={url} muted autoPlay loop playsInline
+                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={url} alt={`${event.title} photo ${i + 1}`}
+                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                  )
                 ))}
               </div>
             )}

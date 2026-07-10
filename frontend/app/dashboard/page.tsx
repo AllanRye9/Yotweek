@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { api } from "../../lib/api";
@@ -8,6 +8,10 @@ import { EventCard } from "../../components/EventCard";
 import { SkeletonCard } from "../../components/SkeletonCard";
 import { buildProfile } from "../../lib/preferences";
 import { useToast } from "../../components/Toast";
+import {
+  ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
+  AreaChart, Area, PieChart, Pie, Cell,
+} from "recharts";
 
 const SP: Record<string,string> = {
   PENDING:"bg-amber-100 text-amber-700", APPROVED:"bg-emerald-100 text-emerald-700",
@@ -22,8 +26,9 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState<any[]>([]);
   const [savedEvents, setSavedEvents] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [tab, setTab] = useState<"listings"|"bookings"|"saved"|"interests"|"payouts"|"videos">("listings");
+  const [tab, setTab] = useState<"overview"|"listings"|"bookings"|"saved"|"interests"|"payouts"|"videos">("overview");
   const profile = buildProfile();
   const canUploadVideos = user?.role === "ADMIN" || user?.isVerifiedOrganizer;
 
@@ -72,9 +77,45 @@ export default function DashboardPage() {
       api.get("/events/organizer/mine").then(r => setMyEvents(r.data.events)),
       api.get("/bookings/mine").then(r => setBookings(r.data.bookings)),
       api.get("/users/me/saved-events").then(r => setSavedEvents(r.data.savedEvents)),
+      api.get("/notifications").then(r => setNotifications(r.data.notifications ?? [])).catch(() => {}),
       ...(user.role !== "USER" ? [api.get("/bookings/organizer/payouts").then(r => setPayouts(r.data))] : []),
     ]).finally(() => setDataLoading(false));
   }, [user]);
+
+  // ── Derived analytics for the Overview tab ────────────────────────────
+  const stats = useMemo(() => {
+    const totalListings = myEvents.length;
+    const totalBookingsReceived = myEvents.reduce((sum, e) => sum + (e._count?.bookings || 0), 0);
+    const totalViews = myEvents.reduce((sum, e) => sum + (e.viewCount || 0), 0);
+    const totalTicketsSold = myEvents.reduce((sum, e) => sum + (e.ticketsSold || 0), 0);
+    const pendingCount = myEvents.filter(e => e.status === "PENDING").length;
+    const flaggedCount = myEvents.filter(e => e.isFlagged).length;
+
+    const statusCounts: Record<string, number> = {};
+    myEvents.forEach(e => { statusCounts[e.status] = (statusCounts[e.status] || 0) + 1; });
+    const statusPie = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
+
+    const topEvents = [...myEvents]
+      .sort((a, b) => (b.ticketsSold || 0) - (a.ticketsSold || 0))
+      .slice(0, 5)
+      .map(e => ({ name: e.title.length > 16 ? e.title.slice(0, 15) + "…" : e.title, Tickets: e.ticketsSold || 0, Views: e.viewCount || 0 }));
+
+    const revenueByMonth: Record<string, number> = {};
+    (payouts?.payments || []).forEach((p: any) => {
+      if (!p.paidAt) return;
+      const key = format(new Date(p.paidAt), "MMM yy");
+      revenueByMonth[key] = (revenueByMonth[key] || 0) + Number(p.organizerPayoutAmount);
+    });
+    const revenueTrend = Object.entries(revenueByMonth).map(([month, amount]) => ({ month, Revenue: amount }));
+
+    return { totalListings, totalBookingsReceived, totalViews, totalTicketsSold, pendingCount, flaggedCount, statusPie, topEvents, revenueTrend };
+  }, [myEvents, payouts]);
+
+  const unreadNotifCount = notifications.filter(n => !n.read).length;
+  const isOrganizerRole = user?.role !== "USER";
+  const PIE_COLORS: Record<string, string> = {
+    PENDING: "#f59e0b", APPROVED: "#10b981", REJECTED: "#ef4444", HIDDEN: "#94a3b8",
+  };
 
   if (loading) return <div className="max-w-7xl mx-auto px-4 py-16 text-center text-gray-400">Loading…</div>;
   if (!user) return (
@@ -88,6 +129,7 @@ export default function DashboardPage() {
   );
 
   const TABS = [
+    { key:"overview", label:"Overview", icon:"📈", count: unreadNotifCount > 0 ? unreadNotifCount : null },
     { key:"listings", label:"My Listings", icon:"🎪", count:myEvents.length },
     { key:"bookings", label:"Bookings", icon:"🎫", count:bookings.length },
     { key:"saved",    label:"Saved", icon:"❤️", count:savedEvents.length },
@@ -138,6 +180,136 @@ export default function DashboardPage() {
           <div className="listing-grid">{[...Array(4)].map((_,i) => <SkeletonCard key={i} />)}</div>
         ) : (
           <>
+            {tab==="overview" && (
+              <div className="space-y-6">
+                {/* Quick actions */}
+                <div className="flex flex-wrap gap-2.5">
+                  <Link href="/events/create" className="btn-primary !px-4 !py-2 !text-sm">➕ List an event</Link>
+                  <Link href="/businesses/create" className="btn-secondary !px-4 !py-2 !text-sm">🏪 List a business</Link>
+                  <Link href="/events" className="btn-ghost !px-4 !py-2 !text-sm">🎪 Browse events</Link>
+                  {isOrganizerRole && <button onClick={() => setTab("listings")} className="btn-ghost !px-4 !py-2 !text-sm">📋 Manage listings</button>}
+                  {isOrganizerRole && <button onClick={() => setTab("payouts")} className="btn-ghost !px-4 !py-2 !text-sm">💰 View payouts</button>}
+                </div>
+
+                {/* KPI cards */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {isOrganizerRole ? (
+                    <>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎪 Listings</p><p className="font-extrabold text-2xl text-gray-900">{stats.totalListings}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎫 Bookings received</p><p className="font-extrabold text-2xl text-sky-600">{stats.totalBookingsReceived}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">👁 Total views</p><p className="font-extrabold text-2xl text-gray-900">{stats.totalViews.toLocaleString()}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">💰 Total payout</p><p className="font-extrabold text-2xl text-emerald-600">{payouts ? Number(payouts.totalPayout).toLocaleString() : "—"}</p></div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎫 My bookings</p><p className="font-extrabold text-2xl text-sky-600">{bookings.length}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">❤️ Saved events</p><p className="font-extrabold text-2xl text-gray-900">{savedEvents.length}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🔔 Unread alerts</p><p className="font-extrabold text-2xl text-gray-900">{unreadNotifCount}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎯 Interests tracked</p><p className="font-extrabold text-2xl text-gray-900">{profile.categories?.length || 0}</p></div>
+                    </>
+                  )}
+                </div>
+
+                {/* Alerts */}
+                {(stats.pendingCount > 0 || stats.flaggedCount > 0) && (
+                  <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-sm text-amber-800 flex flex-wrap gap-x-6 gap-y-1">
+                    {stats.pendingCount > 0 && <span>⏳ {stats.pendingCount} listing{stats.pendingCount>1?"s":""} awaiting admin review.</span>}
+                    {stats.flaggedCount > 0 && <span>⚠️ {stats.flaggedCount} listing{stats.flaggedCount>1?"s":""} flagged — check the Listings tab.</span>}
+                  </div>
+                )}
+
+                {/* Charts */}
+                {isOrganizerRole && stats.totalListings > 0 && (
+                  <div className="grid lg:grid-cols-2 gap-4">
+                    <div className="card-base p-5">
+                      <h3 className="font-bold text-gray-900 text-sm mb-3">Top listings — views vs tickets sold</h3>
+                      <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={stats.topEvents}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                          <XAxis dataKey="name" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
+                          <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                          <Bar dataKey="Views" fill="#93c5fd" radius={[4,4,0,0]} />
+                          <Bar dataKey="Tickets" fill="#0ea5e9" radius={[4,4,0,0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+
+                    {stats.revenueTrend.length > 0 ? (
+                      <div className="card-base p-5">
+                        <h3 className="font-bold text-gray-900 text-sm mb-3">Payout revenue over time</h3>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <AreaChart data={stats.revenueTrend}>
+                            <defs>
+                              <linearGradient id="revFill" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
+                                <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+                            <XAxis dataKey="month" tick={{ fontSize: 10 }} />
+                            <YAxis tick={{ fontSize: 10 }} />
+                            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                            <Area type="monotone" dataKey="Revenue" stroke="#10b981" fill="url(#revFill)" strokeWidth={2} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="card-base p-5">
+                        <h3 className="font-bold text-gray-900 text-sm mb-3">Listing status breakdown</h3>
+                        <ResponsiveContainer width="100%" height={220}>
+                          <PieChart>
+                            <Pie data={stats.statusPie} dataKey="value" nameKey="name" innerRadius={45} outerRadius={75} paddingAngle={3}>
+                              {stats.statusPie.map((s, i) => <Cell key={i} fill={PIE_COLORS[s.name] || "#94a3b8"} />)}
+                            </Pie>
+                            <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8 }} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid lg:grid-cols-2 gap-4">
+                  {/* Notifications */}
+                  <div className="card-base p-5">
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Recent activity & alerts</h3>
+                    {notifications.length === 0 ? (
+                      <p className="text-sm text-gray-400">You're all caught up — nothing new to report.</p>
+                    ) : (
+                      <div className="space-y-2 max-h-64 overflow-y-auto">
+                        {notifications.slice(0, 8).map((n: any) => (
+                          <div key={n.id} className={`text-sm px-3 py-2 rounded-lg ${!n.read ? "bg-sky-50 text-sky-800" : "text-gray-500"}`}>{n.message}</div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Recommendations */}
+                  <div className="card-base p-5">
+                    <h3 className="font-bold text-gray-900 text-sm mb-3">Recommended for you</h3>
+                    {profile.hasData ? (
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-500">Based on what you've explored, you tend to gravitate toward:</p>
+                        <div className="flex flex-wrap gap-2">
+                          {profile.categories.slice(0,5).map((c:any) => (
+                            <Link key={c.key} href={`/events?category=${c.key}`} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-sky-50 text-sky-700 hover:bg-sky-100 transition-colors">
+                              {c.key.replace(/_/g," ").toLowerCase()}
+                            </Link>
+                          ))}
+                        </div>
+                        {isOrganizerRole && (
+                          <p className="text-xs text-gray-400 pt-1">Tip: listings in these categories tend to get discovered faster by users like you.</p>
+                        )}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400">Browse a few events or businesses and we'll start tailoring suggestions here.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
             {tab==="listings" && (myEvents.length===0 ? (
               <div className="card-base p-12 text-center"><p className="text-4xl mb-3">🎪</p><p className="font-semibold text-gray-700 mb-4">No listings yet</p><Link href="/events/create" className="btn-primary !px-6 !py-2.5">Post your first event</Link></div>
             ) : (
@@ -277,7 +449,7 @@ export default function DashboardPage() {
                         {uploadingVideo ? (
                           <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
                         ) : videoForm.videoUrl ? (
-                          <video src={videoForm.videoUrl} muted className="w-full h-full object-cover" />
+                          <video src={videoForm.videoUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
                         ) : (
                           <span className="text-xl text-gray-300">🎬</span>
                         )}

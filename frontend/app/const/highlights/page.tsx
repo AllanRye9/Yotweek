@@ -191,7 +191,7 @@ export default function AdminHighlightsPage() {
                 <div key={h.id} className="card-base p-4 flex gap-4 items-center">
                   <div className="w-24 h-16 rounded-lg overflow-hidden bg-slate-800 shrink-0 relative">
                     {h.mediaType === "VIDEO"
-                      ? <video src={h.mediaUrl} muted className="w-full h-full object-cover" />
+                      ? <video src={h.mediaUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
                       // eslint-disable-next-line @next/next/no-img-element
                       : <img src={h.mediaUrl} alt={h.title} className="w-full h-full object-cover" />}
                     {!h.isActive && <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-[10px] font-bold text-white">HIDDEN</div>}

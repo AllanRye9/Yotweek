@@ -15,7 +15,8 @@
     "date-fns": "^4.1.0",
     "next": "^15.3.4",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "recharts": "^3.9.2"
   },
   "devDependencies": {
     "@types/node": "^20.19.37",

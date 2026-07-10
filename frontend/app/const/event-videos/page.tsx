@@ -149,7 +149,7 @@ export default function AdminEventVideosPage() {
                 {uploadingMedia ? (
                   <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
                 ) : form.videoUrl ? (
-                  <video src={form.videoUrl} muted className="w-full h-full object-cover" />
+                  <video src={form.videoUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
                 ) : (
                   <span className="text-xl text-gray-300">🎬</span>
                 )}
@@ -201,7 +201,7 @@ export default function AdminEventVideosPage() {
               {filtered.map((v, i) => (
                 <div key={v.id} className="card-base p-4 flex gap-4 items-center">
                   <div className="w-24 h-16 rounded-lg overflow-hidden bg-slate-800 shrink-0 relative">
-                    <video src={v.videoUrl} muted className="w-full h-full object-cover" />
+                    <video src={v.videoUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
                     {!v.isActive && <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-[10px] font-bold text-white">HIDDEN</div>}
                   </div>
                   <div className="flex-1 min-w-0">

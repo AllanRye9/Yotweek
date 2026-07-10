@@ -38,6 +38,7 @@ async function main() {
     { name: "Shopping", slug: "shopping" },
     { name: "Nightlife", slug: "nightlife" },
     { name: "Travel & Tours", slug: "travel-tours" },
+    { name: "Accommodation", slug: "accommodation" },
     { name: "Pets", slug: "pets" },
     { name: "Active Life", slug: "active-life" },
     { name: "Beauty & Spas", slug: "beauty-spas" },

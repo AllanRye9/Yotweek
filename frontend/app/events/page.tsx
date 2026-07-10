@@ -40,6 +40,20 @@ function Content() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("startDate");
 
+  // Nav/category links point at /events?category=...&scope=...&priceType=...
+  // Since Next keeps this component mounted across query-only navigations,
+  // the initial useState(sp.get(...)) above only fires once — without this,
+  // clicking a different filter link while already on /events silently did
+  // nothing. Re-sync whenever the query string itself changes.
+  useEffect(() => {
+    setSearch(sp.get("search") || "");
+    setSearchInput(sp.get("search") || "");
+    setCategory(sp.get("category") || "");
+    setScope(sp.get("scope") || "");
+    setPriceType(sp.get("priceType") || "");
+    setPage(1);
+  }, [sp]);
+
   useEffect(() => {
     const params: any = { pageSize: 24, page };
     if (search) params.search = search;

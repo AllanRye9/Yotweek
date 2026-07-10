@@ -9,6 +9,7 @@ import { ShareButtons } from "../../../components/ShareButtons";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
 import { recordSignal } from "../../../lib/preferences";
+import { isVideoUrl } from "../../../lib/media";
 
 const PRICE_LABELS: Record<string,string> = { BUDGET:"$ Budget", MODERATE:"$$ Moderate", EXPENSIVE:"$$$ Expensive", LUXURY:"$$$$ Luxury" };
 
@@ -71,9 +72,14 @@ export default function BusinessDetailPage() {
             {business.galleryUrls && business.galleryUrls.length > 0 && (
               <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
                 {business.galleryUrls.map((url, i) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={i} src={url} alt={`${business.name} photo ${i + 1}`}
-                    className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                  isVideoUrl(url) ? (
+                    <video key={i} src={url} muted autoPlay loop playsInline
+                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img key={i} src={url} alt={`${business.name} photo ${i + 1}`}
+                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
+                  )
                 ))}
               </div>
             )}

@@ -105,4 +105,24 @@ router.post("/video", requireAuth, canUploadEventVideos, (req: AuthRequest, res:
   });
 });
 
+// POST /api/uploads/listing-video - any signed-in user, for videos attached
+// to their own event/business listing gallery (mirrors /image's access
+// model). Kept separate from /video above, which stays restricted to the
+// homepage past/upcoming-events slider.
+router.post("/listing-video", requireAuth, (req: AuthRequest, res: Response, next: NextFunction) => {
+  uploadVideo.single("video")(req, res, (err: any) => {
+    if (err) {
+      const message =
+        err instanceof multer.MulterError && err.code === "LIMIT_FILE_SIZE"
+          ? "Video is too large (max 50MB)."
+          : err.message || "Upload failed.";
+      return res.status(400).json({ error: message });
+    }
+    if (!req.file) return res.status(400).json({ error: "No video file provided." });
+
+    const base = (process.env.PUBLIC_UPLOAD_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+    res.status(201).json({ url: `${base}/uploads/${req.file.filename}` });
+  });
+});
+
 export default router;

@@ -50,7 +50,7 @@ export function EventVideoSlider() {
         ))}
       </div>
 
-      <div className="relative w-full overflow-hidden rounded-2xl bg-slate-800" style={{ aspectRatio: "9/12" }}>
+      <div className="relative w-full overflow-hidden rounded-2xl bg-slate-900 shadow-2xl shadow-black/40" style={{ aspectRatio: "4/5" }}>
         {loading ? (
           <div className="w-full h-full flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-white/40 border-t-transparent rounded-full animate-spin" />
@@ -64,6 +64,18 @@ export function EventVideoSlider() {
           </div>
         ) : (
           <>
+            {/* Blurred, scaled copy fills the frame edge-to-edge as a backdrop */}
+            <video
+              key={`${cur.id}-bg`}
+              src={cur.videoUrl}
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-hidden
+              className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-60"
+            />
+            {/* Real video, always shown in full — no cropping, no stretching */}
             <video
               key={cur.id}
               src={cur.videoUrl}
@@ -72,10 +84,10 @@ export function EventVideoSlider() {
               muted
               loop
               playsInline
-              className="w-full h-full object-cover"
+              className="relative w-full h-full object-contain"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-            <div className="absolute bottom-0 left-0 right-0 p-4">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none" />
+            <div className="absolute bottom-0 left-0 right-0 p-4 pointer-events-none">
               <h3 className="font-extrabold text-white text-base drop-shadow leading-snug">{cur.title}</h3>
               {cur.caption && <p className="text-white/80 text-xs mt-1 line-clamp-2">{cur.caption}</p>}
             </div>

@@ -28,14 +28,20 @@ export function StatsTicker() {
   }, []);
   const all = [...items, ...items];
   return (
-    <div className="overflow-hidden bg-slate-950/90 border-b border-white/5 py-1">
-      <div className="flex whitespace-nowrap animate-ticker" style={{width:"fit-content"}}>
+    <div className="relative overflow-hidden bg-gradient-to-r from-indigo-950 via-slate-950 to-sky-950 border-b border-sky-400/10 py-1.5 group">
+      {/* subtle animated sheen */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-sky-400/5 to-transparent bg-[length:200%_100%] animate-[gradientShift_6s_ease_infinite]" />
+      {/* edge fade so the loop feels seamless rather than clipped */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-10 sm:w-16 bg-gradient-to-r from-slate-950 to-transparent z-10" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-10 sm:w-16 bg-gradient-to-l from-slate-950 to-transparent z-10" />
+
+      <div className="relative flex whitespace-nowrap animate-ticker group-hover:[animation-play-state:paused]" style={{width:"fit-content"}}>
         {all.map((item, i) => (
           <span key={i} className="inline-flex items-center gap-1.5 px-6 text-[11px] font-semibold text-white/90">
-            <span>{item.icon}</span>
-            <span className="text-white/50">{item.label}:</span>
-            <span className="text-sky-300 font-bold">{item.value}</span>
-            <span className="text-white/20 ml-4">|</span>
+            <span className="drop-shadow-[0_0_6px_rgba(56,189,248,0.6)]">{item.icon}</span>
+            <span className="text-white/50 tracking-wide">{item.label}:</span>
+            <span className="text-sky-300 font-extrabold tabular-nums">{item.value}</span>
+            <span className="w-1 h-1 rounded-full bg-sky-400/40 ml-4" />
           </span>
         ))}
       </div>

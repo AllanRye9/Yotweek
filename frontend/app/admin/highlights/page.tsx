@@ -79,7 +79,7 @@ export default function AdminHighlightsPage() {
               <div key={s.id} className="card-base p-4 flex items-center gap-4">
                 <div className="w-20 h-14 shrink-0 rounded-lg overflow-hidden bg-gray-100">
                   {s.mediaType==="VIDEO"
-                    ? <video src={s.mediaUrl} muted className="w-full h-full object-cover" />
+                    ? <video src={s.mediaUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
                     // eslint-disable-next-line @next/next/no-img-element
                     : <img src={s.mediaUrl} alt={s.title} className="w-full h-full object-cover" />}
                 </div>

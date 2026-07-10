@@ -2,14 +2,24 @@
 import { useRef, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "./Toast";
+import { isVideoUrl } from "../lib/media";
 
 const ACCEPTED = "image/jpeg,image/png,image/webp,image/gif";
+const ACCEPTED_GALLERY = "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime";
 const MAX_BYTES = 8 * 1024 * 1024;
+const MAX_VIDEO_BYTES = 50 * 1024 * 1024;
 
 async function uploadImage(file: File): Promise<string> {
   const formData = new FormData();
   formData.append("image", file);
   const r = await api.post("/uploads/image", formData);
+  return r.data.url as string;
+}
+
+async function uploadGalleryVideo(file: File): Promise<string> {
+  const formData = new FormData();
+  formData.append("video", file);
+  const r = await api.post("/uploads/listing-video", formData);
   return r.data.url as string;
 }
 
@@ -56,21 +66,34 @@ export function ImageUrlInput({
     }
   }
 
+  function validateGalleryFile(file: File): string | null {
+    if (file.type.startsWith("image/")) {
+      if (file.size > MAX_BYTES) return "Image is too large (max 8MB).";
+      return null;
+    }
+    if (file.type.startsWith("video/")) {
+      if (file.size > MAX_VIDEO_BYTES) return "Video is too large (max 50MB).";
+      return null;
+    }
+    return "Please choose an image or video file.";
+  }
+
   async function handleGalleryPick(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []);
     if (galleryInputRef.current) galleryInputRef.current.value = "";
     if (files.length === 0) return;
     setUploadingGallery(true);
-    const uploaded: string[] = [];
-    for (const file of files) {
-      const problem = validate(file);
-      if (problem) { toast.error(`${file.name}: ${problem}`); continue; }
+    const results = await Promise.all(files.map(async file => {
+      const problem = validateGalleryFile(file);
+      if (problem) { toast.error(`${file.name}: ${problem}`); return null; }
       try {
-        uploaded.push(await uploadImage(file));
+        return file.type.startsWith("video/") ? await uploadGalleryVideo(file) : await uploadImage(file);
       } catch (err: any) {
         toast.error(`${file.name}: ${err?.response?.data?.error || "upload failed"}`);
+        return null;
       }
-    }
+    }));
+    const uploaded = results.filter((u): u is string => !!u);
     if (uploaded.length) onGalleryChange([...galleryUrls, ...uploaded]);
     setUploadingGallery(false);
   }
@@ -109,18 +132,22 @@ export function ImageUrlInput({
 
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-          Photo gallery <span className="text-gray-400 font-normal">(optional)</span>
+          Photo & video gallery <span className="text-gray-400 font-normal">(optional)</span>
         </label>
-        <input ref={galleryInputRef} type="file" accept={ACCEPTED} multiple onChange={handleGalleryPick} className="hidden" id="gallery-upload-input" />
+        <input ref={galleryInputRef} type="file" accept={ACCEPTED_GALLERY} multiple onChange={handleGalleryPick} className="hidden" id="gallery-upload-input" />
         <label htmlFor="gallery-upload-input" className="btn-secondary cursor-pointer inline-flex !px-4 !py-2 !text-sm">
-          {uploadingGallery ? "Uploading…" : "+ Add photos"}
+          {uploadingGallery ? "Uploading…" : "+ Add photos or videos"}
         </label>
         {galleryUrls.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-3">
             {galleryUrls.map(url => (
               <div key={url} className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={url} alt="Gallery preview" className="w-full h-full object-cover" />
+                {isVideoUrl(url) ? (
+                  <video src={url} muted autoPlay loop playsInline className="w-full h-full object-cover" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={url} alt="Gallery preview" className="w-full h-full object-cover" />
+                )}
                 <button type="button" onClick={() => removeGalleryUrl(url)}
                   className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
                   Remove
@@ -129,7 +156,7 @@ export function ImageUrlInput({
             ))}
           </div>
         )}
-        <p className="text-xs text-gray-400 mt-1.5">Add a few extra photos — these appear as a scrollable gallery on your listing page.</p>
+        <p className="text-xs text-gray-400 mt-1.5">Select several files at once — photos (JPEG/PNG/WEBP/GIF, up to 8MB each) or videos (MP4/WEBM/MOV, up to 50MB each). They appear as a scrollable gallery on your listing page.</p>
       </div>
     </div>
   );

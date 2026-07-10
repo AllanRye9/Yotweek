@@ -112,11 +112,7 @@ export default function HomePage() {
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5 animate-float pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{animationDelay:"2s"}} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-[minmax(280px,340px)_1fr] gap-8 lg:gap-10 items-center">
-          <div>
-            <EventVideoSlider />
-          </div>
-
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-[1fr_minmax(340px,460px)] gap-8 lg:gap-10 items-center">
           <div>
             <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3">Events · Businesses · Destinations</p>
             <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl mb-4">
@@ -136,6 +132,10 @@ export default function HomePage() {
               <Link href="/businesses" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">Find businesses</Link>
               <Link href="/search" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">🔍 Search</Link>
             </div>
+          </div>
+
+          <div className="order-first lg:order-last">
+            <EventVideoSlider />
           </div>
         </div>
       </section>
