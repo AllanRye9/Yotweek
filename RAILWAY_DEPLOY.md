@@ -50,6 +50,18 @@ git commit -m "migrations" && git push
 4. **Settings → Networking → Generate Domain**
 5. Wait for deploy. Test: `https://YOUR-BACKEND.up.railway.app/health` → `{"status":"ok"}`
 
+### 4b. Attach a persistent Volume for uploaded images (do this before you upload anything real)
+Without this step, every event/business cover photo, gallery item, and homepage video vanishes
+the next time the backend redeploys or restarts — Railway's container filesystem is wiped each
+time, and uploads are written to local disk by default.
+1. Backend service → **Settings → Volumes → New Volume**
+2. Mount path: `/app/uploads`
+3. Backend service → **Variables** → add `UPLOAD_DIR=/app/uploads`
+4. Redeploy the backend
+
+If you skip this, images will work fine in your first test session and then silently 404 after
+the next deploy — worth doing now rather than debugging it later.
+
 ### 5. Deploy the frontend service
 1. Railway → **New** → **GitHub Repo** → same repo
 2. **Settings → Root Directory** → `frontend`

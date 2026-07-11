@@ -88,6 +88,62 @@ router.post("/events/:id/hide", async (req, res, next) => {
   }
 });
 
+// GET /api/admin/events/all - full listing management view (not just the
+// pending/flagged review queues above), so the admin can edit, feature, or
+// remove any event regardless of status.
+router.get("/events/all", async (req, res, next) => {
+  try {
+    const { q, status } = req.query as { q?: string; status?: string };
+    const events = await prisma.event.findMany({
+      where: {
+        ...(status ? { status: status as any } : {}),
+        ...(q ? { title: { contains: q, mode: "insensitive" } } : {}),
+      },
+      orderBy: [{ isFeatured: "desc" }, { createdAt: "desc" }],
+      include: { organizer: { select: { id: true, name: true, email: true, organizationName: true } } },
+      take: 100,
+    });
+    res.json({ events });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/admin/events/:id - edit core listing fields and/or toggle the
+// homepage "featured" flag. Separate from /approve /reject /hide above,
+// which only ever change `status`.
+router.put("/events/:id", async (req, res, next) => {
+  try {
+    const { title, description, category, price, capacity, isFeatured } = req.body;
+    const event = await prisma.event.update({
+      where: { id: req.params.id },
+      data: {
+        ...(title !== undefined ? { title } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(category !== undefined ? { category } : {}),
+        ...(price !== undefined ? { price } : {}),
+        ...(capacity !== undefined ? { capacity } : {}),
+        ...(isFeatured !== undefined ? { isFeatured: Boolean(isFeatured) } : {}),
+      },
+    });
+    res.json({ event });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/events/:id", async (req, res, next) => {
+  try {
+    await prisma.event.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (err: any) {
+    if (err?.code === "P2003" || err?.code === "P2014") {
+      return res.status(409).json({ error: "This event has bookings/reviews attached and can't be hard-deleted. Use Hide instead." });
+    }
+    next(err);
+  }
+});
+
 // GET /api/admin/users - list/search all users for the admin's user
 // management page (verify organizers, suspend accounts, etc).
 router.get("/users", async (req, res, next) => {
@@ -157,6 +213,35 @@ router.post("/users/:id/suspend", async (req, res, next) => {
   }
 });
 
+// DELETE /api/admin/users/:id - permanently remove a user. Guards against
+// self-deletion and removing the last remaining admin. If the user still
+// owns content (events, businesses, bookings, reviews, ...) the DB's
+// foreign-key constraints will reject the delete rather than silently
+// cascading — in that case we surface a clear message pointing at suspend
+// as the safer alternative, instead of a raw Postgres error.
+router.delete("/users/:id", async (req: AuthRequest, res, next) => {
+  try {
+    if (req.params.id === req.user!.userId) {
+      return res.status(400).json({ error: "You can't delete your own account." });
+    }
+    const target = await prisma.user.findUnique({ where: { id: req.params.id }, select: { role: true } });
+    if (!target) return res.status(404).json({ error: "User not found." });
+    if (target.role === "ADMIN") {
+      const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
+      if (adminCount <= 1) return res.status(400).json({ error: "Can't delete the last remaining admin." });
+    }
+    await prisma.user.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (err: any) {
+    if (err?.code === "P2003" || err?.code === "P2014") {
+      return res.status(409).json({
+        error: "This user still owns listings, bookings, or reviews and can't be deleted outright. Suspend the account instead, or reassign/remove their content first.",
+      });
+    }
+    next(err);
+  }
+});
+
 router.get("/reviews/pending", async (_req, res, next) => {
   try {
     const reviews = await prisma.review.findMany({
@@ -165,6 +250,25 @@ router.get("/reviews/pending", async (_req, res, next) => {
       orderBy: { createdAt: "asc" },
     });
     res.json({ reviews });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/reviews/:id", async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const review = await prisma.review.update({ where: { id: req.params.id }, data: { status } });
+    res.json({ review });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/reviews/:id", async (req, res, next) => {
+  try {
+    await prisma.review.delete({ where: { id: req.params.id } });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }
@@ -256,6 +360,57 @@ router.post("/businesses/:id/hide", async (req, res, next) => {
   }
 });
 
+// GET /api/admin/businesses/all - full searchable directory for the admin's
+// "All businesses" management view, mirroring /events/all.
+router.get("/businesses/all", async (req, res, next) => {
+  try {
+    const { q, status } = req.query as { q?: string; status?: string };
+    const businesses = await prisma.business.findMany({
+      where: {
+        ...(status ? { status: status as any } : {}),
+        ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      include: { owner: { select: { id: true, name: true, email: true, organizationName: true } } },
+      take: 100,
+    });
+    res.json({ businesses });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PUT /api/admin/businesses/:id - edit core listing fields, separate from
+// /approve /reject /hide above which only ever change `status`.
+router.put("/businesses/:id", async (req, res, next) => {
+  try {
+    const { name, description, priceRange } = req.body;
+    const business = await prisma.business.update({
+      where: { id: req.params.id },
+      data: {
+        ...(name !== undefined ? { name } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(priceRange !== undefined ? { priceRange } : {}),
+      },
+    });
+    res.json({ business });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/businesses/:id", async (req, res, next) => {
+  try {
+    await prisma.business.delete({ where: { id: req.params.id } });
+    res.status(204).send();
+  } catch (err: any) {
+    if (err?.code === "P2003" || err?.code === "P2014") {
+      return res.status(409).json({ error: "This business has reviews/bookings attached and can't be hard-deleted. Use Hide instead." });
+    }
+    next(err);
+  }
+});
+
 router.get("/business-reviews/pending", async (_req, res, next) => {
   try {
     const reviews = await prisma.businessReview.findMany({
@@ -264,6 +419,25 @@ router.get("/business-reviews/pending", async (_req, res, next) => {
       orderBy: { createdAt: "asc" },
     });
     res.json({ reviews });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/business-reviews/:id", async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    const review = await prisma.businessReview.update({ where: { id: req.params.id }, data: { status } });
+    res.json({ review });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/business-reviews/:id", async (req, res, next) => {
+  try {
+    await prisma.businessReview.delete({ where: { id: req.params.id } });
+    res.status(204).send();
   } catch (err) {
     next(err);
   }
@@ -313,11 +487,70 @@ router.delete("/categories/:id", async (req, res, next) => {
   }
 });
 
+// GET /api/admin/analytics - lightweight platform analytics for the admin
+// overview dashboard: signups & bookings trend (last 30 days), category
+// mix, and top-performing listings. Bucketed in JS rather than raw SQL so
+// this stays portable across whatever Postgres version is running.
+router.get("/analytics", async (_req, res, next) => {
+  try {
+    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const [signups, bookings, categoryCounts, topEvents, topBusinesses, payments, totalBookings, totalReviews] = await Promise.all([
+      prisma.user.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true } }),
+      prisma.booking.findMany({ where: { createdAt: { gte: since } }, select: { createdAt: true, totalAmount: true } }),
+      prisma.event.groupBy({ by: ["category"], _count: { _all: true } }),
+      prisma.event.findMany({ orderBy: { viewCount: "desc" }, take: 5, select: { id: true, title: true, viewCount: true, ticketsSold: true } }),
+      prisma.business.findMany({ orderBy: { viewCount: "desc" }, take: 5, select: { id: true, name: true, viewCount: true } }),
+      prisma.payment.findMany({ where: { paidAt: { gte: since } }, select: { paidAt: true, commissionAmount: true } }),
+      prisma.booking.count(),
+      prisma.review.count(),
+    ]);
+
+    const bucket = (rows: { createdAt: Date }[]) => {
+      const days: Record<string, number> = {};
+      for (let i = 29; i >= 0; i--) {
+        const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+        days[d.toISOString().slice(0, 10)] = 0;
+      }
+      rows.forEach(r => {
+        const key = r.createdAt.toISOString().slice(0, 10);
+        if (key in days) days[key] += 1;
+      });
+      return Object.entries(days).map(([date, count]) => ({ date, count }));
+    };
+
+    const revenueByDay: Record<string, number> = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
+      revenueByDay[d.toISOString().slice(0, 10)] = 0;
+    }
+    payments.forEach(p => {
+      if (!p.paidAt) return;
+      const key = p.paidAt.toISOString().slice(0, 10);
+      if (key in revenueByDay) revenueByDay[key] += Number(p.commissionAmount);
+    });
+
+    res.json({
+      signupsTrend: bucket(signups),
+      bookingsTrend: bucket(bookings),
+      revenueTrend: Object.entries(revenueByDay).map(([date, amount]) => ({ date, amount })),
+      categoryMix: categoryCounts.map(c => ({ category: c.category, count: c._count._all })),
+      topEvents, topBusinesses,
+      totalBookings, totalReviews,
+      newSignupsLast30d: signups.length,
+      newBookingsLast30d: bookings.length,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get("/overview", async (_req, res, next) => {
   try {
     const [
       pendingEvents, flaggedEvents, pendingReports, totalUsers, totalEvents,
       pendingBusinesses, flaggedBusinesses, totalBusinesses,
+      pendingReviews, pendingBusinessReviews, pendingTestimonials,
     ] = await Promise.all([
       prisma.event.count({ where: { status: "PENDING" } }),
       prisma.event.count({ where: { OR: [{ isFlagged: true }, { reportCount: { gt: 0 } }] } }),
@@ -327,10 +560,14 @@ router.get("/overview", async (_req, res, next) => {
       prisma.business.count({ where: { status: "PENDING" } }),
       prisma.business.count({ where: { OR: [{ isFlagged: true }, { reportCount: { gt: 0 } }] } }),
       prisma.business.count(),
+      prisma.review.count({ where: { status: "PENDING" } }),
+      prisma.businessReview.count({ where: { status: "PENDING" } }),
+      prisma.testimonial.count({ where: { status: "PENDING" } }),
     ]);
     res.json({
       pendingEvents, flaggedEvents, pendingReports, totalUsers, totalEvents,
       pendingBusinesses, flaggedBusinesses, totalBusinesses,
+      pendingReviews, pendingBusinessReviews, pendingTestimonials,
     });
   } catch (err) {
     next(err);
@@ -511,6 +748,49 @@ router.post("/posts/:id/unpublish", async (req, res, next) => {
   try {
     const post = await prisma.post.update({ where: { id: req.params.id }, data: { status: "ARCHIVED" } });
     res.json({ post });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Site-wide settings ───────────────────────────────────────────────
+// Singleton row, created on first read if it doesn't exist yet.
+
+router.get("/settings", async (_req, res, next) => {
+  try {
+    const settings = await prisma.platformSetting.upsert({
+      where: { id: "singleton" },
+      update: {},
+      create: { id: "singleton" },
+    });
+    res.json({ settings });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/settings", async (req: AuthRequest, res, next) => {
+  try {
+    const {
+      siteName, supportEmail, maintenanceMode, announcementBanner,
+      requireEventApproval, requireBusinessApproval, defaultCommissionPct, autoApproveVerified,
+    } = req.body;
+    const settings = await prisma.platformSetting.upsert({
+      where: { id: "singleton" },
+      update: {
+        ...(siteName !== undefined ? { siteName } : {}),
+        ...(supportEmail !== undefined ? { supportEmail } : {}),
+        ...(maintenanceMode !== undefined ? { maintenanceMode: Boolean(maintenanceMode) } : {}),
+        ...(announcementBanner !== undefined ? { announcementBanner } : {}),
+        ...(requireEventApproval !== undefined ? { requireEventApproval: Boolean(requireEventApproval) } : {}),
+        ...(requireBusinessApproval !== undefined ? { requireBusinessApproval: Boolean(requireBusinessApproval) } : {}),
+        ...(defaultCommissionPct !== undefined ? { defaultCommissionPct: Number(defaultCommissionPct) } : {}),
+        ...(autoApproveVerified !== undefined ? { autoApproveVerified: Boolean(autoApproveVerified) } : {}),
+        updatedBy: req.user!.userId,
+      },
+      create: { id: "singleton", updatedBy: req.user!.userId },
+    });
+    res.json({ settings });
   } catch (err) {
     next(err);
   }

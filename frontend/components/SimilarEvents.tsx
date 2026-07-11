@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { api } from "../lib/api";
+import { GalleryThumb } from "./GalleryThumb";
 
 interface SimilarEvent {
   id: string;
@@ -32,8 +33,7 @@ export function SimilarEvents({ eventId }: { eventId: string }) {
           <Link key={e.id} href={`/events/${e.id}`} className="card overflow-hidden">
             <div className="h-24 w-full bg-gradient-to-br from-sunset-300 to-sunset-500">
               {e.coverImageUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={e.coverImageUrl} alt={e.title} className="h-full w-full object-cover" />
+                <GalleryThumb url={e.coverImageUrl} alt={e.title} className="h-full w-full object-cover" fallbackIcon="🎪" />
               )}
             </div>
             <div className="p-3">

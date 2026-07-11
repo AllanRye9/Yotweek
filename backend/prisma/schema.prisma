@@ -192,6 +192,7 @@ model Event {
   ticketsSold Int         @default(0)
   status      EventStatus @default(PENDING)
   viewCount   Int         @default(0)
+  isFeatured  Boolean     @default(false) // admin-curated homepage/"For You" boost
 
   // spam / authenticity signals
   isFlagged      Boolean  @default(false)
@@ -220,6 +221,7 @@ model Event {
   @@index([category])
   @@index([city, country])
   @@index([startDate])
+  @@index([isFeatured])
 }
 
 model Booking {
@@ -559,4 +561,20 @@ model Post {
 
   @@index([status])
   @@index([authorId])
+}
+
+// Singleton row (id is always "singleton") holding site-wide settings the
+// admin can tune from /const/settings without a redeploy.
+model PlatformSetting {
+  id                    String   @id @default("singleton")
+  siteName              String   @default("Yotweek")
+  supportEmail          String   @default("support@yotweek.com")
+  maintenanceMode       Boolean  @default(false)
+  announcementBanner    String?
+  requireEventApproval  Boolean  @default(true)
+  requireBusinessApproval Boolean @default(true)
+  defaultCommissionPct  Float    @default(10)
+  autoApproveVerified   Boolean  @default(false) // skip review queue for isVerifiedOrganizer submitters
+  updatedAt             DateTime @updatedAt
+  updatedBy             String?
 }

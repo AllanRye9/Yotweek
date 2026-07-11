@@ -173,6 +173,18 @@ router.post(
         startDate: new Date(data.startDate),
       });
 
+      const isFlagged = Boolean(suspiciousHit || duplicateOfId);
+
+      // Honor the admin's site-wide approval settings (/const/settings):
+      // flagged submissions always go to review regardless, since those
+      // settings are about trust, not about skipping fraud checks.
+      const settings = await prisma.platformSetting.findUnique({ where: { id: "singleton" } });
+      const organizer = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { isVerifiedOrganizer: true } });
+      const skipReview =
+        !isFlagged &&
+        ((settings && settings.requireEventApproval === false) ||
+          (settings?.autoApproveVerified && organizer?.isVerifiedOrganizer));
+
       const slug = `${slugify(data.title)}-${Date.now().toString(36)}`;
 
       const event = await prisma.event.create({
@@ -200,10 +212,14 @@ router.post(
           tags: (data.tags || []).map((t: string) => t.toLowerCase()),
           capacity: data.capacity,
           organizerId: req.user!.userId,
-          // Every listing still requires admin approval regardless of flags -
-          // flags simply surface it more prominently in the review queue.
-          status: "PENDING",
-          isFlagged: Boolean(suspiciousHit || duplicateOfId),
+          // Every listing goes through review by default - flags simply
+          // surface it more prominently in the queue. Admins can relax this
+          // globally (skip review entirely, or auto-approve verified
+          // organizers) from /const/settings; flagged submissions still
+          // always land in the queue regardless of that setting.
+          status: skipReview ? "APPROVED" : "PENDING",
+          ...(skipReview ? { approvedAt: new Date() } : {}),
+          isFlagged,
           flagReason: suspiciousHit
             ? `Suspicious phrase detected: "${suspiciousHit}"`
             : duplicateOfId
@@ -213,7 +229,7 @@ router.post(
         },
       });
 
-      res.status(201).json({ event, message: "Submitted for admin review" });
+      res.status(201).json({ event, message: skipReview ? "Listing published" : "Submitted for admin review" });
     } catch (err) {
       next(err);
     }

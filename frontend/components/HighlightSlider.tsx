@@ -9,7 +9,12 @@ export function HighlightSlider() {
   const [idx, setIdx] = useState(0);
 
   useEffect(() => {
-    api.get("/highlights").then(r => setSlides(r.data.highlights)).catch(() => {});
+    // The landing page's hero already has one video interface
+    // (EventVideoSlider). This banner stays image-only so it never becomes
+    // a second video display further down the page — VIDEO-type highlights
+    // still work anywhere else they might be surfaced, they just don't
+    // render here.
+    api.get("/highlights").then(r => setSlides((r.data.highlights || []).filter((h: Highlight) => h.mediaType !== "VIDEO"))).catch(() => {});
   }, []);
 
   const next = useCallback(() => setIdx(i => (i+1) % slides.length), [slides.length]);

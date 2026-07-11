@@ -9,7 +9,7 @@ import { EventCard } from "../../../components/EventCard";
 import { SkeletonCard } from "../../../components/SkeletonCard";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
-import { isVideoUrl } from "../../../lib/media";
+import { GalleryThumb } from "../../../components/GalleryThumb";
 import { WeatherWidget } from "../../../components/WeatherWidget";
 import { ReviewSection } from "../../../components/ReviewSection";
 import { ShareButtons } from "../../../components/ShareButtons";
@@ -29,6 +29,7 @@ export default function EventDetailPage() {
   const toast = useToast();
   const [event, setEvent] = useState<EventItem | null>(null);
   const [similar, setSimilar] = useState<EventItem[]>([]);
+  const [coverImgFailed, setCoverImgFailed] = useState(false);
   const [saved, setSaved] = useState(false);
   const [booking, setBooking] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -39,6 +40,7 @@ export default function EventDetailPage() {
     api.get(`/events/${id}`)
       .then(r => {
         setEvent(r.data.event);
+        setCoverImgFailed(false);
         const e = r.data.event;
         recordSignal({ eventId:e.id, action:"view", category:e.category, city:e.city, tags:e.tags });
         // Track read time — record a "read" signal after 15s
@@ -123,9 +125,9 @@ export default function EventDetailPage() {
           <div className="lg:col-span-2 space-y-5">
             {/* Cover */}
             <div className="relative rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-sky-400 to-indigo-600">
-              {event.coverImageUrl
+              {event.coverImageUrl && !coverImgFailed
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={event.coverImageUrl} alt={event.title} className="w-full h-full object-cover" />
+                ? <img src={event.coverImageUrl} alt={event.title} className="w-full h-full object-cover" onError={() => setCoverImgFailed(true)} />
                 : <div className="absolute inset-0 flex items-center justify-center" style={{fontSize:"5rem"}}>{icon}</div>}
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               <div className="absolute top-4 left-4 flex flex-wrap gap-2">
@@ -141,14 +143,7 @@ export default function EventDetailPage() {
             {event.galleryUrls && event.galleryUrls.length > 0 && (
               <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
                 {event.galleryUrls.map((url, i) => (
-                  isVideoUrl(url) ? (
-                    <video key={i} src={url} muted autoPlay loop playsInline
-                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={i} src={url} alt={`${event.title} photo ${i + 1}`}
-                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
-                  )
+                  <GalleryThumb key={i} url={url} alt={`${event.title} photo ${i + 1}`} />
                 ))}
               </div>
             )}

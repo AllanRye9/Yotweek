@@ -40,6 +40,17 @@ export default function AdminUsersPage() {
     toast.success(`Role updated to ${role}.`);
     load();
   }
+  async function deleteUser(u: any) {
+    if (u.id === user?.id) { toast.error("You can't delete your own account."); return; }
+    if (!confirm(`Permanently delete ${u.name}'s account? This can't be undone.`)) return;
+    try {
+      await api.delete(`/admin/users/${u.id}`);
+      toast.warning("Account deleted.");
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not delete this user.");
+    }
+  }
 
   return (
     <AdminGuard>
@@ -82,6 +93,9 @@ export default function AdminUsersPage() {
                   </button>
                   <button onClick={() => toggleSuspend(u)} className={`!px-3 !py-1.5 !text-xs ${u.isSuspended ? "btn-secondary" : "btn-danger"}`}>
                     {u.isSuspended ? "Reinstate" : "Suspend"}
+                  </button>
+                  <button onClick={() => deleteUser(u)} className="btn-danger !px-3 !py-1.5 !text-xs" title="Permanently delete this account">
+                    🗑 Delete
                   </button>
                 </div>
               </div>

@@ -112,10 +112,10 @@ export default function HomePage() {
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5 animate-float pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{animationDelay:"2s"}} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-[1fr_minmax(340px,460px)] gap-8 lg:gap-10 items-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-8 lg:gap-12 items-center">
           <div>
             <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3">Events · Businesses · Destinations</p>
-            <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight max-w-3xl mb-4">
+            <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight mb-4">
               Discover<span className="text-sky-300"> what&apos;s happening</span><br className="hidden sm:block" />
               around you — and the world
             </h1>
@@ -134,8 +134,15 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="order-first lg:order-last">
-            <EventVideoSlider />
+          <div className="order-first lg:order-last relative">
+            <div className="absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-sky-300/30 via-fuchsia-300/20 to-amber-200/20 blur-xl pointer-events-none" />
+            <div className="relative">
+              <div className="flex items-center gap-1.5 mb-2 ml-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
+                <span className="text-white/80 text-[11px] font-bold uppercase tracking-widest">Happening now</span>
+              </div>
+              <EventVideoSlider />
+            </div>
           </div>
         </div>
       </section>

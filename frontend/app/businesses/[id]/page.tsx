@@ -9,7 +9,7 @@ import { ShareButtons } from "../../../components/ShareButtons";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
 import { recordSignal } from "../../../lib/preferences";
-import { isVideoUrl } from "../../../lib/media";
+import { GalleryThumb } from "../../../components/GalleryThumb";
 
 const PRICE_LABELS: Record<string,string> = { BUDGET:"$ Budget", MODERATE:"$$ Moderate", EXPENSIVE:"$$$ Expensive", LUXURY:"$$$$ Luxury" };
 
@@ -17,6 +17,7 @@ export default function BusinessDetailPage() {
   const { id } = useParams<{ id:string }>();
   const { user } = useAuth(); const router = useRouter(); const toast = useToast();
   const [business, setBusiness] = useState<Business|null>(null);
+  const [coverImgFailed, setCoverImgFailed] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("SPAM");
 
@@ -24,6 +25,7 @@ export default function BusinessDetailPage() {
     api.get(`/businesses/${id}`)
       .then(r => {
         setBusiness(r.data.business);
+        setCoverImgFailed(false);
         const b = r.data.business;
         recordSignal({ businessId:b.id, action:"view", city:b.city, tags:b.tags, category:b.category?.slug });
       })
@@ -58,9 +60,9 @@ export default function BusinessDetailPage() {
           <div className="lg:col-span-2 space-y-5">
             {/* Cover */}
             <div className="relative rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-slate-200 to-slate-300">
-              {business.coverImageUrl
+              {business.coverImageUrl && !coverImgFailed
                 // eslint-disable-next-line @next/next/no-img-element
-                ? <img src={business.coverImageUrl} alt={business.name} className="w-full h-full object-cover" />
+                ? <img src={business.coverImageUrl} alt={business.name} className="w-full h-full object-cover" onError={() => setCoverImgFailed(true)} />
                 : <div className="absolute inset-0 flex items-center justify-center text-7xl">🏪</div>}
               <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                 {business.isVerified && <span className="badge-verif">✓ Verified</span>}
@@ -72,14 +74,7 @@ export default function BusinessDetailPage() {
             {business.galleryUrls && business.galleryUrls.length > 0 && (
               <div className="flex gap-2.5 overflow-x-auto no-scrollbar pb-1">
                 {business.galleryUrls.map((url, i) => (
-                  isVideoUrl(url) ? (
-                    <video key={i} src={url} muted autoPlay loop playsInline
-                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
-                  ) : (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img key={i} src={url} alt={`${business.name} photo ${i + 1}`}
-                      className="w-28 h-20 sm:w-32 sm:h-24 shrink-0 rounded-xl object-cover ring-1 ring-gray-200" />
-                  )
+                  <GalleryThumb key={i} url={url} alt={`${business.name} photo ${i + 1}`} />
                 ))}
               </div>
             )}

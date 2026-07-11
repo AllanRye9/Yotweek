@@ -175,6 +175,14 @@ router.post(
         country: data.country,
       });
 
+      const isFlagged = Boolean(suspiciousHit || duplicateOfId);
+      const settings = await prisma.platformSetting.findUnique({ where: { id: "singleton" } });
+      const owner = await prisma.user.findUnique({ where: { id: req.user!.userId }, select: { isVerifiedOrganizer: true } });
+      const skipReview =
+        !isFlagged &&
+        ((settings && settings.requireBusinessApproval === false) ||
+          (settings?.autoApproveVerified && owner?.isVerifiedOrganizer));
+
       const slug = `${slugify(data.name)}-${Date.now().toString(36)}`;
 
       const business = await prisma.business.create({
@@ -197,10 +205,12 @@ router.post(
           tags: (data.tags || []).map((t: string) => t.toLowerCase()),
           hours: data.hours ?? undefined,
           ownerId: req.user!.userId,
-          // Every listing still requires admin approval regardless of flags -
-          // flags simply surface it more prominently in the review queue.
-          status: "PENDING",
-          isFlagged: Boolean(suspiciousHit || duplicateOfId),
+          // Every listing goes through review by default; admins can relax
+          // this globally from /const/settings. Flagged submissions still
+          // always land in the queue regardless of that setting.
+          status: skipReview ? "APPROVED" : "PENDING",
+          ...(skipReview ? { approvedAt: new Date() } : {}),
+          isFlagged,
           flagReason: suspiciousHit
             ? `Suspicious phrase detected: "${suspiciousHit}"`
             : duplicateOfId
@@ -209,7 +219,7 @@ router.post(
         },
       });
 
-      res.status(201).json({ business, message: "Submitted for admin review" });
+      res.status(201).json({ business, message: skipReview ? "Listing published" : "Submitted for admin review" });
     } catch (err) {
       next(err);
     }
