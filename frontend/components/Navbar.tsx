@@ -111,7 +111,6 @@ export function Navbar() {
   const navBg = scrolled
     ? "bg-white/95 backdrop-blur-xl border-b border-gray-100 shadow-sm"
     : "bg-transparent";
-  const textColor = scrolled ? "text-gray-800" : "text-white";
   const logoAccent = scrolled ? "text-sky-600" : "text-sky-200";
 
   return (

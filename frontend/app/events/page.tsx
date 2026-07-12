@@ -6,18 +6,15 @@ import { EventItem } from "../../lib/types";
 import { EventCard } from "../../components/EventCard";
 import { SkeletonCard } from "../../components/SkeletonCard";
 import { useLocation } from "../../lib/geolocation";
-import { buildProfile } from "../../lib/preferences";
-import { CATEGORIES } from "../navbar";   // <-- shared categories
+import { CATEGORIES } from "../../components/Navbar";
 
 function Content() {
   const sp = useSearchParams();
   const { location } = useLocation();
-  const profile = buildProfile();
   const [events, setEvents] = useState<EventItem[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(sp.get("search") || "");
-  const [searchInput, setSearchInput] = useState(sp.get("search") || "");
   const [category, setCategory] = useState(sp.get("category") || "");
   const [scope, setScope] = useState(sp.get("scope") || "");
   const [priceType, setPriceType] = useState(sp.get("priceType") || "");
@@ -27,7 +24,6 @@ function Content() {
   // Sync with query string changes (for filter links)
   useEffect(() => {
     setSearch(sp.get("search") || "");
-    setSearchInput(sp.get("search") || "");
     setCategory(sp.get("category") || "");
     setScope(sp.get("scope") || "");
     setPriceType(sp.get("priceType") || "");
@@ -87,7 +83,7 @@ function Content() {
           </select>
           {hasFilters && (
             <button
-              onClick={() => { setCategory(""); setScope(""); setPriceType(""); setSearch(""); setSearchInput(""); setPage(1); }}
+              onClick={() => { setCategory(""); setScope(""); setPriceType(""); setSearch(""); setPage(1); }}
               className="px-3 py-2 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors"
             >
               ✕ Clear
