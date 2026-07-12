@@ -6,6 +6,42 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { CurrencySelector } from "./CurrencySelector";
 
+// ---------- Shared categories (source of truth) ----------
+export const CATEGORIES = [
+  { key: "",          label: "All" },
+  { key: "FESTIVAL",          label: "🎪 Festivals" },
+  { key: "WILDLIFE_SAFARI",   label: "🦁 Safari" },
+  { key: "CULTURAL_HERITAGE", label: "🏛️ Culture" },
+  { key: "ADVENTURE_OUTDOOR", label: "⛰️ Adventure" },
+  { key: "CONCERT",           label: "🎵 Concerts" },
+  { key: "FOOD_DRINK",        label: "🍲 Food & Drink" },
+  { key: "GUIDED_TOUR",       label: "🗺️ Tours" },
+  { key: "CONFERENCE",        label: "🎤 Conferences" },
+  { key: "SPORTS",            label: "⚽ Sports" },
+  { key: "NIGHTLIFE",         label: "🌙 Nightlife" },
+  { key: "WORKSHOP",          label: "🛠️ Workshops" },
+  { key: "RELIGIOUS",         label: "🕌 Religious" },
+  { key: "EXHIBITION",        label: "🖼️ Exhibitions" },
+];
+
+// Build the category bar from CATEGORIES (skip "All") plus extra static links
+const CATEGORIES_BAR = CATEGORIES
+  .filter(c => c.key !== "")
+  .map(c => ({
+    href: `/events?category=${c.key}`,
+    label: c.label,
+  }));
+
+const EXTRA_LINKS = [
+  { href: "/communities", label: "🤝 Communities" },
+  { href: "/businesses",  label: "🏪 Businesses" },
+  { href: "/blog",        label: "✍️ Blog" },
+  { href: "/events?priceType=FREE", label: "🆓 Free" },
+];
+
+const FULL_BAR = [...EXTRA_LINKS, ...CATEGORIES_BAR];
+
+// ---------- Explore dropdown links ----------
 const EXPLORE_LINKS = [
   { href:"/events", icon:"🎪", label:"All Events" },
   { href:"/events?priceType=FREE", icon:"🆓", label:"Free Events" },
@@ -16,19 +52,6 @@ const EXPLORE_LINKS = [
   { href:"/communities", icon:"🤝", label:"Communities" },
   { href:"/destinations", icon:"🗺️", label:"Destinations" },
   { href:"/blog", icon:"✍️", label:"Travel Blog" },
-];
-const CATEGORIES_BAR = [
-  { href:"/communities", label:"🤝 Communities" },
-  { href:"/events?category=FESTIVAL", label:"🎪 Festivals" },
-  { href:"/events?category=WILDLIFE_SAFARI", label:"🦁 Safari" },
-  { href:"/events?category=CULTURAL_HERITAGE", label:"🏛️ Culture" },
-  { href:"/events?category=ADVENTURE_OUTDOOR", label:"⛰️ Adventure" },
-  { href:"/events?category=CONCERT", label:"🎵 Concerts" },
-  { href:"/events?category=FOOD_DRINK", label:"🍲 Food & Drink" },
-  { href:"/businesses", label:"🏪 Businesses" },
-  { href:"/events?category=GUIDED_TOUR", label:"🗺️ Tours" },
-  { href:"/blog", label:"✍️ Blog" },
-  { href:"/events?priceType=FREE", label:"🆓 Free" },
 ];
 
 export function Navbar() {
@@ -254,10 +277,10 @@ export function Navbar() {
           </form>
         </div>
 
-        {/* Category bar */}
+        {/* Category bar – now using FULL_BAR (built from shared CATEGORIES + extras) */}
         <div className={`hidden sm:block border-t overflow-x-auto no-scrollbar ${scrolled ? "bg-gray-50 border-gray-100" : "bg-blue-800/50 border-white/10"}`}>
           <div className="max-w-7xl mx-auto px-4 flex gap-0.5 py-1">
-            {CATEGORIES_BAR.map(c => (
+            {FULL_BAR.map(c => (
               <Link key={c.href} href={c.href}
                 className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded transition-colors ${scrolled ? "text-gray-600 hover:bg-sky-50 hover:text-sky-700" : "text-white/75 hover:text-white hover:bg-white/10"}`}>
                 {c.label}
