@@ -2,6 +2,9 @@
 set -euo pipefail
 IFS=$'\n\t'
 
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT_DIR"
+
 usage() {
   cat <<'EOF'
 Usage: ./script.sh [options] [commit-message]
@@ -62,15 +65,15 @@ done
 
 if [[ "$run_migrations" == true ]]; then
   echo "Running backend Prisma migrations..."
-  (cd backend && npm run prisma:migrate:deploy)
+  (cd "$ROOT_DIR/backend" && npm run prisma:migrate:deploy)
 fi
 
 if [[ "$run_build" == true ]]; then
   echo "Building backend..."
-  (cd backend && npm run build)
+  (cd "$ROOT_DIR/backend" && npm run build)
 
   echo "Building frontend..."
-  (cd frontend && npm run build)
+  (cd "$ROOT_DIR/frontend" && npm run build)
 fi
 
 if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
@@ -78,20 +81,27 @@ if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   exit 1
 fi
 
-branch=$(git symbolic-ref --quiet --short HEAD)
-if [[ "$branch" != "main" ]]; then
-  echo "Switching to main branch from '$branch'..."
-  git checkout main
+target_branch="main"
+current_branch="$(git symbolic-ref --quiet --short HEAD 2>/dev/null || true)"
+
+if git show-ref --verify --quiet "refs/heads/$target_branch"; then
+  if [[ "$current_branch" != "$target_branch" ]]; then
+    echo "Switching to $target_branch branch from '${current_branch:-detached HEAD}'..."
+    git checkout "$target_branch"
+  fi
+else
+  echo "Creating local '$target_branch' from origin/$target_branch..."
+  git checkout -B "$target_branch" "origin/$target_branch"
 fi
 
-echo "Pulling latest changes from origin/main..."
-git pull origin main
+echo "Pulling latest changes from origin/$target_branch..."
+git pull --ff-only origin "$target_branch"
 
 if [[ -z "$commit_message" ]]; then
   commit_message="Update: $(date '+%Y-%m-%d %H:%M:%S')"
 fi
 
-git add .
+git add -A
 
 if git diff --cached --quiet --ignore-submodules --; then
   echo "No changes to commit."
@@ -100,7 +110,7 @@ fi
 
 git commit -m "$commit_message"
 
-echo "Pushing committed changes to origin/main..."
-git push origin main
+echo "Pushing committed changes to origin/$target_branch..."
+git push origin "$target_branch"
 
 echo "Done."
