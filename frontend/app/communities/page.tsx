@@ -49,20 +49,6 @@ function Content() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <div className="page-shell">
-          <h1 className="font-extrabold text-2xl sm:text-3xl mb-1">Communities</h1>
-          <p className="text-white/70 text-sm mb-5">Find your people — organized by place, by interest, or both. Promote active and engaging living, together.</p>
-          <div className="flex flex-wrap gap-3">
-            <form onSubmit={e => { e.preventDefault(); setSearch(searchInput); }} className="flex gap-2 max-w-xl flex-1">
-              <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Search communities…" className="input-base flex-1 !text-sm" />
-              <button type="submit" className="btn-primary !px-5 !rounded-xl shrink-0">Search</button>
-            </form>
-            <Link href="/communities/create" className="btn-secondary !px-5 !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20 shrink-0">+ Start a community</Link>
-          </div>
-        </div>
-      </div>
-
       <div className="page-shell py-9">
         <p className="text-xs text-gray-400 mb-4">{total.toLocaleString()} communit{total !== 1 ? "ies" : "y"}</p>
         {loading ? (
