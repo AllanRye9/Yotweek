@@ -110,11 +110,14 @@ export interface UserSignal {
   ts: number;
 }
 
+export type CommunityStatus = "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN";
+
 export interface Community {
   id: string; name: string; slug: string; description: string;
   coverImageUrl?: string | null;
   city?: string | null; country?: string | null; interestTag?: string | null;
+  status: CommunityStatus; rejectedReason?: string | null;
   isFeatured: boolean; createdAt: string;
   creator: { id: string; name: string; organizationName?: string | null };
-  _count: { members: number; events: number; businesses: number };
+  _count: { members: number; events: number; businesses: number; posts?: number };
 }

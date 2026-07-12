@@ -274,6 +274,103 @@ router.delete("/reviews/:id", async (req, res, next) => {
   }
 });
 
+// ─── Community moderation & admin authority ──────────────────────────────
+// Mirrors the events/businesses review-queue pattern: pending queue,
+// flagged-equivalent (none yet - communities don't have a report flow),
+// full searchable list, edit, feature, delete.
+
+router.get("/communities/pending", async (_req, res, next) => {
+  try {
+    const communities = await prisma.community.findMany({
+      where: { status: "PENDING" },
+      orderBy: { createdAt: "asc" },
+      include: { creator: { select: { id: true, name: true, email: true, organizationName: true, isVerifiedOrganizer: true } } },
+    });
+    res.json({ communities });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get("/communities/all", async (req, res, next) => {
+  try {
+    const { q, status } = req.query as { q?: string; status?: string };
+    const communities = await prisma.community.findMany({
+      where: {
+        ...(status ? { status: status as any } : {}),
+        ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
+      },
+      orderBy: { createdAt: "desc" },
+      include: {
+        creator: { select: { id: true, name: true, email: true, organizationName: true } },
+        _count: { select: { members: true, events: true, businesses: true, posts: true } },
+      },
+      take: 100,
+    });
+    res.json({ communities });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/communities/:id/approve", async (req, res, next) => {
+  try {
+    const community = await prisma.community.update({ where: { id: req.params.id }, data: { status: "APPROVED", rejectedReason: null } });
+    res.json({ community });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/communities/:id/reject", async (req, res, next) => {
+  try {
+    const { reason } = req.body;
+    const community = await prisma.community.update({ where: { id: req.params.id }, data: { status: "REJECTED", rejectedReason: reason || null } });
+    res.json({ community });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post("/communities/:id/hide", async (req, res, next) => {
+  try {
+    const community = await prisma.community.update({ where: { id: req.params.id }, data: { status: "HIDDEN" } });
+    res.json({ community });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.put("/communities/:id", async (req, res, next) => {
+  try {
+    const { name, description, isFeatured } = req.body;
+    const community = await prisma.community.update({
+      where: { id: req.params.id },
+      data: {
+        ...(name !== undefined ? { name } : {}),
+        ...(description !== undefined ? { description } : {}),
+        ...(isFeatured !== undefined ? { isFeatured } : {}),
+      },
+    });
+    res.json({ community });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.delete("/communities/:id", async (req, res, next) => {
+  try {
+    await prisma.$transaction([
+      prisma.event.updateMany({ where: { communityId: req.params.id }, data: { communityId: null } }),
+      prisma.business.updateMany({ where: { communityId: req.params.id }, data: { communityId: null } }),
+      prisma.community.delete({ where: { id: req.params.id } }),
+    ]);
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── Business directory moderation (mirrors the event queue above) ──────
 
 router.get("/businesses/pending", async (_req, res, next) => {
@@ -551,6 +648,7 @@ router.get("/overview", async (_req, res, next) => {
       pendingEvents, flaggedEvents, pendingReports, totalUsers, totalEvents,
       pendingBusinesses, flaggedBusinesses, totalBusinesses,
       pendingReviews, pendingBusinessReviews, pendingTestimonials,
+      pendingCommunities, totalCommunities, totalPosts,
     ] = await Promise.all([
       prisma.event.count({ where: { status: "PENDING" } }),
       prisma.event.count({ where: { OR: [{ isFlagged: true }, { reportCount: { gt: 0 } }] } }),
@@ -563,11 +661,15 @@ router.get("/overview", async (_req, res, next) => {
       prisma.review.count({ where: { status: "PENDING" } }),
       prisma.businessReview.count({ where: { status: "PENDING" } }),
       prisma.testimonial.count({ where: { status: "PENDING" } }),
+      prisma.community.count({ where: { status: "PENDING" } }),
+      prisma.community.count(),
+      prisma.post.count(),
     ]);
     res.json({
       pendingEvents, flaggedEvents, pendingReports, totalUsers, totalEvents,
       pendingBusinesses, flaggedBusinesses, totalBusinesses,
       pendingReviews, pendingBusinessReviews, pendingTestimonials,
+      pendingCommunities, totalCommunities, totalPosts,
     });
   } catch (err) {
     next(err);

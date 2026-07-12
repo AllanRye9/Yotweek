@@ -15,18 +15,21 @@ function Content() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState(sp.get("search") || "");
+  const [searchInput, setSearchInput] = useState(sp.get("search") || "");
   const [category, setCategory] = useState(sp.get("category") || "");
   const [scope, setScope] = useState(sp.get("scope") || "");
   const [priceType, setPriceType] = useState(sp.get("priceType") || "");
   const [page, setPage] = useState(1);
-  const [sortBy, setSortBy] = useState("startDate");
+  const [sortBy, setSortBy] = useState(sp.get("sortBy") || "startDate");
 
   // Sync with query string changes (for filter links)
   useEffect(() => {
     setSearch(sp.get("search") || "");
+    setSearchInput(sp.get("search") || "");
     setCategory(sp.get("category") || "");
     setScope(sp.get("scope") || "");
     setPriceType(sp.get("priceType") || "");
+    setSortBy(sp.get("sortBy") || "startDate");
     setPage(1);
   }, [sp]);
 
@@ -67,6 +70,15 @@ function Content() {
 
         {/* Filter row */}
         <div className="flex flex-wrap gap-3 mb-6 items-center">
+          <form onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); setPage(1); }} className="flex gap-2">
+            <input
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search events…"
+              className="input-base !w-48 sm:!w-64 !py-2 !text-xs"
+            />
+            <button type="submit" className="btn-secondary !px-3 !py-2 !text-xs">🔍</button>
+          </form>
           <select value={scope} onChange={e => { setScope(e.target.value); setPage(1); }} className="input-base !w-auto !py-2 !text-xs">
             <option value="">🌐 All scope</option>
             <option value="LOCAL">📍 Local</option>
@@ -83,7 +95,7 @@ function Content() {
           </select>
           {hasFilters && (
             <button
-              onClick={() => { setCategory(""); setScope(""); setPriceType(""); setSearch(""); setPage(1); }}
+              onClick={() => { setCategory(""); setScope(""); setPriceType(""); setSearch(""); setSearchInput(""); setPage(1); }}
               className="px-3 py-2 rounded-xl text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 border border-red-100 transition-colors"
             >
               ✕ Clear

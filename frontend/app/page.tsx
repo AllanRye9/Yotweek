@@ -231,6 +231,14 @@ export default function HomePage() {
         )}
       </section>
 
+      {/* ── TRENDING ─────────────────────────────────────────── */}
+      {trending.length > 0 && (
+        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+          <SectionTitle link="/events?sortBy=viewCount">🔥 Trending events</SectionTitle>
+          <div className="listing-grid-3 stagger">{trending.map(e => <EventCard key={e.id} event={e} />)}</div>
+        </section>
+      )}
+
       {/* ── TRAVEL BLOG ──────────────────────────────────────── */}
       {posts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">

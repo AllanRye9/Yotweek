@@ -276,17 +276,22 @@ export function Navbar() {
           </form>
         </div>
 
-        {/* Category bar – now using FULL_BAR (built from shared CATEGORIES + extras) */}
-        <div className={`hidden sm:block border-t overflow-x-auto no-scrollbar ${scrolled ? "bg-gray-50 border-gray-100" : "bg-blue-800/50 border-white/10"}`}>
-          <div className="max-w-7xl mx-auto px-4 flex gap-0.5 py-1">
-            {FULL_BAR.map(c => (
-              <Link key={c.href} href={c.href}
-                className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded transition-colors ${scrolled ? "text-gray-600 hover:bg-sky-50 hover:text-sky-700" : "text-white/75 hover:text-white hover:bg-white/10"}`}>
-                {c.label}
-              </Link>
-            ))}
+        {/* Category bar – built from shared CATEGORIES + extras. Hidden on
+            /events specifically, since that page renders its own
+            interactive (instant, stateful) version of the same categories
+            directly below — showing both was a literal duplicate filter row. */}
+        {!pathname.startsWith("/events") && (
+          <div className={`hidden sm:block border-t overflow-x-auto no-scrollbar ${scrolled ? "bg-gray-50 border-gray-100" : "bg-blue-800/50 border-white/10"}`}>
+            <div className="max-w-7xl mx-auto px-4 flex gap-0.5 py-1">
+              {FULL_BAR.map(c => (
+                <Link key={c.href} href={c.href}
+                  className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded transition-colors ${scrolled ? "text-gray-600 hover:bg-sky-50 hover:text-sky-700" : "text-white/75 hover:text-white hover:bg-white/10"}`}>
+                  {c.label}
+                </Link>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* Mobile overlay */}

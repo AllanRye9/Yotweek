@@ -24,12 +24,15 @@ export default function AdminPage() {
   const cards = [
     { label: "Pending listings", value: overview?.pendingEvents, href: "/const/events", icon: "⏳", bg: "bg-amber-50 text-amber-600" },
     { label: "Pending businesses", value: overview?.pendingBusinesses, href: "/const/businesses", icon: "🏪", bg: "bg-teal-50 text-teal-600" },
+    { label: "Pending communities", value: overview?.pendingCommunities, href: "/const/communities", icon: "🤝", bg: "bg-cyan-50 text-cyan-600" },
     { label: "Flagged listings", value: (overview?.flaggedEvents ?? 0) + (overview?.flaggedBusinesses ?? 0), href: "/const/events", icon: "⚠️", bg: "bg-red-50 text-red-600" },
     { label: "Open reports", value: overview?.pendingReports, href: "/const/reports", icon: "🚩", bg: "bg-rose-50 text-rose-600" },
     { label: "Pending reviews", value: (overview?.pendingReviews ?? 0) + (overview?.pendingBusinessReviews ?? 0), href: "/const/reviews", icon: "💬", bg: "bg-fuchsia-50 text-fuchsia-600" },
     { label: "Total users", value: overview?.totalUsers, href: "/const/users", icon: "👥", bg: "bg-sky-50 text-sky-600" },
     { label: "Total events", value: overview?.totalEvents, href: "/const/events", icon: "🎪", bg: "bg-indigo-50 text-indigo-600" },
     { label: "Total businesses", value: overview?.totalBusinesses, href: "/const/businesses", icon: "🗺️", bg: "bg-emerald-50 text-emerald-600" },
+    { label: "Total communities", value: overview?.totalCommunities, href: "/const/communities", icon: "🌍", bg: "bg-violet-50 text-violet-600" },
+    { label: "Total posts", value: overview?.totalPosts, href: "/const/communities", icon: "📝", bg: "bg-orange-50 text-orange-600" },
   ];
 
   const engagement = analytics ? [

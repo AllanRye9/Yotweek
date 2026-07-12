@@ -50,7 +50,21 @@ function Content() {
   return (
     <div className="animate-fade-in">
       <div className="page-shell py-9">
-        <p className="text-xs text-gray-400 mb-4">{total.toLocaleString()} communit{total !== 1 ? "ies" : "y"}</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <form onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); }} className="flex gap-2">
+            <input
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search communities…"
+              className="input-base !w-48 sm:!w-64 !py-2 !text-xs"
+            />
+            <button type="submit" className="btn-secondary !px-3 !py-2 !text-xs">🔍</button>
+          </form>
+          <div className="flex items-center gap-4">
+            <p className="text-xs text-gray-400">{total.toLocaleString()} communit{total !== 1 ? "ies" : "y"}</p>
+            <Link href="/communities/mine" className="text-xs font-semibold text-sky-600 hover:text-sky-700">👤 My communities</Link>
+          </div>
+        </div>
         {loading ? (
           <div className="listing-grid-3">{[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}</div>
         ) : communities.length === 0 ? (

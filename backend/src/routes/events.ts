@@ -39,6 +39,7 @@ router.get("/", optionalAuth, async (req, res, next) => {
       startBefore,
       language,
       when, // "past" | "upcoming" (default: upcoming)
+      sortBy, // "startDate" (default) | "viewCount"
       page = "1",
       pageSize = "20",
     } = req.query as Record<string, string>;
@@ -75,7 +76,7 @@ router.get("/", optionalAuth, async (req, res, next) => {
 
     let events = await prisma.event.findMany({
       where,
-      orderBy: { startDate: when === "past" ? "desc" : "asc" },
+      orderBy: sortBy === "viewCount" ? { viewCount: "desc" } : { startDate: when === "past" ? "desc" : "asc" },
       include: {
         organizer: { select: { id: true, name: true, organizationName: true, isVerifiedOrganizer: true } },
         _count: { select: { reviews: true, bookings: true } },

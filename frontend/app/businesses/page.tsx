@@ -70,6 +70,15 @@ function Content() {
         </div>
         {/* Filters */}
         <div className="flex flex-wrap gap-3 mb-6 items-center">
+          <form onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); setPage(1); }} className="flex gap-2">
+            <input
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+              placeholder="Search businesses…"
+              className="input-base !w-48 sm:!w-64 !py-2 !text-xs"
+            />
+            <button type="submit" className="btn-secondary !px-3 !py-2 !text-xs">🔍</button>
+          </form>
           <select value={priceRange} onChange={e => setPriceRange(e.target.value)} className="input-base !w-auto !py-2 !text-xs">
             <option value="">💰 Any price range</option>
             <option value="BUDGET">$ Budget</option>

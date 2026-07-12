@@ -39,7 +39,7 @@ export default function CalendarPage() {
       })
       .then((res) => setEvents(res.data.events))
       .catch(() => setEvents([]));
-  }, [monthStart.getTime(), monthEnd.getTime()]);
+  }, [gridStart.getTime(), gridEnd.getTime()]);
 
   const eventsByDay = useMemo(() => {
     const map = new Map<string, EventItem[]>();
