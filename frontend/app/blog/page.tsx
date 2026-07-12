@@ -14,12 +14,6 @@ export default function BlogPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="font-extrabold text-2xl sm:text-3xl mb-1">Travel Blog</h1>
-          <p className="text-white/70 text-sm">Stories, guides, and inspiration from our community.</p>
-        </div>
-      </div>
       <div className="max-w-7xl mx-auto px-6 sm:px-9 py-12">
         {loading ? (
           <div className="listing-grid-3">{[...Array(6)].map((_,i) => <SkeletonCard key={i} />)}</div>
