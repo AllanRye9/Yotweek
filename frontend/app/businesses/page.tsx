@@ -58,16 +58,6 @@ function Content() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header">
-        <div className="max-w-7xl mx-auto">
-          <h1 className="font-extrabold text-2xl sm:text-3xl mb-1">Businesses & Places</h1>
-          <p className="text-white/70 text-sm mb-5">Restaurants, hotels, tour operators, and more — verified and reviewed.</p>
-          <form onSubmit={e => { e.preventDefault(); setSearch(searchInput); setPage(1); }} className="flex gap-2 max-w-xl">
-            <input value={searchInput} onChange={e => setSearchInput(e.target.value)} placeholder="Search businesses…" className="input-base flex-1 !text-sm" />
-            <button type="submit" className="btn-primary !px-5 !rounded-xl shrink-0">Search</button>
-          </form>
-        </div>
-      </div>
       <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
         {/* Category pills */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
