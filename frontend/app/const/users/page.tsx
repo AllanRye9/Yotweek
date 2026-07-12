@@ -55,14 +55,14 @@ export default function AdminUsersPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-4 sm:px-6 py-7">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11">
         <div className="max-w-7xl mx-auto">
           <h1 className="font-extrabold text-2xl">User Management</h1>
           <p className="text-white/70 text-sm mt-1">Verify organizers, suspend accounts, and manage roles.</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
         <form onSubmit={onSearch} className="flex gap-2 mb-6 max-w-md">
           <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by name, email, organization…" className="input-base flex-1" />
           <button type="submit" className="btn-primary !px-5">Search</button>

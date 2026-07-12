@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "./Toast";
-import { isVideoUrl } from "../lib/media";
+import { GalleryThumb } from "./GalleryThumb";
 
 const ACCEPTED = "image/jpeg,image/png,image/webp,image/gif";
 const ACCEPTED_GALLERY = "image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm,video/quicktime";
@@ -142,12 +142,7 @@ export function ImageUrlInput({
           <div className="flex flex-wrap gap-2 mt-3">
             {galleryUrls.map(url => (
               <div key={url} className="relative w-16 h-16 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 group">
-                {isVideoUrl(url) ? (
-                  <video src={url} muted autoPlay loop playsInline className="w-full h-full object-cover" />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={url} alt="Gallery preview" className="w-full h-full object-cover" />
-                )}
+                <GalleryThumb url={url} alt="Gallery preview" className="w-16 h-16" />
                 <button type="button" onClick={() => removeGalleryUrl(url)}
                   className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
                   Remove

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
+import { CurrencySelector } from "./CurrencySelector";
 
 const EXPLORE_LINKS = [
   { href:"/events", icon:"🎪", label:"All Events" },
@@ -12,10 +13,12 @@ const EXPLORE_LINKS = [
   { href:"/businesses", icon:"🏪", label:"Businesses & Places" },
   { href:"/businesses?category=food", icon:"🍽️", label:"Food & Dining" },
   { href:"/businesses?category=accommodation", icon:"🏨", label:"Accommodation" },
+  { href:"/communities", icon:"🤝", label:"Communities" },
   { href:"/destinations", icon:"🗺️", label:"Destinations" },
   { href:"/blog", icon:"✍️", label:"Travel Blog" },
 ];
 const CATEGORIES_BAR = [
+  { href:"/communities", label:"🤝 Communities" },
   { href:"/events?category=FESTIVAL", label:"🎪 Festivals" },
   { href:"/events?category=WILDLIFE_SAFARI", label:"🦁 Safari" },
   { href:"/events?category=CULTURAL_HERITAGE", label:"🏛️ Culture" },
@@ -91,7 +94,7 @@ export function Navbar() {
   return (
     <>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? navBg : "bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700"}`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center h-14 sm:h-16 gap-3">
+        <div className="max-w-7xl mx-auto px-6 sm:px-9 flex items-center h-14 sm:h-16 gap-3">
 
           {/* Hamburger */}
           <button className={`md:hidden p-2 rounded-lg transition-colors ${scrolled ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"}`}
@@ -160,6 +163,9 @@ export function Navbar() {
               + List
             </Link>
 
+            {/* Currency */}
+            <CurrencySelector dark={!scrolled} />
+
             {/* Notifications */}
             {user && (
               <div ref={notifRef} className="relative">
@@ -177,7 +183,7 @@ export function Navbar() {
                     </div>
                     <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
                       {notifs.length === 0
-                        ? <p className="text-center text-sm text-gray-400 py-6">All caught up!</p>
+                        ? <p className="text-center text-sm text-gray-400 py-9">All caught up!</p>
                         : notifs.map(n => (
                           <div key={n.id} className={`px-4 py-3 ${!n.read ? "bg-sky-50/50" : ""}`}>
                             <p className="text-xs text-gray-800">{n.message}</p>
@@ -289,6 +295,7 @@ export function Navbar() {
             { href:"/", icon:"🏠", label:"Home" },
             { href:"/events", icon:"🎪", label:"Browse Events" },
             { href:"/businesses", icon:"🏪", label:"Businesses & Places" },
+            { href:"/communities", icon:"🤝", label:"Communities" },
             { href:"/destinations", icon:"🗺️", label:"Destinations" },
             { href:"/blog", icon:"✍️", label:"Travel Blog" },
             { href:"/itinerary", icon:"📅", label:"Itinerary Builder" },
@@ -308,6 +315,12 @@ export function Navbar() {
               <span style={{fontSize:"1.3rem",lineHeight:1,width:"1.6rem",textAlign:"center",display:"inline-block"}}>⚙️</span> Admin Panel
             </Link>
           )}
+          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-gray-50">
+            <span className="flex items-center gap-3 text-sm font-medium text-gray-700">
+              <span style={{fontSize:"1.3rem",lineHeight:1,width:"1.6rem",textAlign:"center",display:"inline-block"}}>💱</span> Display currency
+            </span>
+            <CurrencySelector />
+          </div>
           {user ? (
             <div className="px-5 py-4">
               <button onClick={logout} className="w-full py-2.5 rounded-xl bg-red-50 text-red-600 font-semibold text-sm border border-red-100">Sign Out</button>

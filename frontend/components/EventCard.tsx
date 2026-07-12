@@ -4,6 +4,8 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { EventItem } from "../lib/types";
 import { recordSignal } from "../lib/preferences";
+import { useCurrency } from "../context/CurrencyContext";
+import { formatMoney } from "../lib/currency";
 
 const CAT_ICON: Record<string, string> = {
   FESTIVAL:"🎪", CONFERENCE:"🎤", CONCERT:"🎵", SPORTS:"⚽",
@@ -23,8 +25,15 @@ const CAT_GRAD: Record<string, string> = {
 
 export function EventCard({ event, algoSource }: { event: EventItem; algoSource?: string }) {
   const [imgFailed, setImgFailed] = useState(!event.coverImageUrl);
+  const { currency: displayCurrency, convert } = useCurrency();
   const grad = CAT_GRAD[event.category] || "from-sky-400 to-indigo-500";
   const icon = CAT_ICON[event.category] || "🌍";
+
+  const rawAmount = Number(event.price) || 0;
+  const converted = event.currency && event.currency !== displayCurrency ? convert(rawAmount, event.currency) : rawAmount;
+  const priceLabel = converted === null
+    ? formatMoney(rawAmount, event.currency || "USD")
+    : formatMoney(converted, event.currency !== displayCurrency ? displayCurrency : (event.currency || "USD"));
 
   const handleClick = () => {
     recordSignal({
@@ -51,7 +60,7 @@ export function EventCard({ event, algoSource }: { event: EventItem; algoSource?
         {/* Top badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
           <span className={event.priceType === "FREE" ? "badge-free" : "badge-paid"}>
-            {event.priceType === "FREE" ? "FREE" : `${event.currency} ${Number(event.price).toLocaleString()}`}
+            {event.priceType === "FREE" ? "FREE" : priceLabel}
           </span>
           {event.scope === "INTERNATIONAL" && <span className="badge-intl">🌍 Intl</span>}
           {event.organizer?.isVerifiedOrganizer && <span className="badge-verif">✓ Verified</span>}

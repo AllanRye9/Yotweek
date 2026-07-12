@@ -20,7 +20,7 @@ export default function BlogPage() {
           <p className="text-white/70 text-sm">Stories, guides, and inspiration from our community.</p>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-12">
         {loading ? (
           <div className="listing-grid-3">{[...Array(6)].map((_,i) => <SkeletonCard key={i} />)}</div>
         ) : posts.length===0 ? (

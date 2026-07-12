@@ -74,8 +74,8 @@
   .badge-live  { @apply badge bg-green-100 text-green-700; }
 
   /* Layout */
-  .page-shell  { @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8; }
-  .page-header { @apply bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700 text-white px-4 sm:px-6 py-10; }
+  .page-shell  { @apply max-w-7xl mx-auto px-6 sm:px-9 lg:px-12; }
+  .page-header { @apply bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700 text-white px-6 sm:px-9 py-[3.75rem]; }
 
   /* Grid – adapts from 1→2→3→4 cols */
   .listing-grid {

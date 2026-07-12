@@ -64,7 +64,7 @@ export default function ItineraryPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
         {showForm && (
           <form onSubmit={create} className="card-base p-5 mb-6 animate-fade-up">
             <h2 className="font-bold text-gray-900 mb-4">New itinerary</h2>

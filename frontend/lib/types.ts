@@ -38,7 +38,7 @@ export interface Business {
   priceRange?: "BUDGET" | "MODERATE" | "EXPENSIVE" | "LUXURY" | null;
   address?: string | null; city: string; country: string;
   latitude?: number | null; longitude?: number | null;
-  coverImageUrl?: string | null; galleryUrls: string[]; tags: string[];
+  coverImageUrl?: string | null; logoUrl?: string | null; galleryUrls: string[]; tags: string[];
   hours?: Record<string, string> | null;
   status: "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN" | "CLOSED";
   isVerified: boolean; viewCount: number; reportCount: number;
@@ -108,4 +108,13 @@ export interface UserSignal {
   durationMs?: number;
   category?: string; city?: string; tags?: string[];
   ts: number;
+}
+
+export interface Community {
+  id: string; name: string; slug: string; description: string;
+  coverImageUrl?: string | null;
+  city?: string | null; country?: string | null; interestTag?: string | null;
+  isFeatured: boolean; createdAt: string;
+  creator: { id: string; name: string; organizationName?: string | null };
+  _count: { members: number; events: number; businesses: number };
 }

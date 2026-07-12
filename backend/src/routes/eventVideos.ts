@@ -4,8 +4,10 @@ import { requireAuth, canUploadEventVideos, AuthRequest } from "../middleware/au
 
 const router = Router();
 
-// GET /api/event-videos - approved, active clips for the homepage
-// past/upcoming events video slider. Optional ?timing=PAST|UPCOMING filter.
+// GET /api/event-videos - approved, active clips for the homepage's compact
+// video slideshow. Optional ?timing=PAST|UPCOMING filter (unused by the
+// current UI, which mixes both into one slideshow, but kept for API
+// flexibility / the admin moderation view).
 router.get("/", async (req, res, next) => {
   try {
     const { timing } = req.query;

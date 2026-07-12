@@ -8,6 +8,9 @@ import { EventCard } from "../../components/EventCard";
 import { SkeletonCard } from "../../components/SkeletonCard";
 import { buildProfile } from "../../lib/preferences";
 import { useToast } from "../../components/Toast";
+import { getYouTubeId } from "../../lib/media";
+import { useCurrency } from "../../context/CurrencyContext";
+import { formatMoney } from "../../lib/currency";
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   AreaChart, Area, PieChart, Pie, Cell,
@@ -22,6 +25,7 @@ const SP: Record<string,string> = {
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const toast = useToast();
+  const { currency: displayCurrency, convert } = useCurrency();
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [savedEvents, setSavedEvents] = useState<any[]>([]);
@@ -158,7 +162,7 @@ export default function DashboardPage() {
       </div>
 
       {payouts && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-4 mb-4 relative z-10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-9 -mt-4 mb-4 relative z-10">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="card-base p-4 text-center"><p className="text-xs text-gray-400 mb-1">Total payout</p><p className="font-extrabold text-xl text-emerald-600">{Number(payouts.totalPayout).toLocaleString()}</p></div>
             <div className="card-base p-4 text-center"><p className="text-xs text-gray-400 mb-1">Platform fees</p><p className="font-extrabold text-xl text-gray-700">{Number(payouts.totalCommission).toLocaleString()}</p></div>
@@ -167,7 +171,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-1">
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key as any)} className={tab===t.key?"tab-pill-active":"tab-pill-inactive"}>
@@ -340,7 +344,12 @@ export default function DashboardPage() {
                   <div key={b.id} className="card-base p-4 flex flex-wrap items-center gap-4">
                     <div className="flex-1 min-w-0">
                       <Link href={`/events/${b.event.id}`} className="font-bold text-gray-900 hover:text-sky-600 truncate block">{b.event.title}</Link>
-                      <p className="text-xs text-gray-400 mt-0.5">{format(new Date(b.event.startDate),"d MMM yyyy")} · {b.quantity} ticket{b.quantity>1?"s":""} · {b.currency} {Number(b.totalAmount).toLocaleString()}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{format(new Date(b.event.startDate),"d MMM yyyy")} · {b.quantity} ticket{b.quantity>1?"s":""} · {(() => {
+                        const amt = Number(b.totalAmount) || 0;
+                        const from = b.currency || "USD";
+                        const c = from !== displayCurrency ? convert(amt, from) : amt;
+                        return c === null ? formatMoney(amt, from) : formatMoney(c, from !== displayCurrency ? displayCurrency : from);
+                      })()}</p>
                     </div>
                     <span className={`badge ${SP[b.status]||"bg-gray-100 text-gray-600"}`}>{b.status}</span>
                   </div>
@@ -361,14 +370,14 @@ export default function DashboardPage() {
                   <span className="algo-chip">🎯 AI-powered</span>
                 </div>
                 {!profile.hasData ? (
-                  <div className="text-center py-8">
+                  <div className="text-center py-12">
                     <p className="text-4xl mb-3">🧠</p>
                     <p className="font-semibold text-gray-700 mb-1">No profile yet</p>
                     <p className="text-gray-400 text-sm max-w-sm mx-auto">Browse events and businesses to build your personalized interest profile. The more you explore, the better your recommendations get.</p>
                     <Link href="/events" className="btn-primary !px-6 !py-2.5 mt-4 inline-flex">Start exploring</Link>
                   </div>
                 ) : (
-                  <div className="grid sm:grid-cols-3 gap-6">
+                  <div className="grid sm:grid-cols-3 gap-9">
                     <div>
                       <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wide">Top categories</h3>
                       <div className="space-y-2">
@@ -448,6 +457,8 @@ export default function DashboardPage() {
                       <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
                         {uploadingVideo ? (
                           <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                        ) : videoForm.videoUrl && getYouTubeId(videoForm.videoUrl) ? (
+                          <span className="text-xl">▶️</span>
                         ) : videoForm.videoUrl ? (
                           <video src={videoForm.videoUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
                         ) : (
@@ -459,7 +470,16 @@ export default function DashboardPage() {
                         {uploadingVideo ? "Uploading…" : videoForm.videoUrl ? "Change video" : "Upload video"}
                       </label>
                     </div>
-                    <p className="text-xs text-gray-400 mt-1">MP4, WEBM, or MOV — up to 50MB.</p>
+                    <p className="text-xs text-gray-400 mt-1 mb-2">MP4, WEBM, or MOV — up to 50MB.</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="h-px flex-1 bg-gray-200" /><span className="text-[11px] text-gray-400">or</span><div className="h-px flex-1 bg-gray-200" />
+                    </div>
+                    <input
+                      value={videoForm.videoUrl && getYouTubeId(videoForm.videoUrl) ? videoForm.videoUrl : ""}
+                      onChange={e => setVideoForm(f => ({ ...f, videoUrl: e.target.value }))}
+                      className="input-base"
+                      placeholder="Paste a YouTube link — https://youtube.com/watch?v=…"
+                    />
                   </div>
                   <button type="submit" disabled={submittingVideo} className="btn-primary !px-5 !py-2.5 w-full !justify-center">
                     {submittingVideo ? "Submitting…" : "Submit clip"}

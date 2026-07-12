@@ -5,6 +5,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
 import { AdminGuard } from "../../../components/AdminGuard";
 import { EventVideo, EventVideoStatus } from "../../../lib/types";
+import { getYouTubeId } from "../../../lib/media";
 
 const EMPTY = { title: "", caption: "", videoUrl: "", thumbnailUrl: "", timing: "UPCOMING" as "PAST" | "UPCOMING", eventId: "", sortOrder: 0 };
 
@@ -111,14 +112,14 @@ export default function AdminEventVideosPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-4 sm:px-6 py-7">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11">
         <div className="max-w-7xl mx-auto">
           <h1 className="font-extrabold text-2xl">Homepage Event Videos</h1>
           <p className="text-white/70 text-sm mt-1">Review clips submitted by verified organizers, or add your own for the past/upcoming events slider.</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9 grid gap-9 lg:grid-cols-[380px_1fr]">
         {/* Add / edit form */}
         <form onSubmit={submit} className="card-base p-5 h-fit space-y-3">
           <h2 className="font-bold text-gray-900 mb-1">{editingId ? "Edit clip" : "Add a new clip"}</h2>
@@ -148,6 +149,8 @@ export default function AdminEventVideosPage() {
               <div className="w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex items-center justify-center">
                 {uploadingMedia ? (
                   <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
+                ) : form.videoUrl && getYouTubeId(form.videoUrl) ? (
+                  <span className="text-xl">▶️</span>
                 ) : form.videoUrl ? (
                   <video src={form.videoUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
                 ) : (
@@ -159,7 +162,19 @@ export default function AdminEventVideosPage() {
                 {uploadingMedia ? "Uploading…" : form.videoUrl ? "Change video" : "Upload video"}
               </label>
             </div>
-            <p className="text-xs text-gray-400 mt-1">MP4, WEBM, or MOV — up to 50MB.</p>
+            <p className="text-xs text-gray-400 mt-1 mb-2">MP4, WEBM, or MOV — up to 50MB.</p>
+            <div className="flex items-center gap-2 mb-1">
+              <div className="h-px flex-1 bg-gray-200" /><span className="text-[11px] text-gray-400">or</span><div className="h-px flex-1 bg-gray-200" />
+            </div>
+            <input
+              value={form.videoUrl && getYouTubeId(form.videoUrl) ? form.videoUrl : ""}
+              onChange={e => u("videoUrl", e.target.value)}
+              className="input-base"
+              placeholder="Paste a YouTube link — https://youtube.com/watch?v=…"
+            />
+            {form.videoUrl && !getYouTubeId(form.videoUrl) && !uploadingMedia && form.videoUrl.startsWith("http") && !form.videoUrl.match(/\.(mp4|webm|mov)/i) && (
+              <p className="text-xs text-amber-600 mt-1">That doesn't look like a YouTube link — paste a youtube.com or youtu.be URL.</p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Thumbnail URL <span className="text-gray-400 font-normal">(optional)</span></label>
@@ -201,7 +216,12 @@ export default function AdminEventVideosPage() {
               {filtered.map((v, i) => (
                 <div key={v.id} className="card-base p-4 flex gap-4 items-center">
                   <div className="w-24 h-16 rounded-lg overflow-hidden bg-slate-800 shrink-0 relative">
-                    <video src={v.videoUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
+                    {getYouTubeId(v.videoUrl) ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={`https://img.youtube.com/vi/${getYouTubeId(v.videoUrl)}/mqdefault.jpg`} alt={v.title} className="w-full h-full object-cover" />
+                    ) : (
+                      <video src={v.videoUrl} muted autoPlay loop playsInline className="w-full h-full object-cover" />
+                    )}
                     {!v.isActive && <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-[10px] font-bold text-white">HIDDEN</div>}
                   </div>
                   <div className="flex-1 min-w-0">

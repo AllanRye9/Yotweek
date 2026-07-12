@@ -34,6 +34,7 @@ router.get("/", optionalAuth, async (req, res, next) => {
       categoryId,
       priceRange,
       search,
+      sortBy, // "name" (default) | "newest" | "viewCount"
       page = "1",
       pageSize = "20",
     } = req.query as Record<string, string>;
@@ -54,9 +55,12 @@ router.get("/", optionalAuth, async (req, res, next) => {
     const take = Math.min(parseInt(pageSize, 10) || 20, 50);
     const skip = (Math.max(parseInt(page, 10) || 1, 1) - 1) * take;
 
+    const orderBy: { name: "asc" } | { createdAt: "desc" } | { viewCount: "desc" } =
+      sortBy === "newest" ? { createdAt: "desc" } : sortBy === "viewCount" ? { viewCount: "desc" } : { name: "asc" };
+
     const businesses = await prisma.business.findMany({
       where,
-      orderBy: { name: "asc" },
+      orderBy,
       include: {
         category: { select: { id: true, name: true, slug: true } },
         owner: { select: { id: true, name: true, organizationName: true, isVerifiedOrganizer: true } },
@@ -79,7 +83,7 @@ router.get("/", optionalAuth, async (req, res, next) => {
         (b) => b.distanceKm === null || b.distanceKm <= parseFloat(radiusKm)
       );
     }
-    if (lat && lng) {
+    if (lat && lng && !sortBy) {
       withDistance.sort((a, b) => (a.distanceKm ?? Infinity) - (b.distanceKm ?? Infinity));
     }
 
@@ -201,6 +205,8 @@ router.post(
           latitude: data.latitude,
           longitude: data.longitude,
           coverImageUrl: data.coverImageUrl,
+          logoUrl: data.logoUrl,
+          communityId: data.communityId || undefined,
           galleryUrls: data.galleryUrls || [],
           tags: (data.tags || []).map((t: string) => t.toLowerCase()),
           hours: data.hours ?? undefined,
@@ -236,7 +242,7 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res, next) => {
 
     const {
       name, description, categoryId, phone, email, website, priceRange,
-      address, city, country, latitude, longitude, coverImageUrl, galleryUrls, tags, hours,
+      address, city, country, latitude, longitude, coverImageUrl, logoUrl, galleryUrls, tags, hours,
     } = req.body;
 
     // Edits to a live listing go back to PENDING so admins can re-verify.
@@ -245,7 +251,7 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res, next) => {
       data: {
         name, description, categoryId, phone, email, website, priceRange,
         address, city, country, latitude, longitude,
-        coverImageUrl, galleryUrls, tags, hours,
+        coverImageUrl, logoUrl, galleryUrls, tags, hours,
         status: req.user!.role === "ADMIN" ? existing.status : "PENDING",
       },
     });

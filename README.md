@@ -1,273 +1,177 @@
-# yotweek — Events & Business Directory Platform
+# Yotweek
 
-yotweek connects people with shared interests and passions for exploration. It's built using
-the same stack and patterns as the 3R-Elite marketplace (Next.js + TypeScript frontend,
-Express + Prisma/PostgreSQL backend), re-scoped around **discovering, posting, and attending
-events, tourism opportunities, and local businesses** — local or international, free or paid.
-Everything unrelated (classifieds, real estate, jobs, general e‑commerce) has been removed.
+**Promote active and engaging living.**
 
-## What's implemented
+Yotweek is a community-driven SaaS platform for discovering, booking, and promoting events, local businesses, and tourism destinations — locally and internationally. Communities are the foundational building block: people organize around a place, an interest, or both, and events and businesses are surfaced inside that context, tailored by smart recommendations that improve the more you explore.
 
-**1. Roles & posting permissions**
-Registered users, companies, agents, and organizations can all sign up and submit listings
-(`POST /api/events`, `POST /api/businesses`), each with an optional cover image + photo
-gallery (see **"Images on listings"** below). Every submission is created with
-`status: PENDING` and only becomes publicly visible once an admin approves it from `/const`.
+This is built as a full production platform, not a prototype: real authentication, a moderated content pipeline, real-time-feeling notifications, payment-ready bookings, an admin console with full operational control, and a scalable Next.js + Express + PostgreSQL architecture designed to grow.
 
-**2. Admin panel — separate URL, separate login** (`/const`)
-The admin panel lives at `/const`, not `/admin`, and has its own authentication flow that is
-completely independent of the ordinary user login/register:
+---
 
-- `POST /api/auth/register` (ordinary sign-up) can **never** produce an `ADMIN` account,
-  regardless of what's submitted — it's hard-restricted to `USER` / `AGENT` / `COMPANY` /
-  `ORGANIZATION` server-side.
-- `POST /api/auth/admin/setup` — a one-time bootstrap endpoint that creates the platform's
-  first admin. It checks `prisma.user.count({ where: { role: "ADMIN" } })` and refuses (409)
-  the moment one admin exists, so it can't be reused to mint extra admins later. The frontend
-  page for this is `/const/register`; it calls `GET /api/auth/admin/exists` first and shows a
-  "already set up, ask an existing admin" message instead of the form once an admin exists.
-- `POST /api/auth/admin/login` — same credential check as ordinary login, but additionally
-  rejects any account that isn't `role: ADMIN`, even with a correct password. The frontend
-  page is `/const/login`, styled distinctly (dark "Admin Console" theme) so it's visually
-  obvious you're not on the regular sign-in page.
-- Once at least one admin exists, **more admins are created by promoting an existing user**
-  from `/const/users` (role dropdown → `ADMIN`) — not by registering again.
-- Every `/const/*` page is wrapped in `<AdminGuard>` (`frontend/components/AdminGuard.tsx`),
-  which redirects signed-out visitors to `/const/login` and signed-in non-admins to `/`. The
-  real security boundary is the backend, though: every `/api/admin/*` route requires a valid
-  `ADMIN` bearer token via `requireAuth` + `requireRole("ADMIN")` middleware, so no admin data
-  is ever served based on a client-side check alone.
-- Admin pages: `/const` (overview), `/const/events` (approve/reject/hide/flagged queue),
-  `/const/reports` (user reports), `/const/users` (search, verify organizers,
-  suspend/reinstate, change role), `/const/highlights` (manage the homepage hero slideshow —
-  add/edit/reorder/hide/remove slides).
+## Table of contents
 
-**3. Images on listings — real upload, not paste-a-link**
-Both the event and business listing forms (`/events/create`, `/businesses/create`), plus the
-admin hero slideshow (`/const/highlights`), have a "Photos" section
-(`frontend/components/ImageUrlInput.tsx`) that uploads actual image files: click to pick a
-photo (JPEG/PNG/WEBP/GIF, up to 8MB), it uploads immediately to `POST /api/uploads/image`
-(`backend/src/routes/uploads.ts`, multer + disk storage), and the returned URL is what gets
-saved on the listing. Cover image has a live thumbnail; the gallery is a multi-file picker with
-a thumbnail grid and per-photo remove. The backend
-(`coverImageUrl` / `galleryUrls String[]` on both `Event` and `Business` in `schema.prisma`)
-already had these fields; only the forms and the upload endpoint itself were missing. Cover
-images show on listing cards and at the top of the detail page; the gallery renders as a
-horizontal scroll strip beneath the cover image.
+- [Overview](#overview)
+- [Key features](#key-features)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+- [Environment variables](#environment-variables)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
 
-**Where uploaded files live, and the one thing to set up before you deploy:**
-Files are written to `UPLOAD_DIR` (defaults to `<project root>/uploads`) and served back at
-`GET /uploads/<filename>`. Locally this just works — nothing to configure. **In production,**
-most hosts (Railway included) run your container on an ephemeral filesystem: anything written
-to disk disappears on the next deploy or restart. Before going live, either:
-- **Railway**: attach a [Volume](https://docs.railway.app/reference/volumes) to the backend
-  service, mount it at e.g. `/app/uploads`, and set `UPLOAD_DIR=/app/uploads`. This is the
-  minimum-effort option and keeps uploads persistent across deploys.
-- **Any host, more durable**: swap the multer disk storage in `routes/uploads.ts` for an S3 /
-  Cloudflare R2 client (`multer-s3` or a manual `PutObjectCommand` after `multer.memoryStorage()`)
-  and return the bucket's public URL instead of a local one. This is the better long-term
-  answer since it also gets you CDN caching and doesn't tie image durability to your compute
-  host at all.
+---
 
-If you skip both, uploads will work perfectly in the demo/testing session and then vanish on
-the next deploy — not a bug, just what "no persistent disk" means. It's called out here
-explicitly so it isn't a surprise.
+## Overview
 
-**4. Location detection & personalization**
-The homepage and browse page ask the browser for GPS location (`navigator.geolocation`) via
-`lib/geolocation.ts`, and store it so "Near you" results and distance badges use it. Users can
-override this manually at any time with the location picker in the header of the homepage
-(`LocationSelector`).
+Yotweek exists to make it effortless to find what's happening around you — and the world — while giving organizers, businesses, and communities real tools to reach people who care. Every listing on the platform is verified before it goes live, every community is member-driven, and every recommendation gets sharper the more a person explores.
 
-**5. yotweek-aligned features**
-- **Destination Guides** — `/destinations`, curated write-ups plus live event counts per city
-- **Itinerary Builder** — `/itinerary`, day-by-day trip planning with custom stops
-- **Nearby Attractions** — `GET /api/itineraries/suggest-nearby` surfaces nearby approved
-  listings by distance, for filling out an itinerary
-- **Event Reminders** — hourly cron (`utils/reminderCron.ts`) creates an in-app notification
-  ~24h before an event starts, for every confirmed attendee
-- **Social Sharing** — WhatsApp / Facebook / X / copy-link on every event page
-- **Ratings & Reviews** — one review per user per event, moderated before appearing publicly
-- **Weather Integration** — `GET /api/weather` proxies Open-Meteo (no API key required) and is
-  shown on every event's detail page
-- **Language Support** — events carry a `languages` array; browse page can filter by language,
-  and `next-intl` is included as a dependency to build out full UI translation from here
+The platform serves four kinds of people:
 
-**6. Authenticity & spam detection** (`backend/src/utils/spamDetection.ts`)
-- Suspicious-keyword scanning on every new listing
-- Fuzzy duplicate detection (title similarity + same city + overlapping dates)
-- Rate limiting on listing creation (both an IP-based `express-rate-limit` and a per-user
-  "5 listings/hour" check)
-- User-facing "Report" button on every listing (`POST /api/reports`), with an admin queue and
-  automatic hide-pending-review once a listing collects 5+ reports
-- Admin-granted "Verified organizer" badge (`isVerifiedOrganizer`) shown throughout the UI
+- **Attendees & travelers** — discover verified events, businesses, and destinations near them or anywhere in the world, save what they like, book tickets, and get smart, personalized recommendations.
+- **Organizers, companies, and agents** — list events and businesses, manage bookings and payouts, and build a following.
+- **Communities** — anyone can start a community around a place or an interest; members join, and events/businesses can be posted directly into that community's context.
+- **Admins** — full operational control over the platform from a dedicated console, entirely separate from ordinary user accounts.
 
-**7. Landing page statistics** (`GET /api/stats/landing`, `components/StatsTicker.tsx`)
-Total visitors, daily unique visitors (deduped via SHA-256-hashed IP, never storing raw IPs —
-same pattern used in 3R-Elite's analytics), total events held, and active events.
+## Key features
 
-**8. Payments for paid events** (`backend/src/routes/bookings.ts`)
-Booking a paid event creates a `Payment` record with the total pre-split into a platform
-commission and an organizer payout (`utils/commission.ts`, default 5%, configurable per
-event). `POST /api/bookings/:id/confirm-payment` is the single integration point for a real
-card/mobile-money provider's webhook — wire in Flutterwave/Pesapal/DPO/etc. there. Organizers
-can see their running payout total on `/dashboard`.
+**Discovery & booking**
+- Event & business browsing with search, category/price/location filters, and sorting (soonest, most popular, distance)
+- GPS or IP-based location detection with manual override, used for "near you" results and automatic currency conversion
+- Personalized recommendations that learn from what you view, save, and book
+- Ticket booking with commission-aware payouts for organizers, and booking-confirmation + automated post-event follow-up emails
+- Reviews, testimonials, and a report/moderation pipeline to keep listings authentic
 
-## Stack
+**Communities**
+- Create a community around a place, an interest, or both
+- Join/leave, member counts, and a dedicated space where events and businesses can be organized under that community's identity
 
-- **Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind, mirrors 3R-Elite's frontend
-  dependencies (`react-hook-form`, `zod`, `next-intl`, `date-fns`, etc.)
-- **Backend**: Express + TypeScript + Prisma ORM + PostgreSQL, mirrors 3R-Elite's backend
-  dependencies and middleware patterns (helmet, rate limiting, JWT auth, express-validator)
+**Business directory**
+- Full business profiles: logo, cover photo, photo gallery, description, contact details, hours, price range, and category
+- Animated cards (hover lift, shine, staggered entrance) and a compact video-frame treatment for any video in a gallery
+- Search, category/price filtering, and sorting, all synced to shareable URLs
 
-## Running it locally
+**Currency**
+- Base currency is USD; every price displayed across events, listings, and bookings is auto-converted to the visitor's detected or chosen currency, with the original amount always shown for transparency
+
+**Media**
+- Real file upload (not just URL-paste) for cover photos, galleries, business logos, and the homepage's compact video slideshow
+- A dedicated, moderated video-submission pipeline: admins and admin-verified organizers can submit clips; only approved ones appear publicly
+
+**Admin console** — a single, separate admin surface at `/const`, with its own login and one-time bootstrap registration (never reachable through the ordinary sign-up flow):
+- Approve/reject/hide events and businesses, with a flagged-content queue
+- Moderate reviews and testimonials
+- Manage users — verify organizers, suspend accounts, change roles
+- Manage the homepage video/photo slideshow
+- Site-wide settings (maintenance mode, approval requirements, commission rate, announcement banner) with no redeploy needed
+- Full report-handling and authenticity/spam-signal review
+
+## Tech stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 15 (App Router), TypeScript, Tailwind CSS |
+| Backend | Express, TypeScript |
+| Database | PostgreSQL via Prisma ORM |
+| Auth | JWT, bcrypt password hashing |
+| Media | Multer (disk storage, swappable for S3/R2) |
+| Email | Nodemailer (SMTP; logs to console if unconfigured) |
+| Scheduled jobs | node-cron (event reminders, post-event follow-ups) |
+| Deployment | Docker, Railway-ready, or self-hosted via docker-compose + nginx |
+
+## Project structure
+
+```
+yotweek/
+├── frontend/            Next.js app (App Router)
+│   ├── app/              Routes — /events, /businesses, /communities, /const (admin), ...
+│   ├── components/       Shared UI components
+│   ├── context/          Auth, Currency, and other React providers
+│   └── lib/               API client, types, currency/geolocation utilities
+├── backend/              Express API
+│   ├── src/routes/        One file per resource (events, businesses, communities, admin, ...)
+│   ├── src/middleware/    Auth guards, role checks
+│   ├── src/utils/         Email templates, cron jobs, currency/commission helpers
+│   └── prisma/            schema.prisma + migrations
+├── nginx/                 Reference reverse-proxy config for self-hosted deploys
+└── docker-compose.yml      Postgres + backend + frontend, one command to run locally
+```
+
+## Getting started
+
+**Prerequisites:** Node.js 20+, PostgreSQL 14+ (or Docker).
 
 ```bash
-# Backend
+git clone <this-repo> yotweek && cd yotweek
+```
+
+### Backend
+
+```bash
 cd backend
 cp .env.example .env        # fill in DATABASE_URL and JWT_SECRET
 npm install
-npx prisma migrate dev      # creates the schema in your Postgres database
-npx prisma db seed          # optional: adds an admin user + a sample event
+npx prisma migrate deploy
+npx prisma db seed          # optional — creates a sample admin + organizer account
 npm run dev                 # http://localhost:4000
+```
 
-# Frontend
+Seeded admin login (if you ran the seed): `admin@yotweek.com` / `Password123!` — sign in at **`/const/login`**, not the regular `/auth/login`. If you skip seeding, visit **`/const/register`** once after your first deploy to create the platform's first admin account; that endpoint locks itself the moment an admin exists.
+
+### Frontend
+
+```bash
 cd frontend
-cp .env.example .env.local  # point NEXT_PUBLIC_API_URL at the backend above
+cp .env.example .env.local  # set NEXT_PUBLIC_API_URL=http://localhost:4000/api
 npm install
 npm run dev                 # http://localhost:3000
 ```
 
-Seeded admin login: `admin@yotweek.com` / `Password123!` — sign in at **`/const/login`** (not
-the regular `/auth/login`). If you skip the seed step, visit **`/const/register`** instead to
-create the platform's first admin account (it locks itself the moment an admin exists).
-Seeded organizer login: `organizer@example.com` / `Password123!` (regular `/auth/login`).
-
-## What's been verified, and how
-
-This sandbox can't reach `binaries.prisma.sh` (network-restricted), so `prisma generate` can
-produce TypeScript types but not the actual query-engine binary — meaning nothing here could
-be run against a live Postgres database from within this environment. Everything below is what
-*was* actually checked, so it's clear where the real gap is:
-
-- **Frontend**: full `npm install && npx tsc --noEmit` (zero errors) and `npm run build`
-  (24/24 routes compile, including Next's own type-check + lint pass) — both run clean from a
-  fresh install, not just once.
-- **Backend**: `npx tsc --noEmit` — zero errors in every file touched this session
-  (`routes/auth.ts`, `routes/uploads.ts`, `routes/admin.ts`, `app.ts`, `utils/uploadDir.ts`).
-  The rest of the codebase shows 27 pre-existing `implicit any` warnings in files untouched
-  here (`bookings.ts`, `businesses.ts`, `categories.ts`, `events.ts`, `itineraries.ts`,
-  `recommendations.ts`, `users.ts`, `spamDetection.ts`) — these are unrelated tech debt, not
-  something introduced or fixed in this session, and are surfaced only because the missing
-  query-engine binary leaves some Prisma-derived types incomplete.
-- **Route wiring, checked programmatically, not by eye**: a script cross-referenced all 65
-  frontend `api.*()` calls against all 94 backend route definitions (method + path) — every
-  call matches a real route. A second script cross-referenced every internal `<Link href>`
-  against the actual Next.js page tree (24 routes, including dynamic segments) — every link
-  resolves. A third check confirmed every Prisma field used in code
-  (`isSuspended`, `isVerifiedOrganizer`, `coverImageUrl`, `galleryUrls`, `categoryId`, the
-  `Role` enum values, etc.) actually exists in `schema.prisma`.
-- **Image upload**: since it needs no database, this one *was* run live — a minimal server
-  mounting only `routes/uploads.ts` was started, then tested with real `curl` requests: a
-  valid image upload (201 + working URL), a missing-auth request (401), a non-image file
-  (400), and fetching the returned URL back and diffing it byte-for-byte against the original
-  file (identical). Re-run a second time after later changes to confirm nothing regressed.
-- **What's still unverified**: anything that requires an actual database round-trip —
-  registration, login, the admin bootstrap/promotion flow, listing creation/approval — was
-  checked by careful manual reading of the logic (types, route order, middleware application)
-  rather than by executing it. If you want that last gap closed, `npm run dev` in both
-  `backend/` and `frontend/` against a real `DATABASE_URL`, then walking through
-  `/const/register` → `/const/login` → creating a listing once, would confirm it end-to-end.
-
-## Suggested next steps
-
-- Wire a real payment provider's checkout + webhook into `bookings.ts`
-- Move image storage from local disk to S3/R2 (see the callout in "Images on listings" above)
-  — needed before a real production launch, not just for durability across deploys but for a
-  CDN in front of user-uploaded content
-- Build out full `next-intl` translations for the multilingual requirement
-- Add map pins to the itinerary builder and event detail page (Google Maps/Mapbox)
-- Push notifications (web push or a mobile app) for the event-reminder cron, which currently
-  only creates in-app notifications
-
-## Deploying to production
-
-**Before your first deploy**: nothing extra needed — `prisma/migrations/20260703120000_init/`
-already ships in this repo and has been verified against a real PostgreSQL 16 database. It's
-applied automatically by `prisma migrate deploy`, which runs as part of the backend's
-Dockerfile `CMD` on every boot (safe to re-run: it only applies migrations that haven't run
-yet). If you later change `schema.prisma`, generate the follow-up migration yourself:
+### Or, everything at once with Docker
 
 ```bash
-cd backend
-cp .env.example .env   # point DATABASE_URL at a real Postgres instance
-npm install
-npx prisma migrate dev --name <describe_the_change>   # adds a new folder under prisma/migrations/
-```
-
-**Option A — Railway (recommended for this repo)**
-
-This is a monorepo with two deployable services (`backend/`, `frontend/`) plus a database, so
-you'll create three things in one Railway project:
-
-1. **Database** — "New" → "Database" → "PostgreSQL". Railway provisions it and exposes a
-   `DATABASE_URL`-shaped set of variables automatically.
-2. **Backend service** — "New" → "GitHub Repo" (or "Empty Service" + Railway CLI), then in
-   **Settings → Root Directory** set it to `backend`. Railway auto-detects `backend/Dockerfile`
-   and `backend/railway.json` (builder + `/health` healthcheck are already configured). Set
-   these variables on the service:
-   - `DATABASE_URL` → reference the Postgres plugin's variable (`${{Postgres.DATABASE_URL}}`)
-   - `JWT_SECRET` → a long random string
-   - `FRONTEND_URL` → your frontend service's public URL (for CORS) — you can fill this in
-     after step 3 once you know the URL, then redeploy
-   - `PORT` is injected automatically by Railway; the app already reads `process.env.PORT`
-   - On first deploy, the Dockerfile's `CMD` runs `prisma migrate deploy` before starting the
-     server, applying the committed `prisma/migrations/` folder — no manual migration step
-     needed.
-3. **Frontend service** — same repo, **Settings → Root Directory** set to `frontend`. Railway
-   auto-detects `frontend/Dockerfile` and `frontend/railway.json`. Set:
-   - `NEXT_PUBLIC_API_URL` → your backend service's public URL + `/api` (e.g.
-     `https://your-backend.up.railway.app/api`). This must be set as a **build-time** variable
-     — Railway injects service variables into Dockerfile `ARG`s automatically, and
-     `frontend/Dockerfile` already declares `ARG NEXT_PUBLIC_API_URL`, so no extra config is
-     needed beyond setting the variable. Because Next.js inlines `NEXT_PUBLIC_*` vars into the
-     client bundle at build time, changing this value later requires a redeploy (not just a
-     restart).
-4. Generate public domains for both services under **Settings → Networking → Generate Domain**,
-   then go back and set `FRONTEND_URL` on the backend and `NEXT_PUBLIC_API_URL` on the frontend
-   to the real generated URLs, and redeploy both.
-
-**Alternative managed platforms**
-- Frontend → Vercel (auto-detects Next.js; set `NEXT_PUBLIC_API_URL` in project env vars)
-- Backend → Render / Fly.io (both can build straight from `backend/Dockerfile`; set
-  `DATABASE_URL`, `JWT_SECRET`, `FRONTEND_URL`)
-- Database → the managed Postgres add-on any of the above provide (or Neon/Supabase)
-
-**Option B — self-hosted on one VPS with a single public domain**
-```bash
-cp .env.example .env   # fill in POSTGRES_PASSWORD, JWT_SECRET, real domain
+cp .env.example .env        # fill in POSTGRES_PASSWORD, JWT_SECRET
 docker compose up -d --build
 ```
-`docker-compose.yml` brings up Postgres, the backend (auto-runs migrations on boot, published
-on `127.0.0.1:4000`), and the frontend (published on `127.0.0.1:3000`) — it does **not** set up
-a public domain or HTTPS on its own. `nginx/nginx.conf.example` is a ready-to-copy config that
-runs on the host (not inside docker-compose) and fronts those two ports as one public domain:
-`/` → frontend, `/api/*` and `/uploads/*` → backend. Full copy-paste setup steps (including the
-`certbot --nginx` command for HTTPS) are in the comment header at the top of that file. Swap in
-Caddy or Traefik instead if you'd rather have automatic HTTPS with less manual config.
 
-**Either way, before going live:**
+## Environment variables
+
+See `backend/.env.example` and `frontend/.env.example` for the full, documented list. The essentials:
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `DATABASE_URL` | backend | PostgreSQL connection string |
+| `JWT_SECRET` | backend | Signs auth tokens — must be long, random, and secret in production |
+| `FRONTEND_URL` | backend | CORS allow-list — your frontend's public URL |
+| `UPLOAD_DIR` | backend | Where uploaded media is written — point at a persistent volume in production |
+| `NEXT_PUBLIC_API_URL` | frontend | The backend's public URL — **must be set before `next build`**, since it's inlined into the client bundle at build time, not read at runtime |
+
+## Deployment
+
+**Railway** (recommended for managed Postgres + zero-ops deploys): create a Postgres plugin, a backend service (`backend/railway.json` is already configured with a Dockerfile build and `/health` healthcheck), and a frontend service, then set the environment variables above on each. Full step-by-step notes are in `RAILWAY_DEPLOY.md` if present, or follow the standard Railway "deploy from GitHub" flow for a Dockerfile-based service.
+
+**Self-hosted VPS, one domain:**
+```bash
+cp .env.example .env
+docker compose up -d --build
+```
+This brings up Postgres, the backend (auto-runs migrations on boot, published on `127.0.0.1:4000`), and the frontend (`127.0.0.1:3000`). `nginx/nginx.conf.example` is a ready-to-copy reverse proxy that fronts both under one public domain with HTTPS — full setup steps are in its header comment.
+
+**Before going live, either way:**
 - Set a strong, unique `JWT_SECRET`
-- Set `FRONTEND_URL` on the backend to your real frontend domain (it's the CORS allow-list)
-- Point `NEXT_PUBLIC_API_URL` at your real backend URL *before* building the frontend —
-  it's inlined into the client bundle at build time, not read at runtime
-- Take a Postgres backup schedule seriously (managed providers do this for you; on a VPS,
-  `pg_dump` on a cron is the minimum)
-- `.github/workflows/ci.yml` runs a typecheck + build on every push — wire your host's
-  deploy hook (or a `docker build && docker push` step) onto the end of it once you're ready
-  for continuous deployment
-- **First-time admin access**: if you didn't run `npx prisma db seed`, visit
-  `https://yourdomain.com/const/register` once, right after your first deploy, to create the
-  platform's admin account. Do this promptly — anyone who gets there first becomes the admin,
-  since the endpoint only checks "does an admin exist yet," not who's asking.
+- Point a persistent volume at `UPLOAD_DIR`, or move media storage to S3/R2 (see the media section of this README for why)
+- Visit `/const/register` immediately after your first deploy to claim the admin account — the bootstrap endpoint only checks "does an admin exist yet," not who's asking
 
+## Contributing
+
+1. Fork the repo and create a feature branch: `git checkout -b feature/your-feature`
+2. Keep changes scoped and typed — both `frontend` and `backend` should pass `npx tsc --noEmit` with zero new errors before you open a PR
+3. Follow the existing patterns: shared Tailwind utility classes in `globals.css` over one-off styles, Express routes grouped by resource, Prisma migrations written (or generated) per change rather than editing `schema.prisma` without a matching migration
+4. Write a clear PR description: what changed, why, and how you verified it (a build/typecheck log, a screenshot, or both)
+5. Be respectful and constructive in reviews — this is a community-driven project in spirit as well as in feature set
+
+Bug reports and feature requests are welcome via issues. For anything security-related, please report privately rather than opening a public issue.
+
+## License
+
+Proprietary — All Rights Reserved. This codebase is not licensed for reuse, modification, or redistribution without explicit permission from the project owner. If you intended an open-source license (MIT, Apache 2.0, etc.) instead, replace this section and the `license` field in both `package.json` files accordingly.

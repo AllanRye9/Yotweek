@@ -1,6 +1,7 @@
 {
   "name": "yotweek-backend",
   "version": "1.0.0",
+  "license": "UNLICENSED",
   "description": "API for the yotweek platform",
   "main": "dist/index.js",
   "engines": {

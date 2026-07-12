@@ -39,8 +39,14 @@ export function BusinessCard({ business }: { business: Business }) {
         {typeof business.distanceKm === "number" && (
           <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full backdrop-blur-sm">{business.distanceKm} km</span>
         )}
+        {business.logoUrl && (
+          <div className="absolute -bottom-4 left-3 w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-white">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={business.logoUrl} alt={`${business.name} logo`} className="w-full h-full object-cover" />
+          </div>
+        )}
       </div>
-      <div className="flex flex-col flex-1 p-3">
+      <div className={`flex flex-col flex-1 p-3 ${business.logoUrl ? "pt-6" : ""}`}>
         {business.category && <span className="text-[10px] font-bold uppercase tracking-widest text-sky-600 mb-0.5">{business.category.name}</span>}
         <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 mb-1.5 group-hover:text-sky-600 transition-colors">{business.name}</h3>
         <p className="text-[11px] text-gray-500">📍 {business.city}, {business.country}</p>

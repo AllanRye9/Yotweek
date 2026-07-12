@@ -39,8 +39,8 @@ export default function AdminSettingsPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-4 sm:px-6 py-7"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">Site Settings</h1><p className="text-white/70 text-sm mt-1">Platform-wide configuration — changes apply immediately, no redeploy needed.</p></div></div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 max-w-2xl">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">Site Settings</h1><p className="text-white/70 text-sm mt-1">Platform-wide configuration — changes apply immediately, no redeploy needed.</p></div></div>
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9 max-w-2xl">
         {fetching ? <p className="text-gray-400 text-sm">Loading…</p> : (
           <form onSubmit={save} className="card-base p-6 space-y-5">
             <div>

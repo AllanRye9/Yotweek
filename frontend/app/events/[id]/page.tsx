@@ -13,6 +13,8 @@ import { GalleryThumb } from "../../../components/GalleryThumb";
 import { WeatherWidget } from "../../../components/WeatherWidget";
 import { ReviewSection } from "../../../components/ReviewSection";
 import { ShareButtons } from "../../../components/ShareButtons";
+import { useCurrency } from "../../../context/CurrencyContext";
+import { formatMoney } from "../../../lib/currency";
 import { recordSignal } from "../../../lib/preferences";
 
 const CAT_ICON: Record<string, string> = {
@@ -35,6 +37,7 @@ export default function EventDetailPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("SPAM");
   const readTimer = useRef<ReturnType<typeof setTimeout>>();
+  const { currency: displayCurrency, convert } = useCurrency();
 
   useEffect(() => {
     api.get(`/events/${id}`)
@@ -92,8 +95,8 @@ export default function EventDetailPage() {
   }
 
   if (!event) return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-      <div className="grid gap-6 lg:grid-cols-3">
+    <div className="max-w-7xl mx-auto px-6 sm:px-9 py-10">
+      <div className="grid gap-9 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
           <div className="aspect-video shimmer rounded-2xl bg-slate-100 animate-pulse" />
           <div className="card-base p-6 space-y-3">{[...Array(5)].map((_,i) => <div key={i} className={`h-4 shimmer bg-slate-100 rounded ${i===0?"w-1/3":i===1?"w-full":"w-2/3"}`} />)}</div>
@@ -105,12 +108,17 @@ export default function EventDetailPage() {
 
   const icon = CAT_ICON[event.category] || "🌍";
   const spotsLeft = event.capacity ? Math.max(0, event.capacity - event.ticketsSold) : null;
+  const priceAmount = Number(event.price) || 0;
+  const priceFrom = event.currency || "USD";
+  const priceConverted = priceFrom !== displayCurrency ? convert(priceAmount, priceFrom) : priceAmount;
+  const priceShowsConverted = priceConverted !== null && priceFrom !== displayCurrency;
+  const priceLabel = formatMoney(priceShowsConverted ? (priceConverted as number) : priceAmount, priceShowsConverted ? displayCurrency : priceFrom);
 
   return (
     <div className="animate-fade-in">
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2 text-xs text-gray-400">
+        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-2.5 flex items-center gap-2 text-xs text-gray-400">
           <Link href="/" className="hover:text-sky-600 transition-colors">Home</Link>
           <span>/</span>
           <Link href="/events" className="hover:text-sky-600 transition-colors">Events</Link>
@@ -119,8 +127,8 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <div className="grid gap-6 lg:grid-cols-3">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+        <div className="grid gap-9 lg:grid-cols-3">
           {/* Left */}
           <div className="lg:col-span-2 space-y-5">
             {/* Cover */}
@@ -132,7 +140,7 @@ export default function EventDetailPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
               <div className="absolute top-4 left-4 flex flex-wrap gap-2">
                 <span className={event.priceType === "FREE" ? "badge-free" : "badge-paid"}>
-                  {event.priceType === "FREE" ? "🆓 Free" : `🎫 ${event.currency} ${Number(event.price).toLocaleString()}`}
+                  {event.priceType === "FREE" ? "🆓 Free" : `🎫 ${priceLabel}`}
                 </span>
                 {event.scope === "INTERNATIONAL" && <span className="badge-intl">🌍 International</span>}
                 {event.organizer?.isVerifiedOrganizer && <span className="badge-verif">✓ Verified</span>}
@@ -218,7 +226,14 @@ export default function EventDetailPage() {
               <div className="pb-4 mb-4 border-b border-gray-100">
                 {event.priceType === "FREE"
                   ? <p className="font-extrabold text-2xl text-emerald-600">Free admission</p>
-                  : <p className="font-extrabold text-2xl text-sky-700">{event.currency} {Number(event.price).toLocaleString()} <span className="text-sm text-gray-400 font-normal">/ person</span></p>}
+                  : (
+                    <div>
+                      <p className="font-extrabold text-2xl text-sky-700">{priceLabel} <span className="text-sm text-gray-400 font-normal">/ person</span></p>
+                      {priceShowsConverted && (
+                        <p className="text-xs text-gray-400 mt-0.5">{formatMoney(priceAmount, priceFrom)} charged by the organizer — shown converted to {displayCurrency}</p>
+                      )}
+                    </div>
+                  )}
                 {spotsLeft !== null && (
                   <p className={`text-xs font-semibold mt-1 ${spotsLeft < 10 ? "text-red-500" : "text-gray-400"}`}>
                     {spotsLeft === 0 ? "Sold out" : `${spotsLeft.toLocaleString()} of ${event.capacity?.toLocaleString()} spots left`}

@@ -17,6 +17,23 @@ export default function AdminHighlightsPage() {
   const [form, setForm] = useState<typeof EMPTY>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [uploadingMedia, setUploadingMedia] = useState(false);
+  const [busyIds, setBusyIds] = useState<Set<string>>(new Set());
+
+  function withBusy(ids: string[], fn: () => Promise<void>) {
+    if (ids.some(id => busyIds.has(id))) return Promise.resolve(); // already in flight — ignore the repeat click
+    setBusyIds(prev => new Set([...prev, ...ids]));
+    return fn()
+      .catch((err: any) => {
+        // 404 here almost always means someone else already changed/removed
+        // this slide (or a double-click raced itself) — refresh instead of
+        // leaving the UI stuck showing a now-stale item.
+        toast.error(err?.response?.data?.error || "Could not complete that action.");
+        load();
+      })
+      .finally(() => {
+        setBusyIds(prev => { const next = new Set(prev); ids.forEach(id => next.delete(id)); return next; });
+      });
+  }
 
   function load() {
     setFetching(true);
@@ -67,21 +84,26 @@ export default function AdminHighlightsPage() {
       load();
     } catch (err: any) {
       toast.error(err?.response?.data?.error || "Could not save slide.");
+      load();
     } finally {
       setSaving(false);
     }
   }
 
   async function toggleActive(h: Highlight) {
-    await api.put(`/admin/highlights/${h.id}`, { isActive: !h.isActive });
-    load();
+    await withBusy([h.id], async () => {
+      await api.put(`/admin/highlights/${h.id}`, { isActive: !h.isActive });
+      load();
+    });
   }
 
   async function remove(id: string) {
     if (!confirm("Remove this slide from the homepage slideshow?")) return;
-    await api.delete(`/admin/highlights/${id}`);
-    toast.warning("Slide removed.");
-    load();
+    await withBusy([id], async () => {
+      await api.delete(`/admin/highlights/${id}`);
+      toast.warning("Slide removed.");
+      load();
+    });
   }
 
   async function move(h: Highlight, dir: -1 | 1) {
@@ -89,11 +111,13 @@ export default function AdminHighlightsPage() {
     const idx = sorted.findIndex(s => s.id === h.id);
     const swapWith = sorted[idx + dir];
     if (!swapWith) return;
-    await Promise.all([
-      api.put(`/admin/highlights/${h.id}`, { sortOrder: swapWith.sortOrder }),
-      api.put(`/admin/highlights/${swapWith.id}`, { sortOrder: h.sortOrder }),
-    ]);
-    load();
+    await withBusy([h.id, swapWith.id], async () => {
+      await Promise.all([
+        api.put(`/admin/highlights/${h.id}`, { sortOrder: swapWith.sortOrder }),
+        api.put(`/admin/highlights/${swapWith.id}`, { sortOrder: h.sortOrder }),
+      ]);
+      load();
+    });
   }
 
   const sorted = [...slides].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -101,14 +125,14 @@ export default function AdminHighlightsPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-4 sm:px-6 py-7">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11">
         <div className="max-w-7xl mx-auto">
           <h1 className="font-extrabold text-2xl">Hero Slideshow</h1>
           <p className="text-white/70 text-sm mt-1">Manage the image/video slides shown on the homepage hero.</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9 grid gap-9 lg:grid-cols-[380px_1fr]">
         {/* Add / edit form */}
         <form onSubmit={submit} className="card-base p-5 h-fit space-y-3">
           <h2 className="font-bold text-gray-900 mb-1">{editingId ? "Edit slide" : "Add a new slide"}</h2>
@@ -202,13 +226,13 @@ export default function AdminHighlightsPage() {
                     <p className="text-[10px] text-gray-300 mt-0.5">{h.mediaType} · order {h.sortOrder}</p>
                   </div>
                   <div className="flex flex-col gap-1 shrink-0">
-                    <button onClick={() => move(h, -1)} disabled={i === 0} className="btn-ghost !px-2 !py-1 !text-xs disabled:opacity-30">↑</button>
-                    <button onClick={() => move(h, 1)} disabled={i === sorted.length - 1} className="btn-ghost !px-2 !py-1 !text-xs disabled:opacity-30">↓</button>
+                    <button onClick={() => move(h, -1)} disabled={i === 0 || busyIds.has(h.id)} className="btn-ghost !px-2 !py-1 !text-xs disabled:opacity-30">↑</button>
+                    <button onClick={() => move(h, 1)} disabled={i === sorted.length - 1 || busyIds.has(h.id)} className="btn-ghost !px-2 !py-1 !text-xs disabled:opacity-30">↓</button>
                   </div>
                   <div className="flex flex-col gap-1.5 shrink-0">
-                    <button onClick={() => startEdit(h)} className="btn-secondary !px-3 !py-1 !text-xs">Edit</button>
-                    <button onClick={() => toggleActive(h)} className="btn-ghost !px-3 !py-1 !text-xs">{h.isActive ? "Hide" : "Show"}</button>
-                    <button onClick={() => remove(h.id)} className="btn-danger !px-3 !py-1 !text-xs">Remove</button>
+                    <button onClick={() => startEdit(h)} disabled={busyIds.has(h.id)} className="btn-secondary !px-3 !py-1 !text-xs disabled:opacity-30">Edit</button>
+                    <button onClick={() => toggleActive(h)} disabled={busyIds.has(h.id)} className="btn-ghost !px-3 !py-1 !text-xs disabled:opacity-30">{h.isActive ? "Hide" : "Show"}</button>
+                    <button onClick={() => remove(h.id)} disabled={busyIds.has(h.id)} className="btn-danger !px-3 !py-1 !text-xs disabled:opacity-30">Remove</button>
                   </div>
                 </div>
               ))}

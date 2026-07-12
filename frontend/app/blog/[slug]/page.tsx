@@ -34,13 +34,13 @@ export default function PostPage() {
   return (
     <div className="animate-fade-in">
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2 text-xs text-gray-400">
+        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-2.5 flex items-center gap-2 text-xs text-gray-400">
           <Link href="/" className="hover:text-sky-600">Home</Link><span>/</span>
           <Link href="/blog" className="hover:text-sky-600">Blog</Link><span>/</span>
           <span className="text-gray-700 font-medium truncate">{post.title}</span>
         </div>
       </div>
-      <article className="max-w-3xl mx-auto px-4 sm:px-6 py-8">
+      <article className="max-w-3xl mx-auto px-6 sm:px-9 py-12">
         {post.coverImageUrl && (
           <div className="aspect-video overflow-hidden rounded-2xl mb-7 bg-slate-100">
             {/* eslint-disable-next-line @next/next/no-img-element */}

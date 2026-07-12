@@ -1,0 +1,14 @@
+Copyright (c) 2026 Yotweek. All Rights Reserved.
+
+This source code and all associated files (the "Software") are proprietary
+and confidential. Unauthorized copying, modification, distribution, public
+performance, or use of this Software, via any medium, is strictly
+prohibited without the prior written permission of the copyright holder.
+
+No license, express or implied, to any intellectual property rights is
+granted by this document.
+
+If you are the copyright holder and intended to release this project under
+an open-source license instead (e.g. MIT, Apache 2.0), replace this file
+and the corresponding "license" field in frontend/package.json and
+backend/package.json accordingly.

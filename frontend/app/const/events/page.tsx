@@ -51,8 +51,8 @@ export default function AdminEventsPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-4 sm:px-6 py-7"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">Event Management</h1><p className="text-white/70 text-sm mt-1">Review new submissions, or edit/feature/remove any listing.</p></div></div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">Event Management</h1><p className="text-white/70 text-sm mt-1">Review new submissions, or edit/feature/remove any listing.</p></div></div>
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div className="flex gap-2">
             {(["pending","flagged","all"] as const).map(t => <button key={t} onClick={() => setTab(t)} className={tab===t?"tab-pill-active":"tab-pill-inactive"}>{t==="pending"?"⏳ Pending":t==="flagged"?"⚠️ Flagged":"📋 All events"}</button>)}

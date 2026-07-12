@@ -67,7 +67,7 @@ export default function CreateEventPage() {
           <p className="text-white/70 text-sm">All submissions are reviewed by our team before going live.</p>
         </div>
       </div>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-2xl mx-auto px-6 sm:px-9 py-12">
         <div className="flex gap-2 mb-8">
           {[{n:1,label:"Event details"},{n:2,label:"Location & extras"}].map(s => (
             <button key={s.n} type="button" onClick={() => setStep(s.n)}

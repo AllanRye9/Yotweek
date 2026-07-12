@@ -6,9 +6,10 @@ import { api } from "../../../lib/api";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
 import { ImageUrlInput } from "../../../components/ImageUrlInput";
+import { LogoUploadInput } from "../../../components/LogoUploadInput";
 import { Category } from "../../../lib/types";
 
-const INIT = { name:"",description:"",categoryId:"",city:"",country:"Uganda",address:"",phone:"",email:"",website:"",priceRange:"MODERATE",latitude:"",longitude:"",tags:"",coverImageUrl:"" };
+const INIT = { name:"",description:"",categoryId:"",city:"",country:"Uganda",address:"",phone:"",email:"",website:"",priceRange:"MODERATE",latitude:"",longitude:"",tags:"",coverImageUrl:"",logoUrl:"" };
 
 function flattenCategories(cats: Category[], depth = 0): { id: string; label: string }[] {
   return cats.flatMap(c => [
@@ -39,6 +40,7 @@ export default function CreateBusinessPage() {
         longitude:form.longitude?parseFloat(form.longitude):undefined,
         tags:form.tags.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean),
         coverImageUrl: form.coverImageUrl.trim() || undefined,
+        logoUrl: form.logoUrl.trim() || undefined,
         galleryUrls,
       };
       await api.post("/businesses", payload);
@@ -53,7 +55,7 @@ export default function CreateBusinessPage() {
   return (
     <div className="animate-fade-in">
       <div className="page-header"><div className="max-w-2xl mx-auto"><h1 className="font-extrabold text-2xl sm:text-3xl mb-1">List a business</h1><p className="text-white/70 text-sm">Reviewed by our team before going live.</p></div></div>
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-2xl mx-auto px-6 sm:px-9 py-12">
         <form onSubmit={submit} className="card-base p-6 space-y-5">
           {[
             { label:"Business name", key:"name", required:true, placeholder:"e.g. Acholi Inn" },
@@ -97,6 +99,10 @@ export default function CreateBusinessPage() {
             <label className="block"><span className="block text-sm font-semibold text-gray-700 mb-1.5">Longitude</span><input type="number" step="any" value={form.longitude} onChange={e=>u("longitude",e.target.value)} className="input-base" /></label>
           </div>
           <label className="block"><span className="block text-sm font-semibold text-gray-700 mb-1.5">Tags <span className="text-gray-400 font-normal">(comma-separated)</span></span><input value={form.tags} onChange={e=>u("tags",e.target.value)} className="input-base" placeholder="restaurant, outdoor, wifi" /></label>
+          <div className="pt-1 border-t border-gray-100">
+            <p className="text-sm font-bold text-gray-900 mb-3 mt-4">🏷️ Logo</p>
+            <LogoUploadInput logoUrl={form.logoUrl} onChange={v => u("logoUrl", v)} />
+          </div>
           <div className="pt-1 border-t border-gray-100">
             <p className="text-sm font-bold text-gray-900 mb-3 mt-4">📸 Photos</p>
             <ImageUrlInput

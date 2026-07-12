@@ -42,10 +42,10 @@ export default function AdminPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-4 sm:px-6 py-8">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-12">
         <div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl sm:text-3xl">Admin Panel</h1><p className="text-white/70 text-sm mt-1">Platform-wide activity, moderation queues, and controls.</p></div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 space-y-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-12 space-y-8">
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {cards.map(c => (
@@ -61,6 +61,7 @@ export default function AdminPage() {
           <Link href="/const/events" className="btn-primary !px-6 !py-2.5">Review pending listings</Link>
           <Link href="/const/businesses" className="btn-secondary !px-6 !py-2.5">Review businesses</Link>
           <Link href="/const/reviews" className="btn-secondary !px-6 !py-2.5">Moderate reviews</Link>
+          <Link href="/const/testimonials" className="btn-secondary !px-6 !py-2.5">Moderate testimonials</Link>
           <Link href="/const/reports" className="btn-secondary !px-6 !py-2.5">View reports</Link>
           <Link href="/const/users" className="btn-secondary !px-6 !py-2.5">Manage users</Link>
           <Link href="/const/event-videos" className="btn-secondary !px-6 !py-2.5">🎬 Event videos</Link>

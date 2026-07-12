@@ -25,6 +25,7 @@ import postRoutes from "./routes/posts";
 import searchRoutes from "./routes/search";
 import recommendationRoutes from "./routes/recommendations";
 import uploadRoutes from "./routes/uploads";
+import communityRoutes from "./routes/communities";
 import { UPLOAD_DIR } from "./utils/uploadDir";
 
 import { errorHandler, notFound } from "./middleware/errorHandler";
@@ -108,6 +109,7 @@ app.use("/api/posts", postRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/uploads", uploadRoutes);
+app.use("/api/communities", communityRoutes);
 
 // Uploaded images are served straight off disk. `immutable` is safe because
 // filenames are content-addressed with a random suffix (see routes/uploads.ts)

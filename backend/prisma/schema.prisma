@@ -157,6 +157,9 @@ model User {
   posts            Post[]
   uploadedVideos   EventVideo[]
 
+  createdCommunities Community[]       @relation("CommunityCreator")
+  communityMemberships CommunityMember[]
+
   @@index([role])
 }
 
@@ -203,6 +206,9 @@ model Event {
   organizerId String
   organizer   User   @relation("OrganizerEvents", fields: [organizerId], references: [id])
 
+  communityId String?
+  community   Community? @relation(fields: [communityId], references: [id])
+
   approvedAt DateTime?
   approvedBy String?
   rejectedReason String?
@@ -220,6 +226,7 @@ model Event {
   @@index([status])
   @@index([category])
   @@index([city, country])
+  @@index([communityId])
   @@index([startDate])
   @@index([isFeatured])
 }
@@ -396,6 +403,7 @@ model Business {
   longitude Float?
 
   coverImageUrl String?
+  logoUrl       String?
   galleryUrls   String[] @default([])
   tags          String[] @default([])
   hours         Json? // e.g. {"mon": "09:00-18:00", "tue": "09:00-18:00", ...}
@@ -412,6 +420,9 @@ model Business {
   ownerId String
   owner   User   @relation(fields: [ownerId], references: [id])
 
+  communityId String?
+  community   Community? @relation(fields: [communityId], references: [id])
+
   approvedAt     DateTime?
   approvedBy     String?
   rejectedReason String?
@@ -426,6 +437,7 @@ model Business {
   @@index([status])
   @@index([categoryId])
   @@index([city, country])
+  @@index([communityId])
 }
 
 model BusinessReview {
@@ -577,4 +589,59 @@ model PlatformSetting {
   autoApproveVerified   Boolean  @default(false) // skip review queue for isVerifiedOrganizer submitters
   updatedAt             DateTime @updatedAt
   updatedBy             String?
+}
+
+// ─── Communities ─────────────────────────────────────────────────────────
+// The "community" is the foundational building block described in the
+// platform's core philosophy: people organize around a place or a shared
+// interest, then events and businesses are surfaced inside that context.
+// Posting to a community is optional — Event.communityId / Business.communityId
+// are both nullable, so every existing listing flow keeps working exactly as
+// before; a community is an extra lens on top, not a required container.
+model Community {
+  id          String  @id @default(uuid())
+  name        String
+  slug        String  @unique
+  description String
+  coverImageUrl String?
+
+  // A community organizes around a place, an interest, or both - e.g.
+  // "Gulu, Uganda" (place-based) or "Wildlife Photographers" (interest-based,
+  // city/country left blank) or both at once ("Kampala Foodies").
+  city        String?
+  country     String?
+  interestTag String?
+
+  creatorId String
+  creator   User   @relation("CommunityCreator", fields: [creatorId], references: [id])
+
+  isFeatured Boolean @default(false) // admin-curated boost, mirrors Event.isFeatured
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  CommunityMember[]
+  events   Event[]
+  businesses Business[]
+
+  @@index([city, country])
+  @@index([interestTag])
+}
+
+enum CommunityRole {
+  MEMBER
+  ADMIN
+}
+
+model CommunityMember {
+  id          String        @id @default(uuid())
+  communityId String
+  community   Community     @relation(fields: [communityId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  role        CommunityRole @default(MEMBER)
+  joinedAt    DateTime      @default(now())
+
+  @@unique([communityId, userId])
+  @@index([userId])
 }

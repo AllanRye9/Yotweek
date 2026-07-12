@@ -3,8 +3,8 @@ import Link from "next/link";
 export function Footer() {
   return (
     <footer className="bg-gradient-to-br from-slate-900 via-sky-950 to-indigo-950 text-slate-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-10">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-9 md:gap-8">
           <div className="col-span-2 md:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4 w-fit hover:opacity-80 transition-opacity">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center font-black text-white shadow-glow">YW</div>
@@ -49,7 +49,7 @@ export function Footer() {
         </div>
       </div>
       <div className="border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} yotweek. All listings are admin-verified before going live.</p>
           <p>Smart recommendations powered by your interests & location.</p>
         </div>

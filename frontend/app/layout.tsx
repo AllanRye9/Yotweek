@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
+import { CurrencyProvider } from "../context/CurrencyContext";
 import { ToastProvider } from "../components/Toast";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
@@ -8,8 +9,8 @@ import { StatsTicker } from "../components/StatsTicker";
 import { VisitorTracker } from "../components/VisitorTracker";
 
 export const metadata: Metadata = {
-  title: { default: "yotweek — Discover Events, Businesses & Destinations", template: "%s | yotweek" },
-  description: "Find and book local and international events, businesses, and tourism destinations. Smart recommendations powered by your interests.",
+  title: { default: "Yotweek — Promote Active and Engaging Living", template: "%s | Yotweek" },
+  description: "Yotweek is the community-driven SaaS platform for discovering and booking local and international events, businesses, and tourism destinations — with smart recommendations that learn from your interests.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
@@ -26,13 +27,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="flex min-h-screen flex-col bg-slate-50">
         <AuthProvider>
-          <ToastProvider>
-            <VisitorTracker />
-            <StatsTicker />
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </ToastProvider>
+          <CurrencyProvider>
+            <ToastProvider>
+              <VisitorTracker />
+              <StatsTicker />
+              <Navbar />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </ToastProvider>
+          </CurrencyProvider>
         </AuthProvider>
       </body>
     </html>

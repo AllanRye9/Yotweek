@@ -39,7 +39,7 @@ export default function BusinessDetailPage() {
   }
 
   if (!business) return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 space-y-4 animate-pulse">
+    <div className="max-w-7xl mx-auto px-6 sm:px-9 py-10 space-y-4 animate-pulse">
       <div className="aspect-video shimmer rounded-2xl bg-slate-100" />
       <div className="card-base p-6 space-y-3">{[...Array(4)].map((_,i) => <div key={i} className="h-4 shimmer bg-slate-100 rounded w-3/4" />)}</div>
     </div>
@@ -48,15 +48,15 @@ export default function BusinessDetailPage() {
   return (
     <div className="animate-fade-in">
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2.5 flex items-center gap-2 text-xs text-gray-400">
+        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-2.5 flex items-center gap-2 text-xs text-gray-400">
           <Link href="/" className="hover:text-sky-600">Home</Link><span>/</span>
           <Link href="/businesses" className="hover:text-sky-600">Businesses</Link><span>/</span>
           <span className="text-gray-700 font-medium truncate">{business.name}</span>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        <div className="grid gap-6 lg:grid-cols-3">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+        <div className="grid gap-9 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-5">
             {/* Cover */}
             <div className="relative rounded-2xl overflow-hidden aspect-video bg-gradient-to-br from-slate-200 to-slate-300">
@@ -82,7 +82,15 @@ export default function BusinessDetailPage() {
             {/* Info */}
             <div className="card-base p-5 sm:p-7">
               {business.category && <span className="text-[11px] font-bold uppercase tracking-widest text-sky-600 bg-sky-50 px-2.5 py-1 rounded-full">{business.category.name}</span>}
-              <h1 className="font-extrabold text-2xl sm:text-3xl text-gray-900 mt-3 mb-4">{business.name}</h1>
+              <div className="flex items-center gap-3 mt-3 mb-4">
+                {business.logoUrl && (
+                  <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-gray-100 shrink-0 bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={business.logoUrl} alt={`${business.name} logo`} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                <h1 className="font-extrabold text-2xl sm:text-3xl text-gray-900">{business.name}</h1>
+              </div>
               <div className="grid sm:grid-cols-2 gap-3 mb-5 text-sm">
                 <div className="flex items-start gap-3"><span className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 text-sm shrink-0">📍</span><div><p className="font-semibold text-gray-900">{business.city}</p><p className="text-xs text-gray-400">{business.address}, {business.country}</p></div></div>
                 {business.phone && <div className="flex items-start gap-3"><span className="w-9 h-9 rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 text-sm shrink-0">📞</span><div><p className="font-semibold text-gray-900">{business.phone}</p></div></div>}

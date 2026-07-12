@@ -18,6 +18,7 @@ function Content() {
   const [searchInput, setSearchInput] = useState(sp.get("search")||"");
   const [categoryId, setCategoryId] = useState("");
   const [priceRange, setPriceRange] = useState("");
+  const [sortBy, setSortBy] = useState(sp.get("sortBy") || "name");
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -33,6 +34,7 @@ function Content() {
     const slug = sp.get("category");
     setSearch(sp.get("search") || "");
     setSearchInput(sp.get("search") || "");
+    setSortBy(sp.get("sortBy") || "name");
     setPage(1);
     if (!slug) { setCategoryId(""); return; }
     if (categories.length === 0) return; // resolve once categories arrive
@@ -46,12 +48,13 @@ function Content() {
     if (search) params.search = search;
     if (categoryId) params.categoryId = categoryId;
     if (priceRange) params.priceRange = priceRange;
+    if (sortBy && sortBy !== "name") params.sortBy = sortBy;
     if (location.latitude && location.longitude) { params.lat=location.latitude; params.lng=location.longitude; }
     setLoading(true);
     api.get("/businesses", { params })
       .then(r => { setBusinesses(r.data.businesses); setTotal(r.data.total||0); })
       .finally(() => setLoading(false));
-  }, [search, categoryId, priceRange, page, location.latitude, location.longitude]);
+  }, [search, categoryId, priceRange, sortBy, page, location.latitude, location.longitude]);
 
   return (
     <div className="animate-fade-in">
@@ -65,7 +68,7 @@ function Content() {
           </form>
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
         {/* Category pills */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
           <button onClick={() => setCategoryId("")} className={!categoryId?"tab-pill-active":"tab-pill-inactive"}>All</button>
@@ -83,6 +86,11 @@ function Content() {
             <option value="MODERATE">$$ Moderate</option>
             <option value="EXPENSIVE">$$$ Expensive</option>
             <option value="LUXURY">$$$$ Luxury</option>
+          </select>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="input-base !w-auto !py-2 !text-xs">
+            <option value="name">🔤 A–Z</option>
+            <option value="newest">🆕 Newest</option>
+            <option value="viewCount">🔥 Most popular</option>
           </select>
           {(search||categoryId||priceRange) && (
             <button onClick={() => { setSearch(""); setSearchInput(""); setCategoryId(""); setPriceRange(""); setPage(1); }}

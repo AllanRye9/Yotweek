@@ -207,6 +207,7 @@ router.post(
           latitude: data.latitude,
           longitude: data.longitude,
           coverImageUrl: data.coverImageUrl,
+          communityId: data.communityId || undefined,
           galleryUrls: data.galleryUrls || [],
           languages: data.languages || ["en"],
           tags: (data.tags || []).map((t: string) => t.toLowerCase()),

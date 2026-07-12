@@ -106,55 +106,45 @@ export default function HomePage() {
 
   return (
     <div className="animate-fade-in">
+      {/* ── VIDEO SLIDESHOW ──────────────────────────────────── */}
+      <EventVideoSlider />
+
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800">
         {/* Decorative blobs */}
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5 animate-float pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{animationDelay:"2s"}} />
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-12 pb-16 sm:pt-16 sm:pb-20 grid grid-cols-1 lg:grid-cols-[0.85fr_1.15fr] gap-8 lg:gap-12 items-center">
-          <div>
-            <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3">Events · Businesses · Destinations</p>
-            <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight mb-4">
-              Discover<span className="text-sky-300"> what&apos;s happening</span><br className="hidden sm:block" />
-              around you — and the world
-            </h1>
-            <p className="text-white/70 text-sm sm:text-base max-w-xl mb-6 leading-relaxed">
-              Verified events, local businesses, and tourism destinations. Smart recommendations that learn from your interests — the more you explore, the better it gets.
-            </p>
+        <div className="relative max-w-3xl mx-auto px-6 sm:px-9 pt-[4.5rem] pb-24 sm:pt-24 sm:pb-[7.5rem] text-center">
+          <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3">Events · Businesses · Destinations</p>
+          <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight mb-4">
+            Discover<span className="text-sky-300"> what&apos;s happening</span><br className="hidden sm:block" />
+            around you — and the world
+          </h1>
+          <p className="text-white/70 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed">
+            Verified events, local businesses, and tourism destinations. Smart recommendations that learn from your interests — the more you explore, the better it gets.
+          </p>
 
-            <div className="flex flex-wrap items-center gap-4 mb-8">
-              <LocationSelector />
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Link href="/events" className="btn-primary !px-7 !py-3 !text-base !rounded-xl shadow-glow-lg">Browse events</Link>
-              <Link href="/businesses" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">Find businesses</Link>
-              <Link href="/search" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">🔍 Search</Link>
-            </div>
+          <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+            <LocationSelector />
           </div>
 
-          <div className="order-first lg:order-last relative">
-            <div className="absolute -inset-3 rounded-[2rem] bg-gradient-to-br from-sky-300/30 via-fuchsia-300/20 to-amber-200/20 blur-xl pointer-events-none" />
-            <div className="relative">
-              <div className="flex items-center gap-1.5 mb-2 ml-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse" />
-                <span className="text-white/80 text-[11px] font-bold uppercase tracking-widest">Happening now</span>
-              </div>
-              <EventVideoSlider />
-            </div>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/events" className="btn-primary !px-7 !py-3 !text-base !rounded-xl shadow-glow-lg">Browse events</Link>
+            <Link href="/businesses" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">Find businesses</Link>
+            <Link href="/search" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">🔍 Search</Link>
           </div>
         </div>
       </section>
 
       {/* ── HIGHLIGHT SLIDER ─────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 -mt-6 relative z-10 mb-10">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 -mt-6 relative z-10 mb-10">
         <HighlightSlider />
       </section>
 
       {/* ── FOR YOU (personalized) ─────────────────────────── */}
       {showForYou && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
           <div className="section-row">
             <div className="flex items-center gap-2.5">
               <h2 className="section-title">
@@ -173,7 +163,7 @@ export default function HomePage() {
       )}
 
       {/* ── CATEGORIES ───────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
         <SectionTitle>Browse by category</SectionTitle>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {CATS.map(c => (
@@ -187,7 +177,7 @@ export default function HomePage() {
       </section>
 
       {/* ── NEAR YOU ─────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
         <SectionTitle link="/events">📍 Events near you</SectionTitle>
         {loading ? (
           <div className="listing-grid">{[...Array(8)].map((_,i) => <SkeletonCard key={i} />)}</div>
@@ -203,10 +193,10 @@ export default function HomePage() {
       </section>
 
       {/* ── FREE EVENTS BANNER ───────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
         <Link href="/events?priceType=FREE"
           className="block card-base shine overflow-hidden hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300">
-          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-7 sm:px-12 py-8 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-7 sm:px-12 py-12 flex items-center justify-between">
             <div>
               <p className="text-emerald-100 text-xs font-bold uppercase tracking-widest mb-1.5">Explore at no cost</p>
               <h3 className="font-extrabold text-white text-2xl sm:text-3xl mb-1">Free Events Near You</h3>
@@ -218,7 +208,7 @@ export default function HomePage() {
       </section>
 
       {/* ── NEARBY BUSINESSES ────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
         <SectionTitle link="/businesses">🏪 Businesses & places near you</SectionTitle>
         {bizLoading ? (
           <div className="listing-grid">{[...Array(4)].map((_,i) => <SkeletonCard key={i} />)}</div>
@@ -232,7 +222,7 @@ export default function HomePage() {
       </section>
 
       {/* ── INTERNATIONAL ────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
         <SectionTitle link="/events?scope=INTERNATIONAL">🌍 International opportunities</SectionTitle>
         {international.length ? (
           <div className="listing-grid-3 stagger">{international.map(e => <EventCard key={e.id} event={e} />)}</div>
@@ -243,7 +233,7 @@ export default function HomePage() {
 
       {/* ── TRAVEL BLOG ──────────────────────────────────────── */}
       {posts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-12">
+        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
           <SectionTitle link="/blog">✍️ From the travel blog</SectionTitle>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map(p => (
@@ -268,7 +258,7 @@ export default function HomePage() {
       )}
 
       {/* ── ORGANIZER CTA ────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 mb-14">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-14">
         <div className="card-base p-8 sm:p-12 text-center bg-gradient-to-br from-sky-50 via-blue-50 to-indigo-50 border border-sky-100">
           <h2 className="font-extrabold text-2xl sm:text-3xl text-gray-900 mb-3">Are you an organizer or business owner?</h2>
           <p className="text-gray-600 text-sm sm:text-base max-w-lg mx-auto mb-7">

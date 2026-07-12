@@ -89,7 +89,7 @@ function Content() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
         {/* Category pills */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
           {CATS.map(c => (
