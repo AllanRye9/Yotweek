@@ -10,6 +10,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
 import { recordSignal } from "../../../lib/preferences";
 import { GalleryThumb } from "../../../components/GalleryThumb";
+import { SafeImage } from "../../../components/SafeImage";
 
 const PRICE_LABELS: Record<string,string> = { BUDGET:"$ Budget", MODERATE:"$$ Moderate", EXPENSIVE:"$$$ Expensive", LUXURY:"$$$$ Luxury" };
 
@@ -85,8 +86,8 @@ export default function BusinessDetailPage() {
               <div className="flex items-center gap-3 mt-3 mb-4">
                 {business.logoUrl && (
                   <div className="w-14 h-14 rounded-full overflow-hidden ring-2 ring-gray-100 shrink-0 bg-white">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={business.logoUrl} alt={`${business.name} logo`} className="w-full h-full object-cover" />
+                    <SafeImage src={business.logoUrl} alt={`${business.name} logo`} className="w-full h-full object-cover"
+                      fallback={<div className="w-full h-full flex items-center justify-center text-gray-300">🏪</div>} />
                   </div>
                 )}
                 <h1 className="font-extrabold text-2xl sm:text-3xl text-gray-900">{business.name}</h1>
@@ -115,7 +116,7 @@ export default function BusinessDetailPage() {
               <button onClick={() => setReportOpen(p=>!p)} className="text-xs text-gray-300 hover:text-red-400 underline underline-offset-2 transition-colors">Report this listing</button>
               {reportOpen && (
                 <div className="card-base mt-3 p-4 max-w-sm mx-auto text-left">
-                  <select value={reportReason} onChange={e=>setReportReason(e.target.value)} className="input-base !text-sm mb-3">
+                  <select value={reportReason} onChange={e=>setReportReason(e.target.value)} className="select-base !text-sm mb-3">
                     {["SPAM","DUPLICATE","SCAM_OR_FRAUD","MISLEADING_INFO","INAPPROPRIATE","OTHER"].map(r => <option key={r} value={r}>{r.replace(/_/g," ")}</option>)}
                   </select>
                   <button onClick={submitReport} className="btn-danger !text-xs !px-4 !py-2">Submit report</button>

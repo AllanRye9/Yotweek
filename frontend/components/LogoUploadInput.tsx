@@ -2,6 +2,7 @@
 import { useRef, useState } from "react";
 import { api } from "../lib/api";
 import { useToast } from "./Toast";
+import { SafeImage } from "./SafeImage";
 
 const ACCEPTED = "image/jpeg,image/png,image/webp,image/gif";
 const MAX_BYTES = 4 * 1024 * 1024;
@@ -41,8 +42,8 @@ export function LogoUploadInput({ logoUrl, onChange }: { logoUrl: string; onChan
           {uploading ? (
             <div className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full animate-spin" />
           ) : logoUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt="Logo preview" className="w-full h-full object-cover" />
+            <SafeImage src={logoUrl} alt="Logo preview" className="w-full h-full object-cover"
+              fallback={<span className="text-xl text-gray-300">🏷️</span>} />
           ) : (
             <span className="text-xl text-gray-300">🏷️</span>
           )}

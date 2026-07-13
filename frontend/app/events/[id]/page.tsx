@@ -208,7 +208,7 @@ export default function EventDetailPage() {
               {reportOpen && (
                 <div className="card-base mt-3 p-4 max-w-sm mx-auto text-left">
                   <p className="text-sm font-semibold text-gray-800 mb-2">Why are you reporting this?</p>
-                  <select value={reportReason} onChange={e => setReportReason(e.target.value)} className="input-base !text-sm mb-3">
+                  <select value={reportReason} onChange={e => setReportReason(e.target.value)} className="select-base !text-sm mb-3">
                     {["SPAM","DUPLICATE","SCAM_OR_FRAUD","MISLEADING_INFO","INAPPROPRIATE","OTHER"].map(r =>
                       <option key={r} value={r}>{r.replace(/_/g," ")}</option>
                     )}

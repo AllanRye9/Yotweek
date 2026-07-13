@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { api } from "../../../lib/api";
 import { Post } from "../../../lib/types";
 import { recordSignal } from "../../../lib/preferences";
+import { SafeImage } from "../../../components/SafeImage";
 
 export default function PostPage() {
   const { slug } = useParams<{ slug:string }>();
@@ -43,8 +44,8 @@ export default function PostPage() {
       <article className="max-w-3xl mx-auto px-6 sm:px-9 py-12">
         {post.coverImageUrl && (
           <div className="aspect-video overflow-hidden rounded-2xl mb-7 bg-slate-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover" />
+            <SafeImage src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover"
+              fallback={<div className="w-full h-full flex items-center justify-center text-4xl">✍️</div>} />
           </div>
         )}
         {post.tags?.length > 0 && (

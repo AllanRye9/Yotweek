@@ -80,7 +80,7 @@ export default function AdminEventsPage() {
                   {editingId === e.id ? (
                     <div className="space-y-2 mb-2">
                       <input value={editForm.title} onChange={ev=>setEditForm(f=>({...f,title:ev.target.value}))} className="input-base !py-1.5 !text-sm" placeholder="Title" />
-                      <textarea value={editForm.description} onChange={ev=>setEditForm(f=>({...f,description:ev.target.value}))} className="input-base !py-1.5 !text-sm" rows={2} placeholder="Description" />
+                      <textarea value={editForm.description} onChange={ev=>setEditForm(f=>({...f,description:ev.target.value}))} className="textarea-base !py-1.5 !text-sm" rows={2} placeholder="Description" />
                       <div className="flex gap-2">
                         <input value={editForm.price} onChange={ev=>setEditForm(f=>({...f,price:ev.target.value}))} type="number" className="input-base !py-1.5 !text-sm !w-32" placeholder="Price" />
                         <input value={editForm.capacity} onChange={ev=>setEditForm(f=>({...f,capacity:ev.target.value}))} type="number" className="input-base !py-1.5 !text-sm !w-32" placeholder="Capacity" />

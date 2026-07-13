@@ -73,7 +73,7 @@ export default function AdminCommunitiesPage() {
                   {editingId === c.id ? (
                     <div className="space-y-2 mb-2">
                       <input value={editForm.name} onChange={ev=>setEditForm(f=>({...f,name:ev.target.value}))} className="input-base !py-1.5 !text-sm" placeholder="Name" />
-                      <textarea value={editForm.description} onChange={ev=>setEditForm(f=>({...f,description:ev.target.value}))} className="input-base !py-1.5 !text-sm" rows={2} placeholder="Description" />
+                      <textarea value={editForm.description} onChange={ev=>setEditForm(f=>({...f,description:ev.target.value}))} className="textarea-base !py-1.5 !text-sm" rows={2} placeholder="Description" />
                       <div className="flex gap-2">
                         <button onClick={() => saveEdit(c.id)} className="btn-primary !px-4 !py-1.5 !text-xs">Save</button>
                         <button onClick={() => setEditingId(null)} className="btn-ghost !px-4 !py-1.5 !text-xs">Cancel</button>

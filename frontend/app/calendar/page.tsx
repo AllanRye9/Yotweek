@@ -62,9 +62,9 @@ export default function CalendarPage() {
   }
 
   return (
-    <div className="container-page py-10">
+    <div className="page-shell py-10">
       <div className="mb-6 flex items-center justify-between">
-        <h1 className="font-display text-3xl font-bold">Event calendar</h1>
+        <h1 className="display-heading text-3xl text-gray-900">Event calendar</h1>
         <div className="flex items-center gap-3">
           <button onClick={() => setMonth((m) => subMonths(m, 1))} className="btn-secondary px-3 py-1.5">←</button>
           <p className="min-w-[140px] text-center font-semibold">{format(month, "MMMM yyyy")}</p>
@@ -72,7 +72,7 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-savanna-900/50">
+      <div className="grid grid-cols-7 gap-1 text-center text-xs font-semibold text-gray-900/50">
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div key={d} className="py-2">{d}</div>
         ))}
@@ -87,7 +87,7 @@ export default function CalendarPage() {
               key={key}
               onClick={() => setSelectedDay(day)}
               className={`min-h-[84px] rounded-lg border p-2 text-left align-top text-xs ${
-                isSameMonth(day, month) ? "bg-white" : "bg-savanna-50 text-savanna-900/30"
+                isSameMonth(day, month) ? "bg-white" : "bg-gray-50 text-gray-900/30"
               } ${selectedDay && isSameDay(selectedDay, day) ? "border-sunset-500" : "border-black/5"}`}
             >
               <p className="mb-1 font-semibold">{format(day, "d")}</p>
@@ -96,7 +96,7 @@ export default function CalendarPage() {
                   {e.title}
                 </p>
               ))}
-              {dayEvents.length > 2 && <p className="text-[10px] text-savanna-900/40">+{dayEvents.length - 2} more</p>}
+              {dayEvents.length > 2 && <p className="text-[10px] text-gray-900/40">+{dayEvents.length - 2} more</p>}
             </button>
           );
         })}
@@ -104,16 +104,16 @@ export default function CalendarPage() {
 
       {selectedDay && (
         <div className="mt-6">
-          <h2 className="mb-3 font-display text-xl font-bold">{format(selectedDay, "EEEE, d MMMM")}</h2>
+          <h2 className="mb-3 text-xl font-bold text-gray-900">{format(selectedDay, "EEEE, d MMMM")}</h2>
           {(eventsByDay.get(format(selectedDay, "yyyy-MM-dd")) || []).length === 0 ? (
-            <p className="text-sm text-savanna-900/50">No events on this day.</p>
+            <p className="text-sm text-gray-900/50">No events on this day.</p>
           ) : (
             <div className="space-y-3">
               {(eventsByDay.get(format(selectedDay, "yyyy-MM-dd")) || []).map((e) => (
                 <div key={e.id} className="card flex items-center justify-between p-4">
                   <div>
                     <Link href={`/events/${e.id}`} className="font-semibold hover:text-sunset-600">{e.title}</Link>
-                    <p className="text-xs text-savanna-900/50">{e.city}, {e.country}</p>
+                    <p className="text-xs text-gray-900/50">{e.city}, {e.country}</p>
                   </div>
                   {user && (
                     <button

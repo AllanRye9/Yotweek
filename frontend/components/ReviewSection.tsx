@@ -89,7 +89,7 @@ export function ReviewSection({ eventId }: { eventId:string }) {
               <Stars n={rating} interactive onSet={setRating} />
             </div>
             <textarea value={comment} onChange={e => setComment(e.target.value)}
-              placeholder="Share your experience…" rows={3} className="input-base !text-sm" />
+              placeholder="Share your experience…" rows={3} className="textarea-base !text-sm" />
             <button type="submit" disabled={submitting} className="btn-primary !px-5 !py-2 !text-sm">
               {submitting ? "Submitting…" : "Submit review"}
             </button>

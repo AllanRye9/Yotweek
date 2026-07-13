@@ -75,8 +75,8 @@ export default function AdminBusinessesPage() {
                   {editingId === b.id ? (
                     <div className="space-y-2 mb-2">
                       <input value={editForm.name} onChange={ev=>setEditForm(f=>({...f,name:ev.target.value}))} className="input-base !py-1.5 !text-sm" placeholder="Name" />
-                      <textarea value={editForm.description} onChange={ev=>setEditForm(f=>({...f,description:ev.target.value}))} className="input-base !py-1.5 !text-sm" rows={2} placeholder="Description" />
-                      <select value={editForm.priceRange} onChange={ev=>setEditForm(f=>({...f,priceRange:ev.target.value}))} className="input-base !py-1.5 !text-sm !w-40">
+                      <textarea value={editForm.description} onChange={ev=>setEditForm(f=>({...f,description:ev.target.value}))} className="textarea-base !py-1.5 !text-sm" rows={2} placeholder="Description" />
+                      <select value={editForm.priceRange} onChange={ev=>setEditForm(f=>({...f,priceRange:ev.target.value}))} className="select-base !py-1.5 !text-sm !w-40">
                         <option value="">No price range</option>
                         <option value="BUDGET">Budget</option>
                         <option value="MODERATE">Moderate</option>

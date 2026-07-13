@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { api } from "../lib/api";
 import { Highlight } from "../lib/types";
+import { SafeImage } from "./SafeImage";
 
 export function HighlightSlider() {
   const [slides, setSlides] = useState<Highlight[]>([]);
@@ -33,8 +34,8 @@ export function HighlightSlider() {
     <div className="relative w-full overflow-hidden rounded-2xl bg-slate-800" style={{aspectRatio:"16/7"}}>
       {cur.mediaType === "VIDEO"
         ? <video key={cur.id} src={cur.mediaUrl} autoPlay muted loop playsInline className="w-full h-full object-cover" />
-        // eslint-disable-next-line @next/next/no-img-element
-        : <img key={cur.id} src={cur.mediaUrl} alt={cur.title} className="w-full h-full object-cover animate-fade-in" />}
+        : <SafeImage key={cur.id} src={cur.mediaUrl} alt={cur.title} className="w-full h-full object-cover animate-fade-in"
+            fallback={<div className="w-full h-full bg-gradient-to-br from-sky-500 to-indigo-600 flex items-center justify-center text-4xl">🖼️</div>} />}
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
       <div className="absolute bottom-0 left-0 right-0 p-6">
         <h3 className="font-extrabold text-white text-xl sm:text-2xl drop-shadow">{cur.title}</h3>

@@ -84,7 +84,7 @@ export default function AdminUsersPage() {
                   <p className="text-[10px] text-gray-300 mt-0.5">Joined {format(new Date(u.createdAt), "d MMM yyyy")}{u.city ? ` · ${u.city}, ${u.country}` : ""}</p>
                 </div>
                 <select value={u.role} onChange={e => changeRole(u, e.target.value)}
-                  className="input-base !py-1.5 !text-xs !w-auto">
+                  className="select-base !py-1.5 !text-xs !w-auto">
                   {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
                 <div className="flex gap-1.5 shrink-0">

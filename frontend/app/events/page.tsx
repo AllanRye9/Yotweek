@@ -79,17 +79,17 @@ function Content() {
             />
             <button type="submit" className="btn-secondary !px-3 !py-2 !text-xs">🔍</button>
           </form>
-          <select value={scope} onChange={e => { setScope(e.target.value); setPage(1); }} className="input-base !w-auto !py-2 !text-xs">
+          <select value={scope} onChange={e => { setScope(e.target.value); setPage(1); }} className="select-base !w-auto !py-2 !text-xs">
             <option value="">🌐 All scope</option>
             <option value="LOCAL">📍 Local</option>
             <option value="INTERNATIONAL">🌍 International</option>
           </select>
-          <select value={priceType} onChange={e => { setPriceType(e.target.value); setPage(1); }} className="input-base !w-auto !py-2 !text-xs">
+          <select value={priceType} onChange={e => { setPriceType(e.target.value); setPage(1); }} className="select-base !w-auto !py-2 !text-xs">
             <option value="">💰 Any price</option>
             <option value="FREE">🆓 Free only</option>
             <option value="PAID">🎫 Paid only</option>
           </select>
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="input-base !w-auto !py-2 !text-xs">
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select-base !w-auto !py-2 !text-xs">
             <option value="startDate">📅 Soonest first</option>
             <option value="viewCount">🔥 Most popular</option>
           </select>

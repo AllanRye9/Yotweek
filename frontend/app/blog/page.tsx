@@ -6,6 +6,7 @@ import { api } from "../../lib/api";
 import { Post } from "../../lib/types";
 import { SkeletonCard } from "../../components/SkeletonCard";
 import { recordSignal } from "../../lib/preferences";
+import { SafeImage } from "../../components/SafeImage";
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -25,10 +26,8 @@ export default function BlogPage() {
               <Link key={p.id} href={`/blog/${p.slug}`} onClick={() => recordSignal({ postId:p.id, action:"view", tags:p.tags })}
                 className="card-base card-hover shine group overflow-hidden flex flex-col">
                 <div className="aspect-[16/9] overflow-hidden bg-slate-100 relative">
-                  {p.coverImageUrl
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    : <div className="absolute inset-0 flex items-center justify-center text-4xl">✍️</div>}
+                  <SafeImage src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fallback={<div className="absolute inset-0 flex items-center justify-center text-4xl">✍️</div>} />
                 </div>
                 <div className="p-4 flex flex-col flex-1">
                   {p.tags?.length > 0 && <div className="flex flex-wrap gap-1 mb-2">{p.tags.slice(0,2).map(t => <span key={t} className="badge bg-sky-50 text-sky-600">#{t}</span>)}</div>}

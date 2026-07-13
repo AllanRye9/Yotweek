@@ -75,7 +75,7 @@ export default function CreateCommunityPage() {
         </label>
         <label className="block">
           <span className="block text-sm font-semibold text-gray-700 mb-1.5">Description<span className="text-red-500 ml-0.5">*</span></span>
-          <textarea required minLength={10} rows={4} value={form.description} onChange={e => u("description", e.target.value)} className="input-base" placeholder="What's this community about? Who's it for?" />
+          <textarea required minLength={10} rows={4} value={form.description} onChange={e => u("description", e.target.value)} className="textarea-base" placeholder="What's this community about? Who's it for?" />
         </label>
         <div className="grid grid-cols-2 gap-4">
           <label className="block">

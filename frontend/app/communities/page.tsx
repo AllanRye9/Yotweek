@@ -4,19 +4,16 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { api } from "../../lib/api";
 import { Community } from "../../lib/types";
+import { SafeImage } from "../../components/SafeImage";
 import { SkeletonCard } from "../../components/SkeletonCard";
 
 function CommunityCard({ community }: { community: Community }) {
   return (
     <Link href={`/communities/${community.slug}`} className="card-base card-hover shine group flex flex-col overflow-hidden">
       <div className="relative aspect-[3/1.6] overflow-hidden bg-gradient-to-br from-teal-400 to-sky-600">
-        {community.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={community.coverImageUrl} alt={community.name}
-            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-5xl">🤝</div>
-        )}
+        <SafeImage src={community.coverImageUrl} alt={community.name}
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          fallback={<div className="absolute inset-0 flex items-center justify-center text-5xl">🤝</div>} />
         {community.isFeatured && <span className="absolute top-2 left-2 badge bg-amber-100 text-amber-700">⭐ Featured</span>}
       </div>
       <div className="flex flex-col flex-1 p-4">

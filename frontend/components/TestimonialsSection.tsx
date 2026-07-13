@@ -32,18 +32,18 @@ export function TestimonialsSection() {
 
   return (
     <section className="bg-orange-50/50 py-14">
-      <div className="container-page">
-        <h2 className="mb-8 text-center font-display text-3xl font-bold">What travelers are saying</h2>
+      <div className="page-shell">
+        <h2 className="display-heading mb-8 text-center text-3xl text-gray-900">What travelers are saying</h2>
 
         {testimonials.length === 0 ? (
-          <p className="text-center text-sm text-savanna-900/50">Be the first to share your experience.</p>
+          <p className="text-center text-sm text-gray-900/50">Be the first to share your experience.</p>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {testimonials.map((t) => (
               <div key={t.id} className="card p-5">
                 {t.rating && <p className="mb-2 text-sunset-500">{"★".repeat(t.rating)}{"☆".repeat(5 - t.rating)}</p>}
-                <p className="text-sm text-savanna-900/80">&ldquo;{t.content}&rdquo;</p>
-                <p className="mt-3 text-xs font-semibold text-savanna-900/60">
+                <p className="text-sm text-gray-900/80">&ldquo;{t.content}&rdquo;</p>
+                <p className="mt-3 text-xs font-semibold text-gray-900/60">
                   {t.user.name}{t.user.country ? ` · ${t.user.country}` : ""}
                 </p>
               </div>
@@ -58,12 +58,12 @@ export function TestimonialsSection() {
               onChange={(e) => setContent(e.target.value)}
               placeholder="Share your experience with yotweek…"
               rows={3}
-              className="w-full rounded-xl border border-savanna-900/15 px-4 py-3 text-sm"
+              className="textarea-base"
             />
             <button onClick={submit} disabled={submitting} className="btn-primary mt-2">
               {submitting ? "Submitting…" : "Share your story"}
             </button>
-            {submitMsg && <p className="mt-2 text-xs text-savanna-900/60">{submitMsg}</p>}
+            {submitMsg && <p className="mt-2 text-xs text-gray-900/60">{submitMsg}</p>}
           </div>
         )}
       </div>

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { Business } from "../lib/types";
 import { recordSignal } from "../lib/preferences";
+import { SafeImage } from "./SafeImage";
 
 const PRICE_LABELS: Record<string, string> = {
   BUDGET:"$", MODERATE:"$$", EXPENSIVE:"$$$", LUXURY:"$$$$",
@@ -41,8 +42,8 @@ export function BusinessCard({ business }: { business: Business }) {
         )}
         {business.logoUrl && (
           <div className="absolute -bottom-4 left-3 w-10 h-10 rounded-full overflow-hidden ring-2 ring-white shadow-md bg-white">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={business.logoUrl} alt={`${business.name} logo`} className="w-full h-full object-cover" />
+            <SafeImage src={business.logoUrl} alt={`${business.name} logo`} className="w-full h-full object-cover"
+              fallback={<div className="w-full h-full flex items-center justify-center text-gray-300 text-sm">🏪</div>} />
           </div>
         )}
       </div>

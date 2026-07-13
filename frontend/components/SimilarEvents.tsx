@@ -27,7 +27,7 @@ export function SimilarEvents({ eventId }: { eventId: string }) {
 
   return (
     <div>
-      <h3 className="mb-3 font-display text-lg font-bold">You might also like</h3>
+      <h3 className="mb-3 text-lg font-bold text-gray-900">You might also like</h3>
       <div className="grid gap-3 sm:grid-cols-3">
         {events.map((e) => (
           <Link key={e.id} href={`/events/${e.id}`} className="card overflow-hidden">
@@ -38,7 +38,7 @@ export function SimilarEvents({ eventId }: { eventId: string }) {
             </div>
             <div className="p-3">
               <p className="text-sm font-semibold line-clamp-1">{e.title}</p>
-              {e.city && <p className="text-xs text-savanna-900/50">{e.city}</p>}
+              {e.city && <p className="text-xs text-gray-900/50">{e.city}</p>}
             </div>
           </Link>
         ))}

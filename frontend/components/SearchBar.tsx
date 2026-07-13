@@ -51,19 +51,19 @@ export function SearchBar() {
         onChange={(e) => setQ(e.target.value)}
         onFocus={() => results && setOpen(true)}
         placeholder="Search events, places, stories…"
-        className="w-full rounded-full border border-savanna-900/15 bg-white px-4 py-2 text-sm outline-none focus:border-sunset-500"
+        className="w-full rounded-full border border-gray-200 bg-white px-4 py-2 text-sm outline-none transition-all duration-200 hover:border-gray-300 focus:border-sunset-400 focus:ring-4 focus:ring-sunset-100/70"
       />
       {open && q.trim().length >= 2 && (
         <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-96 overflow-y-auto rounded-xl border border-black/5 bg-white p-2 shadow-xl">
-          {!hasResults && <p className="px-3 py-2 text-sm text-savanna-900/50">No matches yet — try a different phrase.</p>}
+          {!hasResults && <p className="px-3 py-2 text-sm text-gray-400">No matches yet — try a different phrase.</p>}
           {results?.events.map((e) => (
             <Link key={e.id} href={`/events/${e.id}`} onClick={() => setOpen(false)} className="block rounded-lg px-3 py-2 text-sm hover:bg-sunset-50">
-              🎫 {e.title} <span className="text-savanna-900/40">· {e.city}</span>
+              🎫 {e.title} <span className="text-gray-400">· {e.city}</span>
             </Link>
           ))}
           {results?.businesses.map((b) => (
-            <div key={b.id} className="block rounded-lg px-3 py-2 text-sm text-savanna-900/70">
-              📍 {b.name} <span className="text-savanna-900/40">· {b.city}</span>
+            <div key={b.id} className="block rounded-lg px-3 py-2 text-sm text-gray-600">
+              📍 {b.name} <span className="text-gray-400">· {b.city}</span>
             </div>
           ))}
           {results?.posts.map((p) => (

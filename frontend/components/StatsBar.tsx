@@ -24,10 +24,10 @@ export function StatsBar() {
       {ITEMS.map((item) => (
         <div key={item.key} className="card flex flex-col items-center gap-1 px-3 py-4 text-center">
           <span className="text-xl">{item.icon}</span>
-          <span className="font-display text-2xl font-bold text-savanna-900">
+          <span className="text-2xl font-extrabold text-gray-900">
             {stats ? stats[item.key].toLocaleString() : "—"}
           </span>
-          <span className="text-xs text-savanna-900/60">{item.label}</span>
+          <span className="text-xs text-gray-900/60">{item.label}</span>
         </div>
       ))}
     </div>

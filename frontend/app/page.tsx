@@ -13,6 +13,7 @@ import { useLocation } from "../lib/geolocation";
 import { useAuth } from "../context/AuthContext";
 import { buildProfile, recordSignal } from "../lib/preferences";
 import { format } from "date-fns";
+import { SafeImage } from "../components/SafeImage";
 
 const CATS = [
   { key:"FESTIVAL",         label:"Festivals",        icon:"🎪", grad:"from-orange-400 to-rose-500" },
@@ -112,13 +113,13 @@ export default function HomePage() {
       {/* ── HERO ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800">
         {/* Decorative blobs */}
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-white/5 animate-float pointer-events-none" />
+        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-sunset-400/10 animate-float pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{animationDelay:"2s"}} />
 
         <div className="relative max-w-3xl mx-auto px-6 sm:px-9 pt-[4.5rem] pb-24 sm:pt-24 sm:pb-[7.5rem] text-center">
           <p className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3">Events · Businesses · Destinations</p>
-          <h1 className="font-extrabold text-white text-3xl sm:text-4xl md:text-5xl leading-tight mb-4">
-            Discover<span className="text-sky-300"> what&apos;s happening</span><br className="hidden sm:block" />
+          <h1 className="display-heading text-white text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-4">
+            Discover<span className="display-accent"> what&apos;s happening</span><br className="hidden sm:block" />
             around you — and the world
           </h1>
           <p className="text-white/70 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed">
@@ -249,10 +250,8 @@ export default function HomePage() {
                 onClick={() => recordSignal({ postId:p.id, action:"view", tags:p.tags })}
                 className="card-base card-hover shine group overflow-hidden flex flex-col">
                 <div className="aspect-[16/9] overflow-hidden bg-gradient-to-br from-slate-200 to-slate-300 relative">
-                  {p.coverImageUrl
-                    // eslint-disable-next-line @next/next/no-img-element
-                    ? <img src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                    : <div className="absolute inset-0 flex items-center justify-center text-4xl">✍️</div>}
+                  <SafeImage src={p.coverImageUrl} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    fallback={<div className="absolute inset-0 flex items-center justify-center text-4xl">✍️</div>} />
                 </div>
                 <div className="p-4 flex-1">
                   <h3 className="font-bold text-gray-900 text-sm line-clamp-2 mb-1.5 group-hover:text-sky-600 transition-colors">{p.title}</h3>

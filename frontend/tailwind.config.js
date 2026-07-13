@@ -18,6 +18,11 @@ module.exports = {
           300: "#7dd3fc", 400: "#38bdf8", 500: "#0ea5e9",
           600: "#0284c7", 700: "#0369a1", 800: "#075985", 900: "#0c4a6e",
         },
+        sunset: {
+          50: "#fff4ed", 100: "#ffe6d5", 200: "#fecdaa", 300: "#fdad74",
+          400: "#fb8a3c", 500: "#f9711a", 600: "#ea5a10", 700: "#c24310",
+          800: "#9a3615", 900: "#7c2f14",
+        },
         surface: { DEFAULT: "#ffffff", muted: "#f8fafc", subtle: "#f1f5f9" },
       },
       animation: {
@@ -46,9 +51,10 @@ module.exports = {
       },
       boxShadow: {
         card:          "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-        "card-hover":  "0 20px 40px -8px rgba(0,0,0,0.10), 0 8px 16px -4px rgba(0,0,0,0.06)",
+        "card-hover":  "0 24px 48px -12px rgba(15,23,42,0.14), 0 8px 20px -6px rgba(15,23,42,0.08)",
         glow:          "0 0 24px rgba(14,165,233,0.28)",
         "glow-lg":     "0 0 48px rgba(14,165,233,0.35)",
+        sunset:        "0 8px 24px -6px rgba(249,113,26,0.4)",
         "inner-top":   "inset 0 2px 4px rgba(0,0,0,0.06)",
       },
     },

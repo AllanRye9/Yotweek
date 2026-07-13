@@ -79,14 +79,14 @@ function Content() {
             />
             <button type="submit" className="btn-secondary !px-3 !py-2 !text-xs">🔍</button>
           </form>
-          <select value={priceRange} onChange={e => setPriceRange(e.target.value)} className="input-base !w-auto !py-2 !text-xs">
+          <select value={priceRange} onChange={e => setPriceRange(e.target.value)} className="select-base !w-auto !py-2 !text-xs">
             <option value="">💰 Any price range</option>
             <option value="BUDGET">$ Budget</option>
             <option value="MODERATE">$$ Moderate</option>
             <option value="EXPENSIVE">$$$ Expensive</option>
             <option value="LUXURY">$$$$ Luxury</option>
           </select>
-          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="input-base !w-auto !py-2 !text-xs">
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="select-base !w-auto !py-2 !text-xs">
             <option value="name">🔤 A–Z</option>
             <option value="newest">🆕 Newest</option>
             <option value="viewCount">🔥 Most popular</option>

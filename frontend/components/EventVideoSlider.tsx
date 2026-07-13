@@ -76,6 +76,7 @@ export function EventVideoSlider() {
                   src={cur.videoUrl}
                   poster={cur.thumbnailUrl || undefined}
                   autoPlay muted loop playsInline
+                  onError={() => { if (slides.length > 1) next(); }}
                   className="relative w-full h-full object-contain"
                 />
               </>

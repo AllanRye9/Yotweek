@@ -9,6 +9,7 @@ import { EventCard } from "../../../components/EventCard";
 import { BusinessCard } from "../../../components/BusinessCard";
 import { useAuth } from "../../../context/AuthContext";
 import { useToast } from "../../../components/Toast";
+import { SafeImage } from "../../../components/SafeImage";
 
 export default function CommunityDetailPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -156,12 +157,8 @@ export default function CommunityDetailPage() {
   return (
     <div className="animate-fade-in">
       <div className="relative aspect-[3/1] sm:aspect-[4/1] overflow-hidden bg-gradient-to-br from-teal-400 to-sky-600">
-        {community.coverImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={community.coverImageUrl} alt={community.name} className="absolute inset-0 w-full h-full object-cover" />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-6xl">🤝</div>
-        )}
+        <SafeImage src={community.coverImageUrl} alt={community.name} className="absolute inset-0 w-full h-full object-cover"
+          fallback={<div className="absolute inset-0 flex items-center justify-center text-6xl">🤝</div>} />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
         {community.status !== "APPROVED" && (
           <div className="absolute top-4 left-4 badge bg-amber-100 text-amber-700">
@@ -185,7 +182,7 @@ export default function CommunityDetailPage() {
               {editing ? (
                 <div className="space-y-3">
                   <input value={editForm.name} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} className="input-base" placeholder="Community name" />
-                  <textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="input-base" rows={3} placeholder="Description" />
+                  <textarea value={editForm.description} onChange={e => setEditForm(f => ({ ...f, description: e.target.value }))} className="textarea-base" rows={3} placeholder="Description" />
                   <div className="flex gap-2">
                     <button onClick={saveEdit} className="btn-primary !px-4 !py-2 !text-sm">Save</button>
                     <button onClick={() => setEditing(false)} className="btn-ghost !px-4 !py-2 !text-sm">Cancel</button>
@@ -211,7 +208,7 @@ export default function CommunityDetailPage() {
                   composing ? (
                     <form onSubmit={submitPost} className="card-base p-5 space-y-2">
                       <input value={postForm.title} onChange={e => setPostForm(f => ({ ...f, title: e.target.value }))} className="input-base" placeholder="Title" />
-                      <textarea value={postForm.body} onChange={e => setPostForm(f => ({ ...f, body: e.target.value }))} className="input-base" rows={3} placeholder="Share an announcement or start a discussion…" />
+                      <textarea value={postForm.body} onChange={e => setPostForm(f => ({ ...f, body: e.target.value }))} className="textarea-base" rows={3} placeholder="Share an announcement or start a discussion…" />
                       <div className="flex gap-2">
                         <button type="submit" disabled={posting} className="btn-primary !px-4 !py-2 !text-sm">{posting ? "Posting…" : "Post"}</button>
                         <button type="button" onClick={() => setComposing(false)} className="btn-ghost !px-4 !py-2 !text-sm">Cancel</button>

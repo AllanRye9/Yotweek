@@ -56,13 +56,52 @@
       transition-all hover:bg-red-100 active:scale-95;
   }
 
-  /* Inputs */
+  /* Inputs — one shared visual language for every text field, textarea,
+     and select in the app: same rest state, same animated focus treatment
+     (border color + expanding ring + soft lift), so a form never feels
+     like it was assembled from different eras of the codebase. */
   .input-base {
     @apply w-full rounded-xl border border-gray-200 bg-white
       px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400
-      transition-all outline-none
-      focus:border-sky-400 focus:ring-4 focus:ring-sky-100/70
-      disabled:bg-gray-50 disabled:text-gray-400;
+      outline-none
+      transition-[border-color,box-shadow,transform] duration-200 ease-out
+      hover:border-gray-300
+      focus:border-sky-400 focus:ring-4 focus:ring-sky-100/70 focus:shadow-card
+      disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:border-gray-200;
+  }
+  /* Native <select> — same shell as input-base, plus a custom chevron so it
+     doesn't fall back to each OS/browser's inconsistent default arrow. */
+  .select-base {
+    @apply input-base appearance-none bg-no-repeat pr-9 cursor-pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-position: right 0.65rem center;
+    background-size: 1rem;
+  }
+  .textarea-base { @apply input-base resize-y leading-relaxed; }
+
+  /* Dark-theme counterpart to input-base, for glass-panel-on-dark-gradient
+     contexts (admin login/register) where the light input-base would clash. */
+  .input-dark {
+    @apply w-full rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/30
+      px-4 py-2.5 text-sm outline-none
+      transition-[border-color,box-shadow,background-color] duration-200 ease-out
+      hover:bg-white/[0.13]
+      focus:bg-white/[0.13] focus:border-violet-400 focus:ring-4 focus:ring-violet-500/20
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Floating-label field: wrap an input-base + label in this container to
+     get an animated label that slides up out of the field on focus/fill.
+     Usage: <div className="field-float"><input className="input-base peer"
+     placeholder=" " /><label>Name</label></div> */
+  .field-float { @apply relative; }
+  .field-float > label {
+    @apply absolute left-4 top-2.5 text-sm text-gray-400 pointer-events-none origin-left
+      transition-all duration-200 ease-out;
+  }
+  .field-float > .input-base:focus + label,
+  .field-float > .input-base:not(:placeholder-shown) + label {
+    @apply -top-2 left-3 text-[11px] font-semibold text-sky-600 bg-white px-1 scale-100;
   }
 
   /* Badges */
@@ -136,6 +175,30 @@
   /* Section title row */
   .section-row { @apply flex items-center justify-between mb-5; }
   .section-title { @apply font-extrabold text-xl sm:text-2xl text-gray-900; }
+
+  /* Editorial display headings — the Playfair italic treatment already used
+     in the wordmark, extended to hero/page titles for a more distinctive,
+     travel-magazine feel instead of Inter everywhere. Used sparingly: hero
+     H1s and page headers only, never body copy or UI chrome. */
+  .display-heading {
+    @apply font-serif italic font-bold tracking-tight;
+  }
+  .display-accent {
+    @apply font-serif not-italic font-bold text-sunset-300;
+  }
+
+  /* Warm sunset accent, used sparingly against the cool blue brand color for
+     contrast on featured/highlighted moments (e.g. "featured" badges, the
+     odd standout CTA) rather than as a second primary color. */
+  .badge-featured { @apply badge bg-sunset-100 text-sunset-700; }
+  .btn-sunset {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl
+      bg-gradient-to-r from-sunset-500 to-sunset-600
+      px-5 py-2.5 text-sm font-semibold text-white shadow-sunset
+      transition-all duration-200 active:scale-95
+      hover:brightness-105
+      disabled:opacity-50 disabled:cursor-not-allowed;
+  }
 }
 
 /* ── Keyframes referenced by tailwind ──────────────────────────── */

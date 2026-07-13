@@ -63,13 +63,13 @@ export default function CreateBusinessPage() {
           ].map((f: any) => (
             <label key={f.key} className="block">
               <span className="block text-sm font-semibold text-gray-700 mb-1.5">{f.label}{f.required && <span className="text-red-500 ml-0.5">*</span>}</span>
-              {f.textarea ? <textarea rows={4} value={(form as any)[f.key]} onChange={e=>u(f.key,e.target.value)} className="input-base" placeholder={f.placeholder} />
+              {f.textarea ? <textarea rows={4} value={(form as any)[f.key]} onChange={e=>u(f.key,e.target.value)} className="textarea-base" placeholder={f.placeholder} />
               : <input value={(form as any)[f.key]} onChange={e=>u(f.key,e.target.value)} className="input-base" placeholder={f.placeholder} required={f.required} />}
             </label>
           ))}
           <label className="block">
             <span className="block text-sm font-semibold text-gray-700 mb-1.5">Category<span className="text-red-500 ml-0.5">*</span></span>
-            <select required value={form.categoryId} onChange={e=>u("categoryId",e.target.value)} className="input-base">
+            <select required value={form.categoryId} onChange={e=>u("categoryId",e.target.value)} className="select-base">
               <option value="">Select a category…</option>
               {flatCategories.map(c => <option key={c.id} value={c.id}>{c.label}</option>)}
             </select>
@@ -84,13 +84,13 @@ export default function CreateBusinessPage() {
           ].map((f: any) => (
             <label key={f.key} className="block">
               <span className="block text-sm font-semibold text-gray-700 mb-1.5">{f.label}{f.required && <span className="text-red-500 ml-0.5">*</span>}</span>
-              {f.textarea ? <textarea rows={4} value={(form as any)[f.key]} onChange={e=>u(f.key,e.target.value)} className="input-base" placeholder={f.placeholder} />
+              {f.textarea ? <textarea rows={4} value={(form as any)[f.key]} onChange={e=>u(f.key,e.target.value)} className="textarea-base" placeholder={f.placeholder} />
               : <input value={(form as any)[f.key]} onChange={e=>u(f.key,e.target.value)} className="input-base" placeholder={f.placeholder} required={f.required} />}
             </label>
           ))}
           <label className="block">
             <span className="block text-sm font-semibold text-gray-700 mb-1.5">Price range</span>
-            <select value={form.priceRange} onChange={e=>u("priceRange",e.target.value)} className="input-base">
+            <select value={form.priceRange} onChange={e=>u("priceRange",e.target.value)} className="select-base">
               <option value="BUDGET">$ Budget</option><option value="MODERATE">$$ Moderate</option><option value="EXPENSIVE">$$$ Expensive</option><option value="LUXURY">$$$$ Luxury</option>
             </select>
           </label>

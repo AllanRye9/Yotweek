@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../context/AuthContext";
+import { SafeImage } from "../../../components/SafeImage";
 
 const STATUS_LABEL: Record<string, string> = {
   PENDING: "⏳ Awaiting approval", APPROVED: "✅ Live", REJECTED: "🚫 Rejected", HIDDEN: "🚫 Hidden by admin",
@@ -50,10 +51,8 @@ export default function MyCommunitiesPage() {
           {communities.map(c => (
             <Link key={c.id} href={`/communities/${c.slug}`} className="card-base p-5 flex items-center gap-4 hover:shadow-md transition-shadow">
               <div className="w-16 h-16 shrink-0 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center">
-                {c.coverImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={c.coverImageUrl} alt={c.name} className="w-full h-full object-cover" />
-                ) : <span className="text-2xl text-gray-300">🤝</span>}
+                <SafeImage src={c.coverImageUrl} alt={c.name} className="w-full h-full object-cover"
+                  fallback={<span className="text-2xl text-gray-300">🤝</span>} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">

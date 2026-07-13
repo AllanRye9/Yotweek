@@ -70,19 +70,19 @@ export default function AdminSetupPage() {
               <label className="block">
                 <span className="block text-sm font-semibold text-white/70 mb-1.5">Full name</span>
                 <input required value={form.name} onChange={e => u("name", e.target.value)}
-                  className="w-full rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/30 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="input-dark"
                   placeholder="Rye Okello" />
               </label>
               <label className="block">
                 <span className="block text-sm font-semibold text-white/70 mb-1.5">Admin email</span>
                 <input required type="email" value={form.email} onChange={e => u("email", e.target.value)}
-                  className="w-full rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/30 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="input-dark"
                   placeholder="admin@yotweek.com" autoComplete="username" />
               </label>
               <label className="block">
                 <span className="block text-sm font-semibold text-white/70 mb-1.5">Password</span>
                 <input required type="password" minLength={8} value={form.password} onChange={e => u("password", e.target.value)}
-                  className="w-full rounded-xl bg-white/10 border border-white/10 text-white placeholder-white/30 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+                  className="input-dark"
                   placeholder="At least 8 characters" autoComplete="new-password" />
               </label>
               <button type="submit" disabled={submitting}

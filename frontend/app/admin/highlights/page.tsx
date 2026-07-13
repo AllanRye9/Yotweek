@@ -105,7 +105,7 @@ export default function AdminHighlightsPage() {
             <input value={form.title} onChange={e=>setForm({...form,title:e.target.value})} placeholder="Title" className="input-base" />
             <input value={form.subtitle} onChange={e=>setForm({...form,subtitle:e.target.value})} placeholder="Subtitle (optional)" className="input-base" />
             <input value={form.mediaUrl} onChange={e=>setForm({...form,mediaUrl:e.target.value})} placeholder="Image or video URL" className="input-base" />
-            <select value={form.mediaType} onChange={e=>setForm({...form,mediaType:e.target.value})} className="input-base">
+            <select value={form.mediaType} onChange={e=>setForm({...form,mediaType:e.target.value})} className="select-base">
               <option value="IMAGE">Image</option>
               <option value="VIDEO">Video</option>
             </select>
