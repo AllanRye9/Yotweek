@@ -1,106 +1,60 @@
 #!/usr/bin/env bash
 set -euo pipefail
-IFS=$'\n\t'
 
-usage() {
-  cat <<'EOF'
-Usage: ./script.sh [options] [commit-message]
+trap 'echo "Script failed at line ${LINENO}." >&2' ERR
 
-Pull the latest changes from origin/main, optionally run Prisma migrations
-and production builds, stage all local changes, commit them with the
-provided message (or a timestamped default), and push back to origin/main.
+# if ! git diff --quiet || ! git diff --cached --quiet; then
+#   echo "Working tree has uncommitted changes. Commit or stash them before running this script." >&2
+#   exit 1
+# fi
 
-Options:
-  --migrate        Run backend Prisma migrations before committing.
-  --build          Run backend and frontend production builds before committing.
-  --verify         Run both migrations and builds before committing.
-  -h, --help       Show this help message
-EOF
-}
-
-commit_message=""
-run_migrations=false
-run_build=false
-
-while [[ $# -gt 0 ]]; do
-  case "$1" in
-    --migrate)
-      run_migrations=true
-      ;;
-    --build)
-      run_build=true
-      ;;
-    --verify)
-      run_migrations=true
-      run_build=true
-      ;;
-    -h|--help)
-      usage
-      exit 0
-      ;;
-    --)
-      shift
-      break
-      ;;
-    -*)
-      echo "Unknown option: $1" >&2
-      usage >&2
-      exit 1
-      ;;
-    *)
-      if [[ -z "$commit_message" ]]; then
-        commit_message="$1"
-      else
-        echo "Unexpected extra argument: $1" >&2
-        usage >&2
-        exit 1
-      fi
-      ;;
-  esac
-  shift
-done
-
-if [[ "$run_migrations" == true ]]; then
-  echo "Running backend Prisma migrations..."
-  (cd backend && npm run prisma:migrate:deploy)
+if [[ -n "$(git ls-files -u)" ]]; then
+  echo "Unresolved merge conflicts detected. Resolve conflicts, stage the files, and commit before running this script." >&2
+  git merge
 fi
 
-if [[ "$run_build" == true ]]; then
-  echo "Building backend..."
-  (cd backend && npm run build)
-
-  echo "Building frontend..."
-  (cd frontend && npm run build)
+# Stash local changes if any, remember whether we created a stash
+stash_output=$(git stash 2>&1 || true)
+need_apply=false
+if [[ "$stash_output" != *"No local changes"* ]]; then
+  need_apply=true
 fi
 
-if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-  echo "Error: not inside a git repository." >&2
+git pull --ff-only origin main
+
+# Only apply stash if we actually created one
+if [ "$need_apply" = true ]; then
+  git stash apply
+fi
+
+if [ ! -d frontend ] || [ ! -d backend ]; then
+  echo "Expected frontend and backend directories in repository root." >&2
   exit 1
 fi
 
-branch=$(git symbolic-ref --quiet --short HEAD)
-if [[ "$branch" != "main" ]]; then
-  echo "Switching to main branch from '$branch'..."
-  git checkout main
-fi
+pushd frontend > /dev/null
+rm -rf node_modules package-lock.json
+npm install
+npm run build
+popd > /dev/null
 
-echo "Pulling latest changes from origin/main..."
-git pull origin main
-
-if [[ -z "$commit_message" ]]; then
-  commit_message="Update: $(date '+%Y-%m-%d %H:%M:%S')"
+if [ -f backend/package.json ]; then
+  pushd backend > /dev/null
+  rm -rf node_modules package-lock.json
+  npm install
+  npm run build
+  popd > /dev/null
+else
+  echo "Warning: backend/package.json not found. Skipping backend build."
 fi
 
 git add .
 
-if git diff --cached --quiet --ignore-submodules --; then
-  echo "No changes to commit."
+if git diff --cached --quiet; then
+  echo "Build completed, but there are no changes to commit."
   exit 0
 fi
 
-git commit -m "$commit_message"
-
-echo "Pushing committed changes to origin/main..."
+git commit -m "Update frontend build"
 git push origin main
-
-echo "Done."
+echo "Done!"
