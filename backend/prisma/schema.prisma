@@ -159,6 +159,7 @@ model User {
 
   createdCommunities Community[]       @relation("CommunityCreator")
   communityMemberships CommunityMember[]
+  adminActionLogs   AdminActionLog[]
 
   @@index([role])
 }
@@ -344,14 +345,34 @@ model Notification {
 // ─── Landing-page / traffic analytics ───────────────────────────────────
 
 model VisitorLog {
-  id        String   @id @default(uuid())
-  ipHash    String   // SHA-256 hashed IP, never store raw IP
-  day       DateTime // truncated to date, used for daily-unique dedupe
-  country   String?
-  createdAt DateTime @default(now())
+  id         String   @id @default(uuid())
+  ipHash     String   // SHA-256 hashed IP, never store raw IP
+  day        DateTime // truncated to date, used for daily-unique dedupe
+  country    String?
+  deviceType String? // "mobile" | "tablet" | "desktop" — parsed from User-Agent, never the raw UA string
+  createdAt  DateTime @default(now())
 
   @@unique([ipHash, day])
   @@index([day])
+}
+
+// Audit trail for admin actions — point-in-time record of who did what to
+// which piece of content, so moderation is accountable. Deliberately
+// append-only (no update/delete on this model itself).
+model AdminActionLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  admin      User     @relation(fields: [adminId], references: [id])
+  action     String   // e.g. "approve", "reject", "hide", "edit", "delete", "suspend"
+  targetType String   // "event" | "business" | "community" | "user" | "post" | "review" | "testimonial" | "highlight" | "eventVideo"
+  targetId   String
+  targetLabel String? // human-readable snapshot (e.g. event title) — survives the target later being deleted
+  details    String?  // free-text note, e.g. a rejection reason
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }
 
 model SiteCounter {

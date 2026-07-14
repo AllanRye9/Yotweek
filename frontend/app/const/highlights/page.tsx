@@ -127,8 +127,8 @@ export default function AdminHighlightsPage() {
     <div className="animate-fade-in">
       <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11">
         <div className="max-w-7xl mx-auto">
-          <h1 className="font-extrabold text-2xl">Hero Slideshow</h1>
-          <p className="text-white/70 text-sm mt-1">Manage the image/video slides shown on the homepage hero.</p>
+          <h1 className="font-extrabold text-2xl">Highlight Banner</h1>
+          <p className="text-white/70 text-sm mt-1">Manage the promotional image/video banner shown below the homepage hero.</p>
         </div>
       </div>
 

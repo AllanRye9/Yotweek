@@ -96,3 +96,10 @@ export async function detectCountryByIp(): Promise<DetectedLocation> {
     return { countryCode: null, currency: null };
   }
 }
+
+/** Converts a 2-letter ISO country code into its flag emoji (regional indicator symbols). Falls back to a globe for "Unknown" or anything not a valid 2-letter code. */
+export function countryFlag(code: string): string {
+  if (!/^[A-Za-z]{2}$/.test(code)) return "🌐";
+  const base = 127397;
+  return String.fromCodePoint(...[...code.toUpperCase()].map(c => base + c.charCodeAt(0)));
+}

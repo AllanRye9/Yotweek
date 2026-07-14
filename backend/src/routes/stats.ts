@@ -14,6 +14,16 @@ function startOfDay(d: Date): Date {
   return copy;
 }
 
+// Coarse device category only — "mobile" | "tablet" | "desktop" — never the
+// raw User-Agent string, which is itself a fairly identifying fingerprint.
+function deviceTypeFromUA(ua: string | undefined): string {
+  if (!ua) return "desktop";
+  const s = ua.toLowerCase();
+  if (/ipad|tablet(?!.*mobile)/.test(s)) return "tablet";
+  if (/mobi|android|iphone/.test(s)) return "mobile";
+  return "desktop";
+}
+
 // POST /api/stats/visit - call once per page load from the frontend.
 // Dedupes per IP-hash per day for "daily visitors"; every call increments
 // the lifetime "total visitors" counter.
@@ -22,6 +32,7 @@ router.post("/visit", async (req, res, next) => {
     const ip = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.socket.remoteAddress || "unknown";
     const ipHash = hashIp(ip);
     const day = startOfDay(new Date());
+    const deviceType = deviceTypeFromUA(req.headers["user-agent"]);
 
     await prisma.siteCounter.upsert({
       where: { key: "total_visitors" },
@@ -30,7 +41,7 @@ router.post("/visit", async (req, res, next) => {
     });
 
     try {
-      await prisma.visitorLog.create({ data: { ipHash, day, country: req.body?.country } });
+      await prisma.visitorLog.create({ data: { ipHash, day, country: req.body?.country, deviceType } });
     } catch {
       // unique constraint on (ipHash, day) means this visitor was already
       // counted today - that's expected and fine, not an error.

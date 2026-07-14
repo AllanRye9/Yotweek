@@ -51,6 +51,7 @@ const EXPLORE_LINKS = [
   { href:"/businesses?category=accommodation", icon:"🏨", label:"Accommodation" },
   { href:"/communities", icon:"🤝", label:"Communities" },
   { href:"/destinations", icon:"🗺️", label:"Destinations" },
+  { href:"/itinerary", icon:"📅", label:"Itinerary Builder" },
   { href:"/blog", icon:"✍️", label:"Travel Blog" },
 ];
 
@@ -146,7 +147,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop Search */}
-          <form onSubmit={onSearch} className="hidden sm:flex flex-1 max-w-lg">
+          <form onSubmit={onSearch} className="hidden lg:flex flex-1 min-w-0 max-w-lg">
             <div className={`flex w-full rounded-xl overflow-hidden ring-2 transition-all ${scrolled ? "ring-gray-200 focus-within:ring-sky-400" : "ring-white/20 focus-within:ring-white/60"}`}>
               <input value={searchQ} onChange={e => setSearchQ(e.target.value)}
                 placeholder="Search events, businesses, destinations…"
@@ -176,10 +177,6 @@ export function Navbar() {
                 </div>
               )}
             </div>
-
-            <Link href="/itinerary" className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${scrolled ? "text-gray-700 hover:bg-gray-100" : "text-white/90 hover:bg-white/10"}`}>
-              Itinerary
-            </Link>
 
             <Link href="/events/create" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${scrolled ? "bg-sky-600 text-white hover:bg-sky-700" : "bg-white/20 text-white border border-white/30 hover:bg-white/30"}`}>
               + List
@@ -267,8 +264,10 @@ export function Navbar() {
           </nav>
         </div>
 
-        {/* Mobile search */}
-        <div className={`sm:hidden px-4 py-2 border-t ${scrolled ? "bg-white border-gray-100" : "bg-blue-800/40 border-white/10"}`}>
+        {/* Search — shown here (below header) at any width narrower than
+            lg, where the inline header search is hidden to avoid crowding
+            out the nav items on tablet / small-laptop widths. */}
+        <div className={`lg:hidden px-4 py-2 border-t ${scrolled ? "bg-white border-gray-100" : "bg-blue-800/40 border-white/10"}`}>
           <form onSubmit={onSearch} className="flex rounded-xl overflow-hidden ring-1 ring-white/20">
             <input value={searchQ} onChange={e => setSearchQ(e.target.value)} placeholder="Search events, places…"
               className={`flex-1 px-3 py-2 text-sm outline-none ${scrolled ? "bg-white text-gray-900" : "bg-white/10 text-white placeholder:text-white/50"}`} />

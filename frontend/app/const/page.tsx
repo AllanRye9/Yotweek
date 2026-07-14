@@ -68,7 +68,7 @@ export default function AdminPage() {
           <Link href="/const/reports" className="btn-secondary !px-6 !py-2.5">View reports</Link>
           <Link href="/const/users" className="btn-secondary !px-6 !py-2.5">Manage users</Link>
           <Link href="/const/event-videos" className="btn-secondary !px-6 !py-2.5">🎬 Event videos</Link>
-          <Link href="/const/highlights" className="btn-secondary !px-6 !py-2.5">🎞️ Hero slideshow</Link>
+          <Link href="/const/highlights" className="btn-secondary !px-6 !py-2.5">🎞️ Highlight banner</Link>
           <Link href="/const/settings" className="btn-secondary !px-6 !py-2.5">⚙️ Site settings</Link>
         </div>
 
