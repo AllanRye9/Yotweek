@@ -10,8 +10,14 @@ export default function AdminTestimonialsPage() {
   const [items, setItems] = useState<any[]>([]); const [fetching, setFetching] = useState(true);
   function load() { setFetching(true); api.get("/admin/testimonials/pending").then(r=>setItems(r.data.testimonials)).finally(()=>setFetching(false)); }
   useEffect(() => { if (user?.role==="ADMIN") load(); }, [user]); // eslint-disable-line react-hooks/exhaustive-deps
-  async function approve(id: string, isFeatured: boolean) { await api.post(`/admin/testimonials/${id}/approve`, { isFeatured }); toast.success("Approved!"); load(); }
-  async function reject(id: string) { await api.post(`/admin/testimonials/${id}/reject`); toast.info("Rejected."); load(); }
+  async function approve(id: string, isFeatured: boolean) {
+    try { await api.post(`/admin/testimonials/${id}/approve`, { isFeatured }); toast.success("Approved!"); load(); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not approve — it may no longer exist."); load(); }
+  }
+  async function reject(id: string) {
+    try { await api.post(`/admin/testimonials/${id}/reject`); toast.info("Rejected."); load(); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not reject — it may no longer exist."); load(); }
+  }
   return (
     <AdminGuard>
     <div className="animate-fade-in">

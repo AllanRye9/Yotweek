@@ -20,17 +20,27 @@ export default function AdminReviewsPage() {
   useEffect(() => { if (user?.role === "ADMIN") load(tab); }, [user, tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function act(id: string, status: "APPROVED"|"REJECTED") {
-    const path = tab === "event" ? `/admin/reviews/${id}` : `/admin/business-reviews/${id}`;
-    await api.put(path, { status });
-    toast.success(status === "APPROVED" ? "Review approved." : "Review rejected.");
-    load(tab);
+    try {
+      const path = tab === "event" ? `/admin/reviews/${id}` : `/admin/business-reviews/${id}`;
+      await api.put(path, { status });
+      toast.success(status === "APPROVED" ? "Review approved." : "Review rejected.");
+      load(tab);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update this review — it may no longer exist.");
+      load(tab);
+    }
   }
   async function remove(id: string) {
     if (!confirm("Delete this review permanently?")) return;
-    const path = tab === "event" ? `/admin/reviews/${id}` : `/admin/business-reviews/${id}`;
-    await api.delete(path);
-    toast.warning("Review deleted.");
-    load(tab);
+    try {
+      const path = tab === "event" ? `/admin/reviews/${id}` : `/admin/business-reviews/${id}`;
+      await api.delete(path);
+      toast.warning("Review deleted.");
+      load(tab);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not delete this review — it may already be gone.");
+      load(tab);
+    }
   }
 
   return (

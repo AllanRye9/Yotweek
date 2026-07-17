@@ -24,21 +24,36 @@ export default function AdminUsersPage() {
   function onSearch(e: React.FormEvent) { e.preventDefault(); load(); }
 
   async function toggleVerify(u: any) {
-    await api.post(`/admin/users/${u.id}/verify`, { verified: !u.isVerifiedOrganizer });
-    toast.success(u.isVerifiedOrganizer ? "Verification removed." : "Organizer verified.");
-    load();
+    try {
+      await api.post(`/admin/users/${u.id}/verify`, { verified: !u.isVerifiedOrganizer });
+      toast.success(u.isVerifiedOrganizer ? "Verification removed." : "Organizer verified.");
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update this user — they may no longer exist.");
+      load();
+    }
   }
   async function toggleSuspend(u: any) {
     if (u.id === user?.id) { toast.error("You can't suspend your own account."); return; }
-    await api.post(`/admin/users/${u.id}/suspend`, { suspended: !u.isSuspended });
-    toast.warning(u.isSuspended ? "Account reinstated." : "Account suspended.");
-    load();
+    try {
+      await api.post(`/admin/users/${u.id}/suspend`, { suspended: !u.isSuspended });
+      toast.warning(u.isSuspended ? "Account reinstated." : "Account suspended.");
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update this user — they may no longer exist.");
+      load();
+    }
   }
   async function changeRole(u: any, role: string) {
     if (u.id === user?.id) { toast.error("You can't change your own role."); return; }
-    await api.put(`/admin/users/${u.id}/role`, { role });
-    toast.success(`Role updated to ${role}.`);
-    load();
+    try {
+      await api.put(`/admin/users/${u.id}/role`, { role });
+      toast.success(`Role updated to ${role}.`);
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not change role — this user may no longer exist.");
+      load();
+    }
   }
   async function deleteUser(u: any) {
     if (u.id === user?.id) { toast.error("You can't delete your own account."); return; }

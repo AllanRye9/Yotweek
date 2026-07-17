@@ -24,9 +24,19 @@ export default function AdminBusinessesPage() {
   }
   useEffect(() => { if (user?.role==="ADMIN") load(tab); }, [user,tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function approve(id: string) { await api.post(`/admin/businesses/${id}/approve`); toast.success("Approved!"); load(tab); }
-  async function reject(id: string) { const r=prompt("Reason?")||"Did not meet guidelines"; await api.post(`/admin/businesses/${id}/reject`,{reason:r}); toast.info("Rejected."); load(tab); }
-  async function hide(id: string) { await api.post(`/admin/businesses/${id}/hide`); toast.warning("Hidden."); load(tab); }
+  async function approve(id: string) {
+    try { await api.post(`/admin/businesses/${id}/approve`); toast.success("Approved!"); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not approve — it may no longer exist."); load(tab); }
+  }
+  async function reject(id: string) {
+    const r=prompt("Reason?")||"Did not meet guidelines";
+    try { await api.post(`/admin/businesses/${id}/reject`,{reason:r}); toast.info("Rejected."); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not reject — it may no longer exist."); load(tab); }
+  }
+  async function hide(id: string) {
+    try { await api.post(`/admin/businesses/${id}/hide`); toast.warning("Hidden."); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not hide — it may no longer exist."); load(tab); }
+  }
   async function remove(id: string) {
     if (!confirm("Permanently delete this business? This can't be undone.")) return;
     try { await api.delete(`/admin/businesses/${id}`); toast.warning("Deleted."); load(tab); }
@@ -37,10 +47,15 @@ export default function AdminBusinessesPage() {
     setEditForm({ name: b.name, description: b.description, priceRange: b.priceRange || "" });
   }
   async function saveEdit(id: string) {
-    await api.put(`/admin/businesses/${id}`, { name: editForm.name, description: editForm.description, priceRange: editForm.priceRange || null });
-    toast.success("Business updated.");
-    setEditingId(null);
-    load(tab);
+    try {
+      await api.put(`/admin/businesses/${id}`, { name: editForm.name, description: editForm.description, priceRange: editForm.priceRange || null });
+      toast.success("Business updated.");
+      setEditingId(null);
+      load(tab);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not save changes — this business may no longer exist.");
+      load(tab);
+    }
   }
 
   return (

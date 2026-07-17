@@ -24,10 +24,23 @@ export default function AdminCommunitiesPage() {
   }
   useEffect(() => { if (user?.role==="ADMIN") load(tab); }, [user,tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function approve(id: string) { await api.post(`/admin/communities/${id}/approve`); toast.success("Approved!"); load(tab); }
-  async function reject(id: string) { const r=prompt("Reason?")||"Did not meet guidelines"; await api.post(`/admin/communities/${id}/reject`,{reason:r}); toast.info("Rejected."); load(tab); }
-  async function hide(id: string) { await api.post(`/admin/communities/${id}/hide`); toast.warning("Hidden."); load(tab); }
-  async function toggleFeature(c: any) { await api.put(`/admin/communities/${c.id}`, { isFeatured: !c.isFeatured }); load(tab); }
+  async function approve(id: string) {
+    try { await api.post(`/admin/communities/${id}/approve`); toast.success("Approved!"); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not approve — it may no longer exist."); load(tab); }
+  }
+  async function reject(id: string) {
+    const r=prompt("Reason?")||"Did not meet guidelines";
+    try { await api.post(`/admin/communities/${id}/reject`,{reason:r}); toast.info("Rejected."); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not reject — it may no longer exist."); load(tab); }
+  }
+  async function hide(id: string) {
+    try { await api.post(`/admin/communities/${id}/hide`); toast.warning("Hidden."); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not hide — it may no longer exist."); load(tab); }
+  }
+  async function toggleFeature(c: any) {
+    try { await api.put(`/admin/communities/${c.id}`, { isFeatured: !c.isFeatured }); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not update — it may no longer exist."); load(tab); }
+  }
   async function remove(id: string) {
     if (!confirm("Permanently delete this community? Members and community posts go with it — events/businesses just get unlinked. This can't be undone.")) return;
     try { await api.delete(`/admin/communities/${id}`); toast.warning("Deleted."); load(tab); }
@@ -35,10 +48,15 @@ export default function AdminCommunitiesPage() {
   }
   function startEdit(c: any) { setEditingId(c.id); setEditForm({ name: c.name, description: c.description }); }
   async function saveEdit(id: string) {
-    await api.put(`/admin/communities/${id}`, { name: editForm.name, description: editForm.description });
-    toast.success("Community updated.");
-    setEditingId(null);
-    load(tab);
+    try {
+      await api.put(`/admin/communities/${id}`, { name: editForm.name, description: editForm.description });
+      toast.success("Community updated.");
+      setEditingId(null);
+      load(tab);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not save changes — this community may no longer exist.");
+      load(tab);
+    }
   }
 
   return (

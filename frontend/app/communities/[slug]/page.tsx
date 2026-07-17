@@ -107,16 +107,26 @@ export default function CommunityDetailPage() {
   }
   async function setMemberRole(userId: string, role: "MEMBER" | "ADMIN") {
     if (!community) return;
-    await api.put(`/communities/${community.id}/members/${userId}`, { role });
-    loadMembers();
+    try {
+      await api.put(`/communities/${community.id}/members/${userId}`, { role });
+      loadMembers();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update this member's role.");
+      loadMembers();
+    }
   }
   async function removeMember(userId: string) {
     if (!community) return;
     if (!confirm("Remove this member from the community?")) return;
-    await api.delete(`/communities/${community.id}/members/${userId}`);
-    toast.warning("Member removed.");
-    loadMembers();
-    setCommunity(c => c ? { ...c, _count: { ...c._count, members: Math.max(0, c._count.members - 1) } } : c);
+    try {
+      await api.delete(`/communities/${community.id}/members/${userId}`);
+      toast.warning("Member removed.");
+      loadMembers();
+      setCommunity(c => c ? { ...c, _count: { ...c._count, members: Math.max(0, c._count.members - 1) } } : c);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not remove this member — they may already be gone.");
+      loadMembers();
+    }
   }
 
   async function submitPost(e: React.FormEvent) {
@@ -142,9 +152,13 @@ export default function CommunityDetailPage() {
   async function removePost(postId: string) {
     if (!community) return;
     if (!confirm("Remove this post?")) return;
-    await api.delete(`/communities/${community.id}/posts/${postId}`);
-    setPosts(p => p.filter(x => x.id !== postId));
-    toast.warning("Post removed.");
+    try {
+      await api.delete(`/communities/${community.id}/posts/${postId}`);
+      setPosts(p => p.filter(x => x.id !== postId));
+      toast.warning("Post removed.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not remove this post — it may already be gone.");
+    }
   }
 
   if (!community) return (

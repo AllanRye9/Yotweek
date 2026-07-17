@@ -77,21 +77,36 @@ export default function AdminEventVideosPage() {
   }
 
   async function setStatus(v: EventVideo, status: EventVideoStatus) {
-    await api.put(`/admin/event-videos/${v.id}`, { status });
-    toast.success(status === "APPROVED" ? "Clip approved." : status === "REJECTED" ? "Clip rejected." : "Clip updated.");
-    load();
+    try {
+      await api.put(`/admin/event-videos/${v.id}`, { status });
+      toast.success(status === "APPROVED" ? "Clip approved." : status === "REJECTED" ? "Clip rejected." : "Clip updated.");
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update this clip — it may no longer exist.");
+      load();
+    }
   }
 
   async function toggleActive(v: EventVideo) {
-    await api.put(`/admin/event-videos/${v.id}`, { isActive: !v.isActive });
-    load();
+    try {
+      await api.put(`/admin/event-videos/${v.id}`, { isActive: !v.isActive });
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update this clip — it may no longer exist.");
+      load();
+    }
   }
 
   async function remove(id: string) {
     if (!confirm("Remove this clip from the slider?")) return;
-    await api.delete(`/admin/event-videos/${id}`);
-    toast.warning("Clip removed.");
-    load();
+    try {
+      await api.delete(`/admin/event-videos/${id}`);
+      toast.warning("Clip removed.");
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not remove this clip — it may already be gone.");
+      load();
+    }
   }
 
   async function move(v: EventVideo, dir: -1 | 1) {
@@ -99,11 +114,16 @@ export default function AdminEventVideosPage() {
     const idx = group.findIndex(x => x.id === v.id);
     const swapWith = group[idx + dir];
     if (!swapWith) return;
-    await Promise.all([
-      api.put(`/admin/event-videos/${v.id}`, { sortOrder: swapWith.sortOrder }),
-      api.put(`/admin/event-videos/${swapWith.id}`, { sortOrder: v.sortOrder }),
-    ]);
-    load();
+    try {
+      await Promise.all([
+        api.put(`/admin/event-videos/${v.id}`, { sortOrder: swapWith.sortOrder }),
+        api.put(`/admin/event-videos/${swapWith.id}`, { sortOrder: v.sortOrder }),
+      ]);
+      load();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not reorder — the list may have changed. Refreshing.");
+      load();
+    }
   }
 
   const sorted = [...videos].sort((a, b) => a.sortOrder - b.sortOrder);

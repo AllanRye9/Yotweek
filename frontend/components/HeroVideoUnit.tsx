@@ -70,9 +70,12 @@ export function HeroVideoUnit() {
         );
       })()}
 
-      {/* Scrim: brand-tinted gradient so text stays legible over any
-          uploaded footage while keeping the sky/indigo identity. */}
-      <div className={`absolute inset-0 ${hasVideo ? "bg-gradient-to-b from-indigo-950/70 via-blue-900/50 to-indigo-950/80" : ""}`} />
+      {/* Scrim: kept deliberately light so the footage itself stays the
+          star — just enough to keep white text legible, concentrated at
+          the very top/bottom edges rather than washing out the whole
+          frame. */}
+      <div className={`absolute inset-0 ${hasVideo ? "bg-gradient-to-b from-black/35 via-black/10 to-black/45" : ""}`} />
+      <div className={`absolute inset-0 ${hasVideo ? "bg-black/10" : ""}`} />
       <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-sunset-400/10 animate-float pointer-events-none" />
       <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{ animationDelay: "2s" }} />
 
@@ -94,25 +97,29 @@ export function HeroVideoUnit() {
         </motion.p>
 
         <motion.h1
-          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.07 } } }}
-          className="display-heading text-white text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-4"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.022 } } }}
+          className="display-heading text-white text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]"
         >
-          {HEADLINE_WORDS.map((word, i) => (
-            <motion.span
-              key={i}
-              variants={{ hidden: { opacity: 0, y: 16, filter: "blur(4px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)" } }}
-              transition={{ duration: 0.4 }}
-              className={`inline-block mr-[0.3em] ${i >= 1 && i <= 2 ? "display-accent" : ""}`}
-            >
-              {word}
-            </motion.span>
+          {HEADLINE_WORDS.map((word, wi) => (
+            <span key={wi} className={`inline-block mr-[0.3em] ${wi >= 1 && wi <= 2 ? "display-accent" : ""}`}>
+              {word.split("").map((ch, ci) => (
+                <motion.span
+                  key={ci}
+                  variants={{ hidden: { opacity: 0, y: 12, filter: "blur(3px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)" } }}
+                  transition={{ duration: 0.25 }}
+                  className="inline-block"
+                >
+                  {ch}
+                </motion.span>
+              ))}
+            </span>
           ))}
         </motion.h1>
 
         <motion.p
           variants={{ hidden: { opacity: 0, y: 10 }, show: { opacity: 1, y: 0 } }}
           transition={{ duration: 0.5 }}
-          className="text-white/70 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed"
+          className="text-white/80 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]"
         >
           Verified events, local businesses, and tourism destinations. Smart recommendations that learn from your interests — the more you explore, the better it gets.
         </motion.p>

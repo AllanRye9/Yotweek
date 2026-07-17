@@ -24,10 +24,23 @@ export default function AdminEventsPage() {
   }
   useEffect(() => { if (user?.role==="ADMIN") load(tab); }, [user,tab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  async function approve(id: string) { await api.post(`/admin/events/${id}/approve`); toast.success("Approved!"); load(tab); }
-  async function reject(id: string) { const r=prompt("Reason?")||"Did not meet guidelines"; await api.post(`/admin/events/${id}/reject`,{reason:r}); toast.info("Rejected."); load(tab); }
-  async function hide(id: string) { await api.post(`/admin/events/${id}/hide`); toast.warning("Hidden."); load(tab); }
-  async function toggleFeature(e: any) { await api.put(`/admin/events/${e.id}`, { isFeatured: !e.isFeatured }); toast.success(e.isFeatured ? "Unfeatured." : "Featured! ⭐"); load(tab); }
+  async function approve(id: string) {
+    try { await api.post(`/admin/events/${id}/approve`); toast.success("Approved!"); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not approve — it may no longer exist."); load(tab); }
+  }
+  async function reject(id: string) {
+    const r=prompt("Reason?")||"Did not meet guidelines";
+    try { await api.post(`/admin/events/${id}/reject`,{reason:r}); toast.info("Rejected."); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not reject — it may no longer exist."); load(tab); }
+  }
+  async function hide(id: string) {
+    try { await api.post(`/admin/events/${id}/hide`); toast.warning("Hidden."); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not hide — it may no longer exist."); load(tab); }
+  }
+  async function toggleFeature(e: any) {
+    try { await api.put(`/admin/events/${e.id}`, { isFeatured: !e.isFeatured }); toast.success(e.isFeatured ? "Unfeatured." : "Featured! ⭐"); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not update — it may no longer exist."); load(tab); }
+  }
   async function remove(id: string) {
     if (!confirm("Permanently delete this listing? This can't be undone.")) return;
     try { await api.delete(`/admin/events/${id}`); toast.warning("Deleted."); load(tab); }
@@ -38,14 +51,19 @@ export default function AdminEventsPage() {
     setEditForm({ title: e.title, description: e.description, price: e.price ?? "", capacity: e.capacity ?? "" });
   }
   async function saveEdit(id: string) {
-    await api.put(`/admin/events/${id}`, {
-      title: editForm.title, description: editForm.description,
-      price: editForm.price === "" ? null : Number(editForm.price),
-      capacity: editForm.capacity === "" ? null : Number(editForm.capacity),
-    });
-    toast.success("Listing updated.");
-    setEditingId(null);
-    load(tab);
+    try {
+      await api.put(`/admin/events/${id}`, {
+        title: editForm.title, description: editForm.description,
+        price: editForm.price === "" ? null : Number(editForm.price),
+        capacity: editForm.capacity === "" ? null : Number(editForm.capacity),
+      });
+      toast.success("Listing updated.");
+      setEditingId(null);
+      load(tab);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not save changes — this listing may no longer exist.");
+      load(tab);
+    }
   }
 
   return (

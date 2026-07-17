@@ -16,10 +16,15 @@ export default function AdminReportsPage() {
   }
   useEffect(() => { if (user?.role==="ADMIN") load(tab); }, [user, tab]); // eslint-disable-line react-hooks/exhaustive-deps
   async function resolve(id: string, action: string) {
-    if (tab === "event") await api.post(`/reports/${id}/resolve`,{action});
-    else await api.post(`/reports/business/${id}/resolve`,{action});
-    toast.success(action.startsWith("hide")?"Listing hidden.":"Report dismissed.");
-    load(tab);
+    try {
+      if (tab === "event") await api.post(`/reports/${id}/resolve`,{action});
+      else await api.post(`/reports/business/${id}/resolve`,{action});
+      toast.success(action.startsWith("hide")?"Listing hidden.":"Report dismissed.");
+      load(tab);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not resolve this report — it may have already been handled.");
+      load(tab);
+    }
   }
   return (
     <AdminGuard>
