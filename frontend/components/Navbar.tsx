@@ -5,6 +5,8 @@ import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { CurrencySelector } from "./CurrencySelector";
+import { LocaleSwitcher } from "./LocaleSwitcher";
+import { useIntlayer } from "next-intlayer";
 
 // ---------- Shared categories (source of truth) ----------
 export const CATEGORIES = [
@@ -56,6 +58,7 @@ const EXPLORE_LINKS = [
 ];
 
 export function Navbar() {
+  const content = useIntlayer("navbar");
   const { user, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
@@ -142,7 +145,7 @@ export function Navbar() {
               <span className={`font-extrabold text-lg tracking-tight ${scrolled ? "text-gray-900" : "text-white"}`}>
                 yot<span className={`font-serif italic ${logoAccent}`}>week</span>
               </span>
-              <p className={`text-[9px] font-semibold uppercase tracking-widest ${scrolled ? "text-gray-400" : "text-white/50"}`}>Discover · Explore</p>
+              <p className={`text-[9px] font-semibold uppercase tracking-widest ${scrolled ? "text-gray-400" : "text-white/50"}`}>{content.tagline}</p>
             </div>
           </Link>
 
@@ -184,6 +187,9 @@ export function Navbar() {
 
             {/* Currency */}
             <CurrencySelector dark={!scrolled} />
+
+            {/* Language */}
+            <LocaleSwitcher dark={!scrolled} />
 
             {/* Notifications */}
             {user && (
@@ -346,6 +352,12 @@ export function Navbar() {
               <span style={{fontSize:"1.3rem",lineHeight:1,width:"1.6rem",textAlign:"center",display:"inline-block"}}>💱</span> Display currency
             </span>
             <CurrencySelector />
+          </div>
+          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-gray-50">
+            <span className="flex items-center gap-3 text-sm font-medium text-gray-700">
+              <span style={{fontSize:"1.3rem",lineHeight:1,width:"1.6rem",textAlign:"center",display:"inline-block"}}>🌐</span> Language
+            </span>
+            <LocaleSwitcher />
           </div>
           {user ? (
             <div className="px-5 py-4">

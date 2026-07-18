@@ -7,6 +7,11 @@ import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { StatsTicker } from "../components/StatsTicker";
 import { VisitorTracker } from "../components/VisitorTracker";
+import { IntlayerClientProvider } from "next-intlayer";
+import { getLocale } from "next-intlayer/server";
+import { getHTMLTextDir } from "intlayer";
+
+export { generateStaticParams } from "next-intlayer";
 
 export const metadata: Metadata = {
   title: { default: "Yotweek — Promote Active and Engaging Living", template: "%s | Yotweek" },
@@ -17,27 +22,30 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
   return (
-    <html lang="en">
+    <html lang={locale} dir={getHTMLTextDir(locale)}>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
       </head>
-      <body className="flex min-h-screen flex-col bg-slate-50">
-        <AuthProvider>
-          <CurrencyProvider>
-            <ToastProvider>
-              <VisitorTracker />
-              <StatsTicker />
-              <Navbar />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </ToastProvider>
-          </CurrencyProvider>
-        </AuthProvider>
-      </body>
+      <IntlayerClientProvider defaultLocale={locale}>
+        <body className="flex min-h-screen flex-col bg-slate-50">
+          <AuthProvider>
+            <CurrencyProvider>
+              <ToastProvider>
+                <VisitorTracker />
+                <StatsTicker />
+                <Navbar />
+                <main className="flex-1">{children}</main>
+                <Footer />
+              </ToastProvider>
+            </CurrencyProvider>
+          </AuthProvider>
+        </body>
+      </IntlayerClientProvider>
     </html>
   );
 }

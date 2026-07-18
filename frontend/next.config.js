@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { withIntlayerSync } = require("next-intlayer/server");
+
 const nextConfig = {
   output: "standalone",
   images: {
@@ -6,4 +8,4 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+module.exports = withIntlayerSync(nextConfig);

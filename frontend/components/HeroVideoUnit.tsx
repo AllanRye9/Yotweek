@@ -2,12 +2,11 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useIntlayer } from "next-intlayer";
 import { api } from "../lib/api";
 import { EventVideo } from "../lib/types";
 import { getYouTubeId, youTubeEmbedUrl } from "../lib/media";
 import { LocationSelector } from "./LocationSelector";
-
-const HEADLINE_WORDS = ["Discover", "what's", "happening", "around", "you", "—", "and", "the", "world"];
 
 // One merged hero unit: the video/YouTube slideshow *is* the hero
 // background, not a separate strip above it. Clips are only ever
@@ -17,6 +16,7 @@ const HEADLINE_WORDS = ["Discover", "what's", "happening", "around", "you", "—
 // yet, this falls back to the brand gradient so the hero never looks
 // broken or empty.
 export function HeroVideoUnit() {
+  const content = useIntlayer("hero-video-unit");
   const [slides, setSlides] = useState<EventVideo[]>([]);
   const [idx, setIdx] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -39,6 +39,13 @@ export function HeroVideoUnit() {
 
   const cur = slides[idx];
   const hasVideo = !loading && !!cur;
+
+  // Headline is translated as two whole phrases (word order/grammar isn't
+  // consistent across languages), then split into words here at render
+  // time — so the bit-by-bit reveal animation works correctly no matter
+  // the active language's word count or script.
+  const line1Words = String(content.headlineLine1).split(" ");
+  const line2Words = String(content.headlineLine2).split(" ");
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 min-h-[560px] sm:min-h-[640px] flex items-center">
@@ -93,15 +100,30 @@ export function HeroVideoUnit() {
           transition={{ duration: 0.5 }}
           className="text-sky-200 text-xs font-bold uppercase tracking-widest mb-3"
         >
-          Events · Businesses · Destinations
+          {content.eyebrow}
         </motion.p>
 
         <motion.h1
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.022 } } }}
           className="display-heading text-white text-4xl sm:text-5xl md:text-6xl leading-[1.1] mb-4 drop-shadow-[0_2px_12px_rgba(0,0,0,0.45)]"
         >
-          {HEADLINE_WORDS.map((word, wi) => (
-            <span key={wi} className={`inline-block mr-[0.3em] ${wi >= 1 && wi <= 2 ? "display-accent" : ""}`}>
+          {line1Words.map((word, wi) => (
+            <span key={`l1-${wi}`} className="inline-block mr-[0.3em]">
+              {word.split("").map((ch, ci) => (
+                <motion.span
+                  key={ci}
+                  variants={{ hidden: { opacity: 0, y: 12, filter: "blur(3px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)" } }}
+                  transition={{ duration: 0.25 }}
+                  className="inline-block"
+                >
+                  {ch}
+                </motion.span>
+              ))}
+            </span>
+          ))}
+          <br className="hidden sm:block" />
+          {line2Words.map((word, wi) => (
+            <span key={`l2-${wi}`} className="inline-block mr-[0.3em] display-accent">
               {word.split("").map((ch, ci) => (
                 <motion.span
                   key={ci}
@@ -121,7 +143,7 @@ export function HeroVideoUnit() {
           transition={{ duration: 0.5 }}
           className="text-white/80 text-sm sm:text-base max-w-xl mx-auto mb-6 leading-relaxed drop-shadow-[0_1px_6px_rgba(0,0,0,0.4)]"
         >
-          Verified events, local businesses, and tourism destinations. Smart recommendations that learn from your interests — the more you explore, the better it gets.
+          {content.tagline}
         </motion.p>
 
         <motion.div
@@ -137,9 +159,9 @@ export function HeroVideoUnit() {
           transition={{ duration: 0.5 }}
           className="flex flex-wrap justify-center gap-3"
         >
-          <Link href="/events" className="btn-primary !px-7 !py-3 !text-base !rounded-xl shadow-glow-lg">Browse events</Link>
-          <Link href="/businesses" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">Find businesses</Link>
-          <Link href="/search" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">🔍 Search</Link>
+          <Link href="/events" className="btn-primary !px-7 !py-3 !text-base !rounded-xl shadow-glow-lg">{content.browseEvents}</Link>
+          <Link href="/businesses" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">{content.findBusinesses}</Link>
+          <Link href="/search" className="btn-secondary !px-7 !py-3 !text-base !rounded-xl !bg-white/10 !border-white/30 !text-white hover:!bg-white/20">🔍 {content.search}</Link>
         </motion.div>
 
         {hasVideo && cur.eventId && (
