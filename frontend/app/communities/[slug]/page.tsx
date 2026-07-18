@@ -34,6 +34,11 @@ export default function CommunityDetailPage() {
   const [composing, setComposing] = useState(false);
   const [postForm, setPostForm] = useState({ title: "", body: "" });
   const [posting, setPosting] = useState(false);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editPostForm, setEditPostForm] = useState({ title: "", body: "" });
+  const [commentDraft, setCommentDraft] = useState<Record<string, string>>({});
+  const [submittingCommentId, setSubmittingCommentId] = useState<string | null>(null);
+  const [loadingPostAction, setLoadingPostAction] = useState<string | null>(null);
 
   function load() {
     api.get(`/communities/${slug}`)
@@ -161,6 +166,93 @@ export default function CommunityDetailPage() {
     }
   }
 
+  function startEditPost(post: any) {
+    setEditingPostId(post.id);
+    setEditPostForm({ title: post.title, body: post.body });
+  }
+
+  async function savePostEdit(postId: string) {
+    if (!community) return;
+    try {
+      const payload = { title: editPostForm.title, body: editPostForm.body };
+      const r = await api.put(`/communities/${community.id}/posts/${postId}`, payload);
+      setPosts((ps) => ps.map((p) => (p.id === postId ? r.data.post : p)));
+      setEditingPostId(null);
+      toast.success("Post updated.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update this post.");
+    }
+  }
+
+  async function togglePin(postId: string, isPinned: boolean) {
+    if (!community) return;
+    setLoadingPostAction(postId);
+    try {
+      const r = await api.put(`/communities/${community.id}/posts/${postId}`, { isPinned: !isPinned });
+      setPosts((ps) => ps.map((p) => (p.id === postId ? r.data.post : p)));
+      toast.success(isPinned ? "Post unpinned." : "Post pinned.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update pin state.");
+    } finally {
+      setLoadingPostAction(null);
+    }
+  }
+
+  async function toggleLike(postId: string) {
+    if (!community || !user) { router.push("/auth/login"); return; }
+    setLoadingPostAction(postId);
+    try {
+      const r = await api.post(`/communities/${community.id}/posts/${postId}/like`);
+      setPosts((ps) => ps.map((p) => (p.id === postId ? { ...p, likedByMe: r.data.liked, _count: { ...p._count, likes: r.data.likesCount } } : p)));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update like.");
+    } finally {
+      setLoadingPostAction(null);
+    }
+  }
+
+  async function submitComment(postId: string) {
+    if (!community || !user) { router.push("/auth/login"); return; }
+    const body = (commentDraft[postId] || "").trim();
+    if (!body) return;
+    setSubmittingCommentId(postId);
+    try {
+      const r = await api.post(`/communities/${community.id}/posts/${postId}/comments`, { body });
+      setPosts((ps) => ps.map((p) => p.id === postId ? { ...p, comments: [...(p.comments || []), r.data.comment], _count: { ...p._count, comments: (p._count?.comments || 0) + 1 } } : p));
+      setCommentDraft((drafts) => ({ ...drafts, [postId]: "" }));
+      toast.success("Comment posted.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not post comment.");
+    } finally {
+      setSubmittingCommentId(null);
+    }
+  }
+
+  async function toggleCommentLike(postId: string, commentId: string) {
+    if (!community || !user) { router.push("/auth/login"); return; }
+    try {
+      const r = await api.post(`/communities/${community.id}/posts/${postId}/comments/${commentId}/like`);
+      setPosts((ps) => ps.map((p) => p.id === postId ? {
+        ...p,
+        comments: (p.comments || []).map((c: any) => c.id === commentId ? { ...c, likedByMe: r.data.liked, _count: { ...c._count, likes: r.data.likesCount } } : c),
+      } : p));
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not update comment like.");
+    }
+  }
+
+  async function removeComment(postId: string, commentId: string) {
+    if (!community) return;
+    if (!confirm("Remove this comment?")) return;
+    try {
+      await api.delete(`/communities/${community.id}/posts/${postId}/comments/${commentId}`);
+      setPosts((ps) => ps.map((p) => p.id === postId ? { ...p, comments: (p.comments || []).filter((c: any) => c.id !== commentId), _count: { ...p._count, comments: Math.max(0, (p._count?.comments || 0) - 1) } } : p));
+      toast.warning("Comment removed.");
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error || "Could not remove that comment.");
+    }
+  }
+
   if (!community) return (
     <div className="page-shell py-9 space-y-4 animate-pulse">
       <div className="aspect-[3/1] shimmer rounded-2xl bg-slate-100" />
@@ -238,17 +330,62 @@ export default function CommunityDetailPage() {
                 {posts.length === 0 ? (
                   <div className="card-base p-10 text-center text-gray-400 text-sm">No posts yet — be the first to share something.</div>
                 ) : posts.map(p => (
-                  <div key={p.id} className="card-base p-5">
+                  <div key={p.id} className="card-base p-5 space-y-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h3 className="font-bold text-gray-900">{p.title}</h3>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-gray-900">{p.title}</h3>
+                          {p.isPinned && <span className="badge bg-amber-100 text-amber-700">📌 Pinned</span>}
+                        </div>
                         <p className="text-xs text-gray-400 mb-2">{p.author?.organizationName || p.author?.name} · {p.publishedAt ? format(new Date(p.publishedAt), "d MMM yyyy") : ""}</p>
                       </div>
                       {(p.authorId === user?.id || canManage) && (
-                        <button onClick={() => removePost(p.id)} className="btn-ghost !px-2 !py-1 !text-xs text-red-500">Remove</button>
+                        <div className="flex gap-2 shrink-0">
+                          {canManage && <button onClick={() => togglePin(p.id, p.isPinned)} disabled={loadingPostAction === p.id} className="btn-ghost !px-2 !py-1 !text-[11px]">{p.isPinned ? "Unpin" : "Pin"}</button>}
+                          {(p.authorId === user?.id || canManage) && <button onClick={() => startEditPost(p)} className="btn-ghost !px-2 !py-1 !text-[11px]">Edit</button>}
+                          {(p.authorId === user?.id || canManage) && <button onClick={() => removePost(p.id)} className="btn-ghost !px-2 !py-1 !text-[11px] text-red-500">Remove</button>}
+                        </div>
                       )}
                     </div>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">{p.body}</p>
+                    {editingPostId === p.id ? (
+                      <div className="space-y-2">
+                        <input value={editPostForm.title} onChange={e => setEditPostForm(f => ({ ...f, title: e.target.value }))} className="input-base" />
+                        <textarea value={editPostForm.body} onChange={e => setEditPostForm(f => ({ ...f, body: e.target.value }))} className="textarea-base" rows={3} />
+                        <div className="flex gap-2">
+                          <button onClick={() => savePostEdit(p.id)} className="btn-primary !px-4 !py-2 !text-sm">Save</button>
+                          <button onClick={() => setEditingPostId(null)} className="btn-ghost !px-4 !py-2 !text-sm">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600 whitespace-pre-wrap">{p.body}</p>
+                    )}
+                    <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 pt-3 text-xs text-gray-500">
+                      <button onClick={() => toggleLike(p.id)} className={`btn-ghost !px-2 !py-1 !text-xs ${p.likedByMe ? "text-sky-600" : ""}`}>
+                        {p.likedByMe ? "♥" : "♡"} {p._count?.likes ?? 0} like{(p._count?.likes ?? 0) === 1 ? "" : "s"}
+                      </button>
+                      <span>💬 {p._count?.comments ?? 0} comment{(p._count?.comments ?? 0) === 1 ? "" : "s"}</span>
+                    </div>
+                    <div className="space-y-2 rounded-xl bg-slate-50 p-3">
+                      {(p.comments || []).map((c: any) => (
+                        <div key={c.id} className="rounded-lg border border-gray-100 bg-white p-2.5 text-sm">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <p className="font-semibold text-gray-800">{c.author?.organizationName || c.author?.name}</p>
+                              <p className="text-xs text-gray-400">{format(new Date(c.createdAt), "d MMM yyyy, p")}</p>
+                            </div>
+                            {(c.author?.id === user?.id || canManage) && <button onClick={() => removeComment(p.id, c.id)} className="text-[11px] text-red-500">Remove</button>}
+                          </div>
+                          <p className="mt-1 text-gray-600 whitespace-pre-wrap">{c.body}</p>
+                          <button onClick={() => toggleCommentLike(p.id, c.id)} className={`mt-2 text-[11px] font-semibold ${c.likedByMe ? "text-sky-600" : "text-gray-500"}`}>
+                            {c.likedByMe ? "♥" : "♡"} {c._count?.likes ?? 0}
+                          </button>
+                        </div>
+                      ))}
+                      <div className="flex gap-2">
+                        <input value={commentDraft[p.id] || ""} onChange={e => setCommentDraft(d => ({ ...d, [p.id]: e.target.value }))} className="input-base !py-2" placeholder="Write a comment…" />
+                        <button onClick={() => submitComment(p.id)} disabled={submittingCommentId === p.id} className="btn-primary !px-3 !py-2 !text-sm">{submittingCommentId === p.id ? "…" : "Comment"}</button>
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

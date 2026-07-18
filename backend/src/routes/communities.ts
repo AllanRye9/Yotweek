@@ -346,17 +346,41 @@ router.post("/:id/leave", requireAuth, async (req: AuthRequest, res: Response, n
 // model - same title/body/images shape, own feed, own moderation.
 
 // GET /api/communities/:slug/posts - published posts in this community.
-router.get("/:slug/posts", async (req, res, next) => {
+router.get("/:slug/posts", optionalAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const community = await prisma.community.findUnique({ where: { slug: req.params.slug } });
     if (!community) return res.status(404).json({ error: "Community not found" });
     const posts = await prisma.post.findMany({
       where: { communityId: community.id, status: "PUBLISHED" },
-      orderBy: { publishedAt: "desc" },
-      include: { author: { select: { id: true, name: true, organizationName: true } } },
+      orderBy: [{ isPinned: "desc" }, { publishedAt: "desc" }],
+      include: {
+        author: { select: { id: true, name: true, organizationName: true } },
+        comments: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            author: { select: { id: true, name: true, organizationName: true } },
+            _count: { select: { likes: true } },
+          },
+        },
+        _count: { select: { likes: true, comments: true } },
+      },
       take: 50,
     });
-    res.json({ posts });
+
+    let likedByMe = new Set<string>();
+    if (req.user) {
+      const likes = await prisma.communityPostLike.findMany({
+        where: { postId: { in: posts.map((p) => p.id) }, userId: req.user.userId },
+        select: { postId: true },
+      });
+      likedByMe = new Set(likes.map((l) => l.postId));
+    }
+
+    const payload = posts.map((post) => ({
+      ...post,
+      likedByMe: likedByMe.has(post.id),
+    }));
+    res.json({ posts: payload });
   } catch (err) {
     next(err);
   }
@@ -400,14 +424,68 @@ router.post(
           publishedAt: new Date(),
           communityId: community.id,
         },
-        include: { author: { select: { id: true, name: true, organizationName: true } } },
+        include: {
+          author: { select: { id: true, name: true, organizationName: true } },
+          comments: {
+            orderBy: { createdAt: "asc" },
+            include: {
+              author: { select: { id: true, name: true, organizationName: true } },
+              _count: { select: { likes: true } },
+            },
+          },
+          _count: { select: { likes: true, comments: true } },
+        },
       });
-      res.status(201).json({ post });
+      res.status(201).json({ post: { ...post, likedByMe: false } });
     } catch (err) {
       next(err);
     }
   }
 );
+
+// PUT /api/communities/:id/posts/:postId - author/creator/admin can edit a post.
+router.put("/:id/posts/:postId", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+    if (!community) return res.status(404).json({ error: "Community not found" });
+    const post = await prisma.post.findUnique({ where: { id: req.params.postId } });
+    if (!post || post.communityId !== community.id) return res.status(404).json({ error: "Post not found" });
+
+    const canModerate =
+      post.authorId === req.user!.userId ||
+      community.creatorId === req.user!.userId ||
+      req.user!.role === "ADMIN";
+    if (!canModerate) return res.status(403).json({ error: "Not authorized to edit this post." });
+
+    const { title, body: content, coverImageUrl, images, isPinned, status } = req.body;
+    const updated = await prisma.post.update({
+      where: { id: post.id },
+      data: {
+        ...(title !== undefined ? { title } : {}),
+        ...(content !== undefined ? { body: content } : {}),
+        ...(coverImageUrl !== undefined ? { coverImageUrl } : {}),
+        ...(images !== undefined ? { images } : {}),
+        ...(isPinned !== undefined ? { isPinned } : {}),
+        ...(status !== undefined ? { status } : {}),
+        ...(status === "PUBLISHED" && post.status !== "PUBLISHED" ? { publishedAt: new Date() } : {}),
+      },
+      include: {
+        author: { select: { id: true, name: true, organizationName: true } },
+        comments: {
+          orderBy: { createdAt: "asc" },
+          include: {
+            author: { select: { id: true, name: true, organizationName: true } },
+            _count: { select: { likes: true } },
+          },
+        },
+        _count: { select: { likes: true, comments: true } },
+      },
+    });
+    res.json({ post: { ...updated, likedByMe: false } });
+  } catch (err) {
+    next(err);
+  }
+});
 
 // DELETE /api/communities/:id/posts/:postId - moderation. The post's own
 // author, the community's creator, or a platform admin can remove it.
@@ -426,6 +504,122 @@ router.delete("/:id/posts/:postId", requireAuth, async (req: AuthRequest, res: R
 
     await prisma.post.delete({ where: { id: post.id } });
     res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/communities/:id/posts/:postId/comments - community members can discuss posts.
+router.post("/:id/posts/:postId/comments", requireAuth, [body("body").trim().isLength({ min: 1, max: 2000 })], async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
+    const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+    if (!community) return res.status(404).json({ error: "Community not found" });
+    const post = await prisma.post.findUnique({ where: { id: req.params.postId } });
+    if (!post || post.communityId !== community.id) return res.status(404).json({ error: "Post not found" });
+
+    const membership = await prisma.communityMember.findUnique({ where: { communityId_userId: { communityId: community.id, userId: req.user!.userId } } });
+    if (!membership && req.user!.role !== "ADMIN") return res.status(403).json({ error: "Join this community to comment." });
+
+    const comment = await prisma.communityComment.create({
+      data: {
+        postId: post.id,
+        authorId: req.user!.userId,
+        body: req.body.body.trim(),
+      },
+      include: {
+        author: { select: { id: true, name: true, organizationName: true } },
+        _count: { select: { likes: true } },
+      },
+    });
+
+    if (post.authorId !== req.user!.userId) {
+      await prisma.notification.create({
+        data: {
+          userId: post.authorId,
+          type: "SYSTEM",
+          message: `${req.user!.userId === post.authorId ? "You" : "A member"} commented on your community post.`,
+          read: false,
+        },
+      });
+    }
+    res.status(201).json({ comment });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/communities/:id/posts/:postId/comments/:commentId - author/creator/admin can remove comments.
+router.delete("/:id/posts/:postId/comments/:commentId", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+    if (!community) return res.status(404).json({ error: "Community not found" });
+    const comment = await prisma.communityComment.findUnique({ where: { id: req.params.commentId } });
+    if (!comment || comment.postId !== req.params.postId) return res.status(404).json({ error: "Comment not found" });
+
+    const post = await prisma.post.findUnique({ where: { id: comment.postId } });
+    if (!post || post.communityId !== community.id) return res.status(404).json({ error: "Comment not found" });
+
+    const canModerate = comment.authorId === req.user!.userId || community.creatorId === req.user!.userId || req.user!.role === "ADMIN";
+    if (!canModerate) return res.status(403).json({ error: "Not authorized to remove this comment." });
+
+    await prisma.communityComment.delete({ where: { id: comment.id } });
+    res.status(204).send();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/communities/:id/posts/:postId/like - toggle a like on a post.
+router.post("/:id/posts/:postId/like", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+    if (!community) return res.status(404).json({ error: "Community not found" });
+    const post = await prisma.post.findUnique({ where: { id: req.params.postId } });
+    if (!post || post.communityId !== community.id) return res.status(404).json({ error: "Post not found" });
+
+    const membership = await prisma.communityMember.findUnique({ where: { communityId_userId: { communityId: community.id, userId: req.user!.userId } } });
+    if (!membership && req.user!.role !== "ADMIN") return res.status(403).json({ error: "Join this community to react." });
+
+    const existing = await prisma.communityPostLike.findUnique({ where: { postId_userId: { postId: post.id, userId: req.user!.userId } } });
+    if (existing) {
+      await prisma.communityPostLike.delete({ where: { id: existing.id } });
+      const likesCount = await prisma.communityPostLike.count({ where: { postId: post.id } });
+      return res.json({ liked: false, likesCount });
+    }
+
+    await prisma.communityPostLike.create({ data: { postId: post.id, userId: req.user!.userId } });
+    const likesCount = await prisma.communityPostLike.count({ where: { postId: post.id } });
+    res.json({ liked: true, likesCount });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/communities/:id/posts/:postId/comments/:commentId/like - toggle a like on a comment.
+router.post("/:id/posts/:postId/comments/:commentId/like", requireAuth, async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const community = await prisma.community.findUnique({ where: { id: req.params.id } });
+    if (!community) return res.status(404).json({ error: "Community not found" });
+    const comment = await prisma.communityComment.findUnique({ where: { id: req.params.commentId } });
+    if (!comment || comment.postId !== req.params.postId) return res.status(404).json({ error: "Comment not found" });
+    const post = await prisma.post.findUnique({ where: { id: comment.postId } });
+    if (!post || post.communityId !== community.id) return res.status(404).json({ error: "Comment not found" });
+
+    const membership = await prisma.communityMember.findUnique({ where: { communityId_userId: { communityId: community.id, userId: req.user!.userId } } });
+    if (!membership && req.user!.role !== "ADMIN") return res.status(403).json({ error: "Join this community to react." });
+
+    const existing = await prisma.communityCommentLike.findUnique({ where: { commentId_userId: { commentId: comment.id, userId: req.user!.userId } } });
+    if (existing) {
+      await prisma.communityCommentLike.delete({ where: { id: existing.id } });
+      const likesCount = await prisma.communityCommentLike.count({ where: { commentId: comment.id } });
+      return res.json({ liked: false, likesCount });
+    }
+
+    await prisma.communityCommentLike.create({ data: { commentId: comment.id, userId: req.user!.userId } });
+    const likesCount = await prisma.communityCommentLike.count({ where: { commentId: comment.id } });
+    res.json({ liked: true, likesCount });
   } catch (err) {
     next(err);
   }
