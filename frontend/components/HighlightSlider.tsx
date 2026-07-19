@@ -11,7 +11,7 @@ export function HighlightSlider() {
 
   useEffect(() => {
     // The landing page's hero already has one video interface
-    // (EventVideoSlider). This banner stays image-only so it never becomes
+    // (HeroVideoUnit). This banner stays image-only so it never becomes
     // a second video display further down the page — VIDEO-type highlights
     // still work anywhere else they might be surfaced, they just don't
     // render here.
