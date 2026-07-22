@@ -116,7 +116,7 @@ export default function HomePage() {
 
       {/* ── FOR YOU (personalized) ─────────────────────────── */}
       {showForYou && (
-        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
           <div className="section-row">
             <div className="flex items-center gap-2.5">
               <h2 className="section-title">
@@ -135,21 +135,21 @@ export default function HomePage() {
       )}
 
       {/* ── CATEGORIES ───────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
         <SectionTitle>Browse by category</SectionTitle>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-7 gap-2">
           {CATS.map(c => (
             <Link key={c.key} href={`/events?category=${c.key}`}
-              className="card-base card-hover shine group flex flex-col items-center gap-2.5 p-5 text-center cursor-pointer">
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${c.grad} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`} style={{fontSize:"1.6rem"}}>{c.icon}</div>
-              <span className="text-sm font-semibold text-gray-800">{c.label}</span>
+              className="card-base card-hover shine group flex flex-col items-center gap-1.5 p-3 text-center cursor-pointer">
+              <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${c.grad} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`} style={{fontSize:"1.1rem"}}>{c.icon}</div>
+              <span className="text-xs font-semibold text-gray-800 leading-tight">{c.label}</span>
             </Link>
           ))}
         </div>
       </section>
 
       {/* ── NEAR YOU ─────────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
         <SectionTitle link="/events">📍 Events near you</SectionTitle>
         {loading ? (
           <div className="listing-grid">{[...Array(8)].map((_,i) => <SkeletonCard key={i} />)}</div>
@@ -165,7 +165,7 @@ export default function HomePage() {
       </section>
 
       {/* ── FREE EVENTS BANNER ───────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
         <Link href="/events?priceType=FREE"
           className="block card-base shine overflow-hidden hover:-translate-y-1 hover:shadow-card-hover transition-all duration-300">
           <div className="bg-gradient-to-r from-emerald-500 to-teal-600 px-7 sm:px-12 py-12 flex items-center justify-between">
@@ -180,7 +180,7 @@ export default function HomePage() {
       </section>
 
       {/* ── NEARBY BUSINESSES ────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
         <SectionTitle link="/businesses">🏪 Businesses & places near you</SectionTitle>
         {bizLoading ? (
           <div className="listing-grid">{[...Array(4)].map((_,i) => <SkeletonCard key={i} />)}</div>
@@ -194,7 +194,7 @@ export default function HomePage() {
       </section>
 
       {/* ── INTERNATIONAL ────────────────────────────────────── */}
-      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+      <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
         <SectionTitle link="/events?scope=INTERNATIONAL">🌍 International opportunities</SectionTitle>
         {international.length ? (
           <div className="listing-grid-3 stagger">{international.map(e => <EventCard key={e.id} event={e} />)}</div>
@@ -205,7 +205,7 @@ export default function HomePage() {
 
       {/* ── TRENDING ─────────────────────────────────────────── */}
       {trending.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
           <SectionTitle link="/events?sortBy=viewCount">🔥 Trending events</SectionTitle>
           <div className="listing-grid-3 stagger">{trending.map(e => <EventCard key={e.id} event={e} />)}</div>
         </section>
@@ -213,7 +213,7 @@ export default function HomePage() {
 
       {/* ── TRAVEL BLOG ──────────────────────────────────────── */}
       {posts.length > 0 && (
-        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-[4.5rem]">
+        <section className="max-w-7xl mx-auto px-6 sm:px-9 mb-10">
           <SectionTitle link="/blog">✍️ From the travel blog</SectionTitle>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {posts.map(p => (

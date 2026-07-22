@@ -208,6 +208,7 @@ router.post(
           latitude: data.latitude,
           longitude: data.longitude,
           coverImageUrl: data.coverImageUrl,
+          videoUrl: data.videoUrl || undefined,
           communityId: data.communityId || undefined,
           galleryUrls: data.galleryUrls || [],
           languages: data.languages || ["en"],
@@ -247,7 +248,7 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res, next) => {
     }
 
     const { title, description, category, priceType, price, currency, startDate, endDate,
-      venueName, address, city, country, latitude, longitude, coverImageUrl, galleryUrls,
+      venueName, address, city, country, latitude, longitude, coverImageUrl, galleryUrls, videoUrl,
       languages, tags, capacity, scope } = req.body;
 
     // Edits to a live listing go back to PENDING so admins can re-verify.
@@ -259,7 +260,7 @@ router.put("/:id", requireAuth, async (req: AuthRequest, res, next) => {
         currency, startDate: startDate ? new Date(startDate) : undefined,
         endDate: endDate ? new Date(endDate) : undefined,
         venueName, address, city, country, latitude, longitude,
-        coverImageUrl, galleryUrls, languages, tags, capacity, scope,
+        coverImageUrl, galleryUrls, videoUrl, languages, tags, capacity, scope,
         status: req.user!.role === "ADMIN" ? existing.status : "PENDING",
       },
     });

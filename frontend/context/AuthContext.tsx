@@ -10,6 +10,7 @@ interface AuthCtx {
   adminLogin: (email: string, password: string) => Promise<void>;
   adminSetup: (payload: { name: string; email: string; password: string }) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 const Ctx = createContext<AuthCtx | undefined>(undefined);
 
@@ -51,7 +52,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   function logout() { localStorage.removeItem("yw_token"); setUser(null); }
 
-  return <Ctx.Provider value={{ user, loading, login, register, adminLogin, adminSetup, logout }}>{children}</Ctx.Provider>;
+  // Re-fetches the current user from the server - used after profile edits
+  // so changes (name, avatar, bio, etc.) reflect immediately everywhere
+  // this context is read (Navbar, dashboard, etc.), not just on the page
+  // that made the edit.
+  async function refreshUser() {
+    const r = await api.get("/auth/me");
+    setUser(r.data.user);
+  }
+
+  return <Ctx.Provider value={{ user, loading, login, register, adminLogin, adminSetup, logout, refreshUser }}>{children}</Ctx.Provider>;
 }
 export function useAuth() {
   const c = useContext(Ctx);

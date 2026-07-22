@@ -48,7 +48,7 @@ export function HeroVideoUnit() {
   const line2Words = String(content.headlineLine2).split(" ");
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 min-h-[560px] sm:min-h-[640px] flex items-center">
+    <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 min-h-[360px] sm:min-h-[420px] flex items-center">
       {/* Video/YouTube background — object-cover fills the hero edge-to-edge
           with no distortion (crops overflow rather than stretching, the
           correct behavior for a full-bleed background, unlike the earlier

@@ -331,6 +331,10 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
                       <span>👁 {e.viewCount}</span><span>🎫 {e.ticketsSold}</span>
                     </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link href={`/events/${e.id}`} className="btn-secondary !px-3 !py-1.5 !text-xs">View</Link>
+                      <Link href={`/events/create?edit=${e.id}`} className="btn-primary !px-3 !py-1.5 !text-xs">✏️ Edit</Link>
+                    </div>
                   </div>
                 ))}
               </div>

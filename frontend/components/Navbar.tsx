@@ -120,10 +120,10 @@ export function Navbar() {
   return (
     <>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? navBg : "bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700"}`}>
-        <div className="max-w-7xl mx-auto px-6 sm:px-9 flex items-center h-14 sm:h-16 gap-3">
+        <div className="max-w-7xl mx-auto px-[10px] flex items-center h-14 sm:h-16 gap-3">
 
           {/* Hamburger */}
-          <button className={`md:hidden p-2 rounded-lg transition-colors ${scrolled ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"}`}
+          <button className={`lg:hidden p-2 rounded-lg transition-colors ${scrolled ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"}`}
             onClick={() => setMobileOpen(p => !p)} aria-label="Menu">
             <div className="w-5 flex flex-col gap-[5px]">
               {[0,1,2].map(i => (
@@ -162,7 +162,7 @@ export function Navbar() {
           </form>
 
           {/* Desktop nav */}
-          <nav className="hidden md:flex items-center gap-1 ml-auto shrink-0">
+          <nav className="hidden lg:flex items-center gap-1 ml-auto shrink-0">
             {/* Explore dropdown */}
             <div ref={exploreRef} className="relative">
               <button onClick={() => setExploreOpen(p => !p)}
@@ -238,6 +238,7 @@ export function Navbar() {
                     <div className="py-1.5">
                       {[
                         { href:"/dashboard", icon:"📊", label:"Dashboard" },
+                        { href:"/profile", icon:"👤", label:"Profile" },
                         { href:"/itinerary", icon:"📅", label:"My Itineraries" },
                         { href:"/events/create", icon:"➕", label:"List an Event" },
                         { href:"/businesses/create", icon:"🏪", label:"List a Business" },
@@ -287,7 +288,7 @@ export function Navbar() {
             directly below — showing both was a literal duplicate filter row. */}
         {!pathname.startsWith("/events") && (
           <div className={`hidden sm:block border-t overflow-x-auto no-scrollbar ${scrolled ? "bg-gray-50 border-gray-100" : "bg-blue-800/50 border-white/10"}`}>
-            <div className="max-w-7xl mx-auto px-4 flex gap-0.5 py-1">
+            <div className="max-w-7xl mx-auto px-[10px] flex gap-0.5 py-1">
               {FULL_BAR.map(c => (
                 <Link key={c.href} href={c.href}
                   className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded transition-colors ${scrolled ? "text-gray-600 hover:bg-sky-50 hover:text-sky-700" : "text-white/75 hover:text-white hover:bg-white/10"}`}>
@@ -300,13 +301,13 @@ export function Navbar() {
       </header>
 
       {/* Mobile overlay */}
-      <div className={`fixed inset-0 z-40 md:hidden transition-opacity duration-300 ${mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+      <div className={`fixed inset-0 z-40 lg:hidden transition-opacity duration-300 ${mobileOpen ? "opacity-100" : "opacity-0 pointer-events-none"}`}
         onClick={() => setMobileOpen(false)}>
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       </div>
 
       {/* Mobile drawer */}
-      <aside className={`fixed top-0 left-0 h-full w-72 max-w-[85vw] z-50 md:hidden bg-white shadow-2xl transform transition-transform duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed top-0 left-0 h-full w-72 max-w-[85vw] z-50 lg:hidden bg-white shadow-2xl transform transition-transform duration-300 ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex items-center justify-between px-5 py-4 bg-gradient-to-r from-sky-700 to-indigo-700 text-white">
           <span className="font-extrabold text-xl">yot<span className="font-serif italic text-sky-200">week</span></span>
           <button onClick={() => setMobileOpen(false)} className="p-1.5 rounded-lg hover:bg-white/20">
@@ -335,6 +336,7 @@ export function Navbar() {
             { href:"/events/create", icon:"➕", label:"List an Event" },
             { href:"/businesses/create", icon:"🏪", label:"List a Business" },
             { href:"/dashboard", icon:"📊", label:"My Dashboard" },
+            { href:"/profile", icon:"👤", label:"Profile" },
           ].map(l => (
             <Link key={l.href+l.label} href={l.href}
               className="flex items-center gap-3 px-5 py-3.5 text-sm font-medium text-gray-700 hover:bg-sky-50 hover:text-sky-700 border-b border-gray-50 transition-colors">

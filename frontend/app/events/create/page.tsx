@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../context/AuthContext";
@@ -11,7 +11,7 @@ const CATS = ["FESTIVAL","CONFERENCE","CONCERT","SPORTS","CULTURAL_HERITAGE","NI
   "WORKSHOP","GUIDED_TOUR","ADVENTURE_OUTDOOR","WILDLIFE_SAFARI","FOOD_DRINK","RELIGIOUS","EXHIBITION","OTHER"];
 const INIT = { title:"",description:"",category:"FESTIVAL",scope:"LOCAL",priceType:"FREE",
   price:"",currency:"UGX",startDate:"",endDate:"",venueName:"",address:"",city:"",country:"Uganda",
-  latitude:"",longitude:"",capacity:"",languages:"en",tags:"",coverImageUrl:"" };
+  latitude:"",longitude:"",capacity:"",languages:"en",tags:"",coverImageUrl:"",videoUrl:"" };
 
 function Field({ label,required,hint,children }: { label:string;required?:boolean;hint?:string;children:React.ReactNode }) {
   return (
@@ -25,9 +25,29 @@ function Field({ label,required,hint,children }: { label:string;required?:boolea
 
 export default function CreateEventPage() {
   const { user, loading } = useAuth(); const router = useRouter(); const toast = useToast();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
   const [form, setForm] = useState(INIT); const [submitting, setSubmitting] = useState(false); const [step, setStep] = useState(1);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
+  const [loadingExisting, setLoadingExisting] = useState(!!editId);
   function u(k: string, v: string) { setForm(f => ({...f,[k]:v})); }
+
+  useEffect(() => {
+    if (!editId) return;
+    api.get(`/events/${editId}`).then(r => {
+      const ev = r.data.event;
+      setForm({
+        title: ev.title, description: ev.description, category: ev.category, scope: ev.scope,
+        priceType: ev.priceType, price: ev.price != null ? String(ev.price) : "", currency: ev.currency || "UGX",
+        startDate: ev.startDate ? ev.startDate.slice(0, 16) : "", endDate: ev.endDate ? ev.endDate.slice(0, 16) : "",
+        venueName: ev.venueName || "", address: ev.address || "", city: ev.city, country: ev.country,
+        latitude: ev.latitude != null ? String(ev.latitude) : "", longitude: ev.longitude != null ? String(ev.longitude) : "",
+        capacity: ev.capacity != null ? String(ev.capacity) : "", languages: (ev.languages || ["en"]).join(","),
+        tags: (ev.tags || []).join(","), coverImageUrl: ev.coverImageUrl || "", videoUrl: ev.videoUrl || "",
+      });
+      setGalleryUrls(ev.galleryUrls || []);
+    }).catch(() => toast.error("Could not load this event.")).finally(() => setLoadingExisting(false));
+  }, [editId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setSubmitting(true);
@@ -40,15 +60,22 @@ export default function CreateEventPage() {
         languages: form.languages.split(",").map(s=>s.trim()).filter(Boolean),
         tags: form.tags.split(",").map(s=>s.trim().toLowerCase()).filter(Boolean),
         coverImageUrl: form.coverImageUrl.trim() || undefined,
+        videoUrl: form.videoUrl.trim() || undefined,
         galleryUrls,
       };
-      await api.post("/events", payload);
-      toast.success("Submitted for review! You'll be notified when approved."); router.push("/dashboard");
+      if (editId) {
+        await api.put(`/events/${editId}`, payload);
+        toast.success("Event updated.");
+        router.push(user?.role === "ADMIN" ? "/const/events" : "/dashboard");
+      } else {
+        await api.post("/events", payload);
+        toast.success("Submitted for review! You'll be notified when approved."); router.push("/dashboard");
+      }
     } catch (err: any) { toast.error(err?.response?.data?.error || err?.response?.data?.errors?.[0]?.msg || "Could not submit."); }
     finally { setSubmitting(false); }
   }
 
-  if (loading) return <div className="max-w-2xl mx-auto px-4 py-16 text-center text-gray-400">Loading…</div>;
+  if (loading || loadingExisting) return <div className="max-w-2xl mx-auto px-4 py-16 text-center text-gray-400">Loading…</div>;
   if (!user) return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="card-base p-10 text-center max-w-md">
@@ -63,8 +90,8 @@ export default function CreateEventPage() {
     <div className="animate-fade-in">
       <div className="page-header">
         <div className="max-w-2xl mx-auto">
-          <h1 className="font-extrabold text-2xl sm:text-3xl mb-1">List an event</h1>
-          <p className="text-white/70 text-sm">All submissions are reviewed by our team before going live.</p>
+          <h1 className="font-extrabold text-2xl sm:text-3xl mb-1">{editId ? "Edit event" : "List an event"}</h1>
+          <p className="text-white/70 text-sm">{editId ? "Update your event's details, photos, and video." : "All submissions are reviewed by our team before going live."}</p>
         </div>
       </div>
       <div className="max-w-2xl mx-auto px-6 sm:px-9 py-12">
@@ -113,20 +140,25 @@ export default function CreateEventPage() {
               <Field label="Languages" hint="Comma-separated, e.g. en, sw, ach"><input value={form.languages} onChange={e=>u("languages",e.target.value)} className="input-base" /></Field>
               <Field label="Tags" hint="Comma-separated — helps recommendations"><input value={form.tags} onChange={e=>u("tags",e.target.value)} className="input-base" placeholder="family-friendly, outdoor, music" /></Field>
               <div className="pt-1 border-t border-gray-100">
-                <p className="text-sm font-bold text-gray-900 mb-3 mt-4">📸 Photos</p>
+                <p className="text-sm font-bold text-gray-900 mb-3 mt-4">📸 Photos & video</p>
                 <ImageUrlInput
                   coverImageUrl={form.coverImageUrl}
                   onCoverChange={v => u("coverImageUrl", v)}
                   galleryUrls={galleryUrls}
                   onGalleryChange={setGalleryUrls}
                 />
+                <div className="mt-4">
+                  <Field label="Video (optional)" hint="A direct video file URL or a YouTube link — shown on the event's page.">
+                    <input value={form.videoUrl} onChange={e=>u("videoUrl",e.target.value)} className="input-base" placeholder="https://youtube.com/watch?v=… or https://…/clip.mp4" />
+                  </Field>
+                </div>
               </div>
               <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs text-amber-700 flex gap-2">
-                <span>⚠️</span><p>Your listing will be reviewed before going live. You'll receive a notification once approved.</p>
+                <span>⚠️</span><p>{editId ? "Changes to a live listing go back for admin re-approval before showing publicly again." : "Your listing will be reviewed before going live. You'll receive a notification once approved."}</p>
               </div>
               <div className="flex gap-3">
                 <button type="button" onClick={() => setStep(1)} className="btn-secondary !px-5">← Back</button>
-                <button type="submit" disabled={submitting} className="btn-primary flex-1 !py-3 !rounded-xl !justify-center">{submitting?"Submitting…":"Submit for review"}</button>
+                <button type="submit" disabled={submitting} className="btn-primary flex-1 !py-3 !rounded-xl !justify-center">{submitting?"Saving…":editId?"Save changes":"Submit for review"}</button>
               </div>
             </div>
           )}

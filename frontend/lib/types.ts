@@ -22,7 +22,7 @@ export interface EventItem {
   startDate: string; endDate?: string | null; timezone: string;
   venueName?: string | null; address?: string | null;
   city: string; country: string; latitude?: number | null; longitude?: number | null;
-  coverImageUrl?: string | null; galleryUrls: string[]; languages: string[]; tags: string[];
+  coverImageUrl?: string | null; videoUrl?: string | null; galleryUrls: string[]; languages: string[]; tags: string[];
   capacity?: number | null; ticketsSold: number; status: EventStatus;
   viewCount: number; isFlagged: boolean; flagReason?: string | null;
   reportCount: number; commissionPct?: number | null;
@@ -58,7 +58,7 @@ export interface UserProfile {
   id: string; name: string; email: string; role: Role;
   phone?: string | null; country?: string | null; city?: string | null;
   organizationName?: string | null; isVerifiedOrganizer: boolean;
-  preferredLanguage: string; avatarUrl?: string | null;
+  preferredLanguage: string; avatarUrl?: string | null; bio?: string | null;
 }
 
 export interface Review {

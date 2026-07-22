@@ -133,6 +133,7 @@ model User {
   country           String?
   city              String?
   avatarUrl         String?
+  bio               String?
   organizationName  String?  // display name for Company/Agent/Organization posters
   isVerifiedOrganizer Boolean @default(false) // admin-granted "verified organizer" badge
   isEmailVerified   Boolean  @default(false)
@@ -192,6 +193,7 @@ model Event {
 
   coverImageUrl String?
   galleryUrls   String[] @default([])
+  videoUrl      String? // organizer-managed video or YouTube link on the event's own page
   languages     String[] @default(["en"])
   tags          String[] @default([])
 

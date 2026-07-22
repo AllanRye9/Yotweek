@@ -7,10 +7,10 @@ router.use(requireAuth);
 
 router.put("/me", async (req: AuthRequest, res, next) => {
   try {
-    const { name, phone, country, city, organizationName, preferredLanguage, avatarUrl } = req.body;
+    const { name, phone, country, city, organizationName, preferredLanguage, avatarUrl, bio } = req.body;
     const user = await prisma.user.update({
       where: { id: req.user!.userId },
-      data: { name, phone, country, city, organizationName, preferredLanguage, avatarUrl },
+      data: { name, phone, country, city, organizationName, preferredLanguage, avatarUrl, bio },
     });
     const { passwordHash, ...safe } = user;
     res.json({ user: safe });

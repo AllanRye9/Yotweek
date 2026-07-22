@@ -16,6 +16,7 @@ import { ShareButtons } from "../../../components/ShareButtons";
 import { useCurrency } from "../../../context/CurrencyContext";
 import { formatMoney } from "../../../lib/currency";
 import { recordSignal } from "../../../lib/preferences";
+import { getYouTubeId } from "../../../lib/media";
 
 const CAT_ICON: Record<string, string> = {
   FESTIVAL:"🎪", CONFERENCE:"🎤", CONCERT:"🎵", SPORTS:"⚽",
@@ -145,7 +146,34 @@ export default function EventDetailPage() {
                 {event.scope === "INTERNATIONAL" && <span className="badge-intl">🌍 International</span>}
                 {event.organizer?.isVerifiedOrganizer && <span className="badge-verif">✓ Verified</span>}
               </div>
+              {(user?.id === event.organizerId || user?.role === "ADMIN") && (
+                <Link href={`/events/create?edit=${event.id}`}
+                  className="absolute top-4 right-4 btn-primary !px-3 !py-1.5 !text-xs shadow-lg">
+                  ✏️ Edit event
+                </Link>
+              )}
             </div>
+
+            {/* Video */}
+            {event.videoUrl && (() => {
+              const ytId = getYouTubeId(event.videoUrl!);
+              return (
+                <div className="relative rounded-2xl overflow-hidden aspect-video bg-black">
+                  {ytId ? (
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${ytId}`}
+                      title={`${event.title} video`}
+                      className="absolute inset-0 w-full h-full"
+                      style={{ border: 0 }}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  ) : (
+                    <video src={event.videoUrl} controls className="absolute inset-0 w-full h-full object-contain" />
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Gallery */}
             {event.galleryUrls && event.galleryUrls.length > 0 && (
