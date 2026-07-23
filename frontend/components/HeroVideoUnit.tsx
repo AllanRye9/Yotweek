@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useIntlayer } from "next-intlayer";
@@ -8,6 +8,8 @@ import { EventVideo } from "../lib/types";
 import { getYouTubeId, youTubeEmbedUrl } from "../lib/media";
 import { LocationSelector } from "./LocationSelector";
 
+const MAX_SLIDE_SECONDS = 30;
+
 // One merged hero unit: the video/YouTube slideshow *is* the hero
 // background, not a separate strip above it. Clips are only ever
 // submitted by admins or admin-approved (isVerifiedOrganizer) organizers,
@@ -15,11 +17,18 @@ import { LocationSelector } from "./LocationSelector";
 // /const/event-videos and POST /api/event-videos). With no video content
 // yet, this falls back to the brand gradient so the hero never looks
 // broken or empty.
+//
+// Slide-transition mechanics follow 3R-Elite's HeroSlideshow: the outgoing
+// slide stays visible underneath the incoming one during the fade (no
+// blackout gap), and auto-advance pauses while the browser tab is hidden.
 export function HeroVideoUnit() {
   const content = useIntlayer("hero-video-unit");
   const [slides, setSlides] = useState<EventVideo[]>([]);
   const [idx, setIdx] = useState(0);
+  const [prevIdx, setPrevIdx] = useState(-1);
   const [loading, setLoading] = useState(true);
+  const isPausedRef = useRef(false);
+  const capTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     api.get("/event-videos")
@@ -28,14 +37,36 @@ export function HeroVideoUnit() {
       .finally(() => setLoading(false));
   }, []);
 
-  const next = useCallback(() => setIdx(i => (i + 1) % Math.max(slides.length, 1)), [slides.length]);
-  const prev = useCallback(() => setIdx(i => (i - 1 + slides.length) % slides.length), [slides.length]);
+  // Pause auto-advance while the tab is hidden, same as 3R-Elite — avoids
+  // a clip silently burning through its cap (or finishing unseen) while
+  // the user isn't even looking at the page.
+  useEffect(() => {
+    const onVisibility = () => { isPausedRef.current = document.hidden; };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, []);
 
+  const goTo = useCallback((target: number) => {
+    setIdx(i => { setPrevIdx(i); return target; });
+  }, []);
+  const next = useCallback(() => {
+    if (isPausedRef.current || slides.length < 2) return;
+    setIdx(i => { setPrevIdx(i); return (i + 1) % slides.length; });
+  }, [slides.length]);
+  const prev = useCallback(() => {
+    setIdx(i => { setPrevIdx(i); return (i - 1 + slides.length) % slides.length; });
+  }, [slides.length]);
+
+  // Every slide gets at most MAX_SLIDE_SECONDS, whether it's a short local
+  // clip that ends naturally sooner (handled via onEnded on the <video>
+  // below) or a YouTube embed / long clip that would otherwise keep
+  // playing indefinitely.
   useEffect(() => {
     if (slides.length < 2) return;
-    const t = setInterval(next, 7000);
-    return () => clearInterval(t);
-  }, [slides.length, next]);
+    if (capTimerRef.current) clearTimeout(capTimerRef.current);
+    capTimerRef.current = setTimeout(next, MAX_SLIDE_SECONDS * 1000);
+    return () => { if (capTimerRef.current) clearTimeout(capTimerRef.current); };
+  }, [idx, slides.length, next]);
 
   const cur = slides[idx];
   const hasVideo = !loading && !!cur;
@@ -49,40 +80,68 @@ export function HeroVideoUnit() {
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 min-h-[360px] sm:min-h-[420px] flex items-center">
-      {/* Video/YouTube background — object-cover fills the hero edge-to-edge
-          with no distortion (crops overflow rather than stretching, the
-          correct behavior for a full-bleed background, unlike the earlier
-          compact-widget version which used object-contain to show the
-          whole frame in a small box). */}
-      {hasVideo && (() => {
-        const ytId = getYouTubeId(cur.videoUrl);
-        return ytId ? (
-          <iframe
-            key={cur.id}
-            src={youTubeEmbedUrl(ytId)}
-            title={cur.title}
-            className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-            style={{ border: 0 }}
-            allow="autoplay; encrypted-media; picture-in-picture"
-          />
-        ) : (
-          <video
-            key={cur.id}
-            src={cur.videoUrl}
-            poster={cur.thumbnailUrl || undefined}
-            autoPlay muted loop playsInline
-            onError={() => { if (slides.length > 1) next(); }}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+      {/* Slideshow layer: every slide is absolutely positioned and
+          stacked. The active slide sits on top (z-2, opaque) and fades
+          in; the previous slide stays fully opaque just beneath it
+          (z-1) so there's never a blackout gap during the crossfade —
+          non-active, non-previous slides are hidden entirely (z-0,
+          opacity 0). Object-cover fills the hero edge-to-edge with no
+          distortion (crops overflow rather than stretching). */}
+      {hasVideo && slides.map((slide, i) => {
+        const isActive = i === idx;
+        const isPrev = i === prevIdx;
+        if (!isActive && !isPrev) return null;
+        const ytId = getYouTubeId(slide.videoUrl);
+
+        return (
+          <div
+            key={slide.id}
+            className="absolute inset-0"
+            style={{
+              zIndex: isActive ? 2 : 1,
+              opacity: 1,
+              transition: isActive ? "opacity 700ms ease-in-out" : undefined,
+            }}
+            aria-hidden={!isActive}
+          >
+            {isActive ? (
+              ytId ? (
+                <iframe
+                  src={youTubeEmbedUrl(ytId)}
+                  title={slide.title}
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  style={{ border: 0 }}
+                  allow="autoplay; encrypted-media; picture-in-picture"
+                />
+              ) : (
+                <video
+                  src={slide.videoUrl}
+                  poster={slide.thumbnailUrl || undefined}
+                  autoPlay muted loop={slides.length < 2} playsInline
+                  onEnded={slides.length > 1 ? next : undefined}
+                  onError={() => { if (slides.length > 1) next(); }}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+              )
+            ) : slide.thumbnailUrl ? (
+              // Outgoing slide: a frozen poster frame rather than a second
+              // live video/iframe playing underneath — keeps the crossfade
+              // gap-free without doubling up on playing media.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={slide.thumbnailUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+            ) : (
+              <div className="absolute inset-0 bg-slate-900" />
+            )}
+          </div>
         );
-      })()}
+      })}
 
       {/* Scrim: kept deliberately light so the footage itself stays the
           star — just enough to keep white text legible, concentrated at
           the very top/bottom edges rather than washing out the whole
           frame. */}
-      <div className={`absolute inset-0 ${hasVideo ? "bg-gradient-to-b from-black/35 via-black/10 to-black/45" : ""}`} />
-      <div className={`absolute inset-0 ${hasVideo ? "bg-black/10" : ""}`} />
+      <div className={`absolute inset-0 z-[3] ${hasVideo ? "bg-gradient-to-b from-black/35 via-black/10 to-black/45" : ""}`} />
+      <div className={`absolute inset-0 z-[3] ${hasVideo ? "bg-black/10" : ""}`} />
       <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-sunset-400/10 animate-float pointer-events-none" />
       <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{ animationDelay: "2s" }} />
 
@@ -172,18 +231,23 @@ export function HeroVideoUnit() {
         )}
       </motion.div>
 
-      {/* Slide controls — edges and footer only, well clear of the
-          centered text/button column above. */}
+      {/* Slide controls — 3R-Elite's arrow + pill-indicator styling: soft
+          black circular buttons that brighten to the brand accent color
+          on hover, and pill indicators that widen for the active slide. */}
       {hasVideo && slides.length > 1 && (
         <>
           <button onClick={prev} aria-label="Previous clip"
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors text-sm backdrop-blur-sm">‹</button>
+            className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-sky-500/80 text-white flex items-center justify-center transition-colors backdrop-blur-sm">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7"/></svg>
+          </button>
           <button onClick={next} aria-label="Next clip"
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-black/30 hover:bg-black/50 text-white flex items-center justify-center transition-colors text-sm backdrop-blur-sm">›</button>
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 flex gap-1.5">
+            className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-black/30 hover:bg-sky-500/80 text-white flex items-center justify-center transition-colors backdrop-blur-sm">
+            <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7"/></svg>
+          </button>
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex gap-1.5">
             {slides.map((_, i) => (
-              <button key={i} onClick={() => setIdx(i)} aria-label={`Clip ${i + 1}`}
-                className={`h-1.5 rounded-full transition-all ${i === idx ? "bg-white w-4" : "bg-white/40 w-1.5"}`} />
+              <button key={i} onClick={() => goTo(i)} aria-label={`Go to clip ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${i === idx ? "w-6 bg-sky-400" : "w-1.5 bg-white/30 hover:bg-white/50"}`} />
             ))}
           </div>
         </>
