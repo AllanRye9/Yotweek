@@ -37,6 +37,15 @@ export default function AdminBusinessesPage() {
     try { await api.post(`/admin/businesses/${id}/hide`); toast.warning("Hidden."); load(tab); }
     catch (err: any) { toast.error(err?.response?.data?.error || "Could not hide — it may no longer exist."); load(tab); }
   }
+  async function approvePartner(id: string) {
+    try { await api.post(`/admin/businesses/${id}/partner-approve`); toast.success("Now a Featured Partner!"); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not approve partner status."); load(tab); }
+  }
+  async function revokePartner(id: string) {
+    if (!confirm("Remove Featured Partner status? Their logo will disappear from the public Partners wall immediately.")) return;
+    try { await api.post(`/admin/businesses/${id}/partner-revoke`); toast.warning("Partner status revoked."); load(tab); }
+    catch (err: any) { toast.error(err?.response?.data?.error || "Could not revoke partner status."); load(tab); }
+  }
   async function remove(id: string) {
     if (!confirm("Permanently delete this business? This can't be undone.")) return;
     try { await api.delete(`/admin/businesses/${id}`); toast.warning("Deleted."); load(tab); }
@@ -109,6 +118,7 @@ export default function AdminBusinessesPage() {
                         <h2 className="font-extrabold text-gray-900">{b.name}</h2>
                         {b.category && <span className="badge bg-sky-50 text-sky-700">{b.category.name}</span>}
                         {b.status && <span className="badge bg-gray-100 text-gray-600">{b.status}</span>}
+                        {b.isFeaturedPartner && <span className="badge bg-emerald-100 text-emerald-700">🤝 Partner</span>}
                         {b.isFlagged && <span className="badge bg-red-100 text-red-700">⚠️ Flagged</span>}
                         {b.reportCount>0 && <span className="badge bg-rose-100 text-rose-700">🚩 {b.reportCount} reports</span>}
                       </div>
@@ -136,6 +146,13 @@ export default function AdminBusinessesPage() {
                   ) : (
                     <>
                       <button onClick={() => startEdit(b)} className="btn-secondary !px-4 !py-1.5 !text-xs">✎ Edit</button>
+                      {b.status === "APPROVED" && (
+                        b.isFeaturedPartner ? (
+                          <button onClick={() => revokePartner(b.id)} className="btn-ghost !px-4 !py-1.5 !text-xs">✕ Revoke Partner</button>
+                        ) : (
+                          <button onClick={() => approvePartner(b.id)} className="btn-primary !px-4 !py-1.5 !text-xs" title={!b.logoUrl ? "No logo uploaded yet — approve now, wall will show it once they add one" : undefined}>🤝 Approve Partner</button>
+                        )
+                      )}
                       <button onClick={() => hide(b.id)} className="btn-ghost !px-4 !py-1.5 !text-xs">🚫 Hide</button>
                       <button onClick={() => remove(b.id)} className="btn-danger !px-4 !py-1.5 !text-xs">🗑 Delete</button>
                     </>

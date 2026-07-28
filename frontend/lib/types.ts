@@ -25,6 +25,7 @@ export interface EventItem {
   coverImageUrl?: string | null; videoUrl?: string | null; galleryUrls: string[]; languages: string[]; tags: string[];
   capacity?: number | null; ticketsSold: number; status: EventStatus;
   viewCount: number; isFlagged: boolean; flagReason?: string | null;
+  isFeatured?: boolean;
   reportCount: number; commissionPct?: number | null;
   organizerId: string; organizer?: Organizer; distanceKm?: number | null;
   _count?: { reviews: number; bookings: number };
@@ -42,6 +43,7 @@ export interface Business {
   hours?: Record<string, string> | null;
   status: "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN" | "CLOSED";
   isVerified: boolean; viewCount: number; reportCount: number;
+  isFeaturedPartner?: boolean; featuredApprovedAt?: string | null; featuredApprovedBy?: string | null;
   ownerId: string; owner?: Organizer; distanceKm?: number | null;
   _count?: { reviews: number };
   createdAt: string;

@@ -6,6 +6,7 @@ import { ToastProvider } from "../components/Toast";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
 import { StatsTicker } from "../components/StatsTicker";
+import { MobileBottomNav } from "../components/MobileBottomNav";
 import { VisitorTracker } from "../components/VisitorTracker";
 import { IntlayerClientProvider } from "next-intlayer";
 import { getLocale } from "next-intlayer/server";
@@ -32,7 +33,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
       </head>
       <IntlayerClientProvider defaultLocale={locale}>
-        <body className="flex min-h-screen flex-col bg-slate-50">
+        <body className="flex min-h-screen flex-col bg-slate-50 pb-16 lg:pb-0">
           <AuthProvider>
             <CurrencyProvider>
               <ToastProvider>
@@ -41,6 +42,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 <Navbar />
                 <main className="flex-1">{children}</main>
                 <Footer />
+                <MobileBottomNav />
               </ToastProvider>
             </CurrencyProvider>
           </AuthProvider>

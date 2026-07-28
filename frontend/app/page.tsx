@@ -61,6 +61,8 @@ export default function HomePage() {
   const [nearbyBiz, setNearbyBiz] = useState<Business[]>([]);
   const [international, setInternational] = useState<EventItem[]>([]);
   const [trending, setTrending] = useState<EventItem[]>([]);
+  const [featured, setFeatured] = useState<EventItem[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [bizLoading, setBizLoading] = useState(true);
@@ -89,6 +91,15 @@ export default function HomePage() {
       }
     }
   }, [user]);
+
+  // Featured events — admin-curated, shown regardless of location/GPS permission
+  useEffect(() => {
+    setFeaturedLoading(true);
+    api.get("/events/featured", { params: { limit: 6 } })
+      .then(r => setFeatured(r.data.events || []))
+      .catch(() => setFeatured([]))
+      .finally(() => setFeaturedLoading(false));
+  }, []);
 
   // Location-based and trending feeds
   useEffect(() => {
@@ -151,6 +162,34 @@ export default function HomePage() {
             <div className="listing-grid stagger">
               {forYou.events.map(e => <EventCard key={e.id} event={e} algoSource={forYou.source} />)}
             </div>
+          </section>
+        )}
+
+        {/* ── FEATURED EVENTS (admin-curated, 6-across) ─────────── */}
+        {(featuredLoading || featured.length > 0) && (
+          <section className="animate-fade-up">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="w-1 h-6 bg-fuchsia-500 rounded-full inline-block" />
+                  <h2 className="text-lg sm:text-xl font-extrabold text-gray-900">✦ Featured Events</h2>
+                  <span className="algo-chip">Handpicked for you</span>
+                </div>
+              </div>
+              <Link href="/events?featured=true" className="text-xs font-semibold text-sky-600 hover:text-sky-700 flex items-center gap-1 shrink-0">
+                View all
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7"/></svg>
+              </Link>
+            </div>
+            {featuredLoading ? (
+              <div className="listing-grid-6">
+                {Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)}
+              </div>
+            ) : (
+              <div className="listing-grid-6 stagger">
+                {featured.map(e => <EventCard key={e.id} event={e} />)}
+              </div>
+            )}
           </section>
         )}
 

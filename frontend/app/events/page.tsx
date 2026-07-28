@@ -19,6 +19,7 @@ function Content() {
   const [category, setCategory] = useState(sp.get("category") || "");
   const [scope, setScope] = useState(sp.get("scope") || "");
   const [priceType, setPriceType] = useState(sp.get("priceType") || "");
+  const [featured, setFeatured] = useState(sp.get("featured") === "true");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState(sp.get("sortBy") || "startDate");
 
@@ -29,6 +30,7 @@ function Content() {
     setCategory(sp.get("category") || "");
     setScope(sp.get("scope") || "");
     setPriceType(sp.get("priceType") || "");
+    setFeatured(sp.get("featured") === "true");
     setSortBy(sp.get("sortBy") || "startDate");
     setPage(1);
   }, [sp]);
@@ -40,6 +42,7 @@ function Content() {
     if (category) params.category = category;
     if (scope) params.scope = scope;
     if (priceType) params.priceType = priceType;
+    if (featured) params.featured = "true";
     if (location.latitude && location.longitude) {
       params.lat = location.latitude;
       params.lng = location.longitude;
@@ -48,7 +51,7 @@ function Content() {
     api.get("/events", { params })
       .then(r => { setEvents(r.data.events); setTotal(r.data.total); })
       .finally(() => setLoading(false));
-  }, [search, category, scope, priceType, page, sortBy, location.latitude, location.longitude]);
+  }, [search, category, scope, priceType, featured, page, sortBy, location.latitude, location.longitude]);
 
   const hasFilters = !!(category || scope || priceType || search);
 

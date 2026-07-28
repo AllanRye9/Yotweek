@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { api } from "../../lib/api";
 import { Business } from "../../lib/types";
 import { BusinessCard } from "../../components/BusinessCard";
+import { FeaturedPartnersWall } from "../../components/FeaturedPartnersWall";
 import { SkeletonCard } from "../../components/SkeletonCard";
 import { useLocation } from "../../lib/geolocation";
 
@@ -59,6 +60,7 @@ function Content() {
   return (
     <div className="animate-fade-in">
       <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+        <FeaturedPartnersWall />
         {/* Category pills */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
           <button onClick={() => setCategoryId("")} className={!categoryId?"tab-pill-active":"tab-pill-inactive"}>All</button>
