@@ -29,7 +29,7 @@ export default function MyCommunitiesPage() {
   if (loading || !user) return null;
 
   return (
-    <div className="animate-fade-in page-shell py-9">
+    <div className="animate-fade-in page-shell py-7">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div>
           <h1 className="font-extrabold text-2xl text-gray-900">My Communities</h1>

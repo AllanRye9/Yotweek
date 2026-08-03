@@ -112,9 +112,11 @@
   .badge-verif { @apply badge bg-sky-100 text-sky-700; }
   .badge-live  { @apply badge bg-green-100 text-green-700; }
 
-  /* Layout */
-  .page-shell  { @apply max-w-7xl mx-auto px-6 sm:px-9 lg:px-12; }
-  .page-header { @apply bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700 text-white px-6 sm:px-9 py-[3.75rem]; }
+  /* Layout — 7% side margin, consistent across every breakpoint (scales
+     naturally with viewport width instead of jumping at fixed px steps),
+     capped at max-w-7xl so lines stay readable on very wide screens. */
+  .page-shell  { @apply max-w-7xl mx-auto px-[7%]; }
+  .page-header { @apply bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700 text-white px-[7%] py-[3.75rem]; }
 
   /* Grid – adapts from 1→2→3→4 cols */
   .listing-grid {

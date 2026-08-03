@@ -55,7 +55,7 @@ export default function CreateBusinessPage() {
   return (
     <div className="animate-fade-in">
       <div className="page-header"><div className="max-w-2xl mx-auto"><h1 className="font-extrabold text-2xl sm:text-3xl mb-1">List a business</h1><p className="text-white/70 text-sm">Reviewed by our team before going live.</p></div></div>
-      <div className="max-w-2xl mx-auto px-6 sm:px-9 py-12">
+      <div className="max-w-2xl mx-auto px-[7%] py-9">
         <form onSubmit={submit} className="card-base p-6 space-y-5">
           {[
             { label:"Business name", key:"name", required:true, placeholder:"e.g. Acholi Inn" },

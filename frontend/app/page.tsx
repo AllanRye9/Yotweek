@@ -138,7 +138,7 @@ export default function HomePage() {
       {/* ── HERO (video slideshow + text, merged) ───────────────── */}
       <HeroVideoUnit />
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-3 space-y-5 sm:space-y-6">
+      <div className="max-w-7xl mx-auto px-[7%] py-3 space-y-5 sm:space-y-6">
         {/* ── FOR YOU (personalized) ─────────────────────────── */}
         {showForYou && (
           <section className="animate-fade-up">

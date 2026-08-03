@@ -79,7 +79,7 @@ export function HeroVideoUnit() {
   const line2Words = String(content.headlineLine2).split(" ");
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 min-h-[360px] sm:min-h-[420px] flex items-center">
+    <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 min-h-[240px] sm:min-h-[280px] max-h-[420px] flex items-center">
       {/* Slideshow layer: every slide is absolutely positioned and
           stacked. The active slide sits on top (z-2, opaque) and fades
           in; the previous slide stays fully opaque just beneath it
@@ -149,7 +149,7 @@ export function HeroVideoUnit() {
           doesn't re-animate distractingly every time the background clip
           rotates. */}
       <motion.div
-        className="relative z-10 max-w-3xl mx-auto px-6 sm:px-9 py-16 text-center w-full"
+        className="relative z-10 max-w-3xl mx-auto px-[7%] py-16 text-center w-full"
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.28 } } }}

@@ -79,7 +79,7 @@ function SearchContent() {
           )}
         </div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+      <div className="max-w-7xl mx-auto px-[7%] py-7">
         {q && !loading && <p className="text-sm text-gray-500 mb-5">{total===0?`No results for "${q}"`:`${total} result${total!==1?"s":""} for "${q}"`}</p>}
         {q && (
           <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar">
@@ -100,7 +100,7 @@ function SearchContent() {
           </div>
         ) : tab==="events" ? (
           results.events.length ? <div className="listing-grid stagger">{results.events.map(e => <EventCard key={e.id} event={e} />)}</div>
-          : <p className="text-gray-400 text-sm py-9">No events found for &ldquo;{q}&rdquo;.</p>
+          : <p className="text-gray-400 text-sm py-7">No events found for &ldquo;{q}&rdquo;.</p>
         ) : tab==="businesses" ? (
           results.businesses.length ? (
             <div className="listing-grid stagger">
@@ -111,7 +111,7 @@ function SearchContent() {
                 </Link>
               ))}
             </div>
-          ) : <p className="text-gray-400 text-sm py-9">No businesses found for &ldquo;{q}&rdquo;.</p>
+          ) : <p className="text-gray-400 text-sm py-7">No businesses found for &ldquo;{q}&rdquo;.</p>
         ) : (
           results.posts.length ? (
             <div className="listing-grid-3 stagger">
@@ -122,7 +122,7 @@ function SearchContent() {
                 </Link>
               ))}
             </div>
-          ) : <p className="text-gray-400 text-sm py-9">No posts found for &ldquo;{q}&rdquo;.</p>
+          ) : <p className="text-gray-400 text-sm py-7">No posts found for &ldquo;{q}&rdquo;.</p>
         )}
       </div>
     </div>
@@ -131,7 +131,7 @@ function SearchContent() {
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="max-w-7xl mx-auto px-4 py-10"><div className="listing-grid">{[...Array(8)].map((_,i) => <SkeletonCard key={i} />)}</div></div>}>
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-[7%] py-10"><div className="listing-grid">{[...Array(8)].map((_,i) => <SkeletonCard key={i} />)}</div></div>}>
       <SearchContent />
     </Suspense>
   );

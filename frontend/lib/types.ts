@@ -1,5 +1,6 @@
 export type Role = "USER" | "AGENT" | "COMPANY" | "ORGANIZATION" | "ADMIN";
 export type PriceType = "FREE" | "PAID";
+export type PaymentMethod = "CARD" | "MOBILE_MONEY" | "BANK_TRANSFER" | "BOTIM" | "MTN_MOMO" | "AIRTEL_MONEY";
 export type EventScope = "LOCAL" | "INTERNATIONAL";
 export type EventStatus = "PENDING" | "APPROVED" | "REJECTED" | "HIDDEN" | "COMPLETED" | "CANCELLED";
 export type EventCategory =

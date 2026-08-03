@@ -71,6 +71,9 @@ enum PaymentMethod {
   CARD
   MOBILE_MONEY
   BANK_TRANSFER
+  BOTIM
+  MTN_MOMO
+  AIRTEL_MONEY
 }
 
 enum ReportStatus {

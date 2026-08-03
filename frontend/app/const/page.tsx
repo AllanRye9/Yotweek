@@ -45,10 +45,10 @@ export default function AdminPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-12">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[7%] py-9">
         <div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl sm:text-3xl">Admin Panel</h1><p className="text-white/70 text-sm mt-1">Platform-wide activity, moderation queues, and controls.</p></div>
       </div>
-      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-12 space-y-8">
+      <div className="max-w-7xl mx-auto px-[7%] py-9 space-y-8">
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {cards.map(c => (

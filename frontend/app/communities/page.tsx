@@ -46,7 +46,7 @@ function Content() {
 
   return (
     <div className="animate-fade-in">
-      <div className="page-shell py-9">
+      <div className="page-shell py-7">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <form onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); }} className="flex gap-2">
             <input

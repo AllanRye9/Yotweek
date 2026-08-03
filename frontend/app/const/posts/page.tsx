@@ -73,14 +73,14 @@ export default function AdminPostsPage() {
   return (
     <AdminGuard>
       <div className="animate-fade-in">
-        <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11">
+        <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[7%] py-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="font-extrabold text-2xl">Posts</h1>
             <p className="text-white/70 text-sm mt-1">Edit, publish, or remove any post on the platform.</p>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+        <div className="max-w-7xl mx-auto px-[7%] py-7">
           <form onSubmit={e => { e.preventDefault(); load(); }} className="flex flex-wrap gap-2 mb-6">
             <input value={q} onChange={e => setQ(e.target.value)} placeholder="Search by title…" className="input-base flex-1 min-w-[200px]" />
             <select value={status} onChange={e => setStatus(e.target.value)} className="input-base !w-auto">

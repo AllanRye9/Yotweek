@@ -17,6 +17,8 @@ import { useCurrency } from "../../../context/CurrencyContext";
 import { formatMoney } from "../../../lib/currency";
 import { recordSignal } from "../../../lib/preferences";
 import { getYouTubeId } from "../../../lib/media";
+import { PaymentMethodSelector } from "../../../components/PaymentMethodSelector";
+import { PaymentMethod } from "../../../lib/types";
 
 const CAT_ICON: Record<string, string> = {
   FESTIVAL:"🎪", CONFERENCE:"🎤", CONCERT:"🎵", SPORTS:"⚽",
@@ -35,6 +37,7 @@ export default function EventDetailPage() {
   const [coverImgFailed, setCoverImgFailed] = useState(false);
   const [saved, setSaved] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("MTN_MOMO");
   const [reportOpen, setReportOpen] = useState(false);
   const [reportReason, setReportReason] = useState("SPAM");
   const readTimer = useRef<ReturnType<typeof setTimeout>>();
@@ -61,7 +64,11 @@ export default function EventDetailPage() {
     if (!user) { router.push("/auth/login"); return; }
     setBooking(true);
     try {
-      const r = await api.post("/bookings", { eventId:id, quantity:1 });
+      const r = await api.post("/bookings", {
+        eventId: id,
+        quantity: 1,
+        ...(event?.priceType === "PAID" ? { paymentMethod } : {}),
+      });
       if (r.data.requiresPayment) toast.info("Booking created — complete payment to confirm.");
       else {
         toast.success("You're registered! See you there 🎉");
@@ -96,8 +103,8 @@ export default function EventDetailPage() {
   }
 
   if (!event) return (
-    <div className="max-w-7xl mx-auto px-6 sm:px-9 py-10">
-      <div className="grid gap-9 lg:grid-cols-3">
+    <div className="max-w-7xl mx-auto px-[7%] py-10">
+      <div className="grid gap-6 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-4">
           <div className="aspect-video shimmer rounded-2xl bg-slate-100 animate-pulse" />
           <div className="card-base p-6 space-y-3">{[...Array(5)].map((_,i) => <div key={i} className={`h-4 shimmer bg-slate-100 rounded ${i===0?"w-1/3":i===1?"w-full":"w-2/3"}`} />)}</div>
@@ -119,7 +126,7 @@ export default function EventDetailPage() {
     <div className="animate-fade-in">
       {/* Breadcrumb */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-2.5 flex items-center gap-2 text-xs text-gray-400">
+        <div className="max-w-7xl mx-auto px-[7%] py-2.5 flex items-center gap-2 text-xs text-gray-400">
           <Link href="/" className="hover:text-sky-600 transition-colors">Home</Link>
           <span>/</span>
           <Link href="/events" className="hover:text-sky-600 transition-colors">Events</Link>
@@ -128,8 +135,8 @@ export default function EventDetailPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
-        <div className="grid gap-9 lg:grid-cols-3">
+      <div className="max-w-7xl mx-auto px-[7%] py-7">
+        <div className="grid gap-6 lg:grid-cols-3">
           {/* Left */}
           <div className="lg:col-span-2 space-y-5">
             {/* Cover */}
@@ -268,6 +275,12 @@ export default function EventDetailPage() {
                   </p>
                 )}
               </div>
+              {event.priceType === "PAID" && spotsLeft !== 0 && (
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-gray-700 mb-1.5">Pay with</p>
+                  <PaymentMethodSelector value={paymentMethod} onChange={setPaymentMethod} />
+                </div>
+              )}
               <button onClick={handleBook} disabled={booking || spotsLeft === 0}
                 className="btn-primary w-full !py-3 !rounded-xl !justify-center mb-3 disabled:opacity-50">
                 {booking ? "Processing…" : spotsLeft === 0 ? "Sold out" : event.priceType === "FREE" ? "Register free" : "Book now"}
@@ -278,7 +291,7 @@ export default function EventDetailPage() {
               </button>
               {event.priceType === "PAID" && (
                 <p className="text-[10px] text-gray-400 text-center mt-3 leading-relaxed">
-                  A {event.commissionPct ?? 5}% platform fee applies. Secure payment via Mobile Money, Card, or Bank Transfer.
+                  A {event.commissionPct ?? 5}% platform fee applies. Secure payment via MTN Mobile Money, Airtel Money, Botim, Card, or Bank Transfer.
                 </p>
               )}
             </div>

@@ -254,7 +254,7 @@ export default function CommunityDetailPage() {
   }
 
   if (!community) return (
-    <div className="page-shell py-9 space-y-4 animate-pulse">
+    <div className="page-shell py-7 space-y-4 animate-pulse">
       <div className="aspect-[3/1] shimmer rounded-2xl bg-slate-100" />
       <div className="card-base p-6 space-y-3">{[...Array(3)].map((_, i) => <div key={i} className="h-4 shimmer bg-slate-100 rounded w-3/4" />)}</div>
     </div>
@@ -281,8 +281,8 @@ export default function CommunityDetailPage() {
         </div>
       </div>
 
-      <div className="page-shell py-9">
-        <div className="grid gap-9 lg:grid-cols-3">
+      <div className="page-shell py-7">
+        <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-5">
             <div className="card-base p-5 sm:p-7">
               {editing ? (

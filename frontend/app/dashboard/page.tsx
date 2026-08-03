@@ -121,7 +121,7 @@ export default function DashboardPage() {
     PENDING: "#f59e0b", APPROVED: "#10b981", REJECTED: "#ef4444", HIDDEN: "#94a3b8",
   };
 
-  if (loading) return <div className="max-w-7xl mx-auto px-4 py-16 text-center text-gray-400">Loading…</div>;
+  if (loading) return <div className="max-w-7xl mx-auto px-[7%] py-16 text-center text-gray-400">Loading…</div>;
   if (!user) return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="card-base p-10 text-center max-w-md">
@@ -162,7 +162,7 @@ export default function DashboardPage() {
       </div>
 
       {payouts && (
-        <div className="max-w-7xl mx-auto px-6 sm:px-9 -mt-4 mb-4 relative z-10">
+        <div className="max-w-7xl mx-auto px-[7%] -mt-4 mb-4 relative z-10">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="card-base p-4 text-center"><p className="text-xs text-gray-400 mb-1">Total payout</p><p className="font-extrabold text-xl text-emerald-600">{Number(payouts.totalPayout).toLocaleString()}</p></div>
             <div className="card-base p-4 text-center"><p className="text-xs text-gray-400 mb-1">Platform fees</p><p className="font-extrabold text-xl text-gray-700">{Number(payouts.totalCommission).toLocaleString()}</p></div>
@@ -171,7 +171,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+      <div className="max-w-7xl mx-auto px-[7%] py-7">
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-1">
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key as any)} className={tab===t.key?"tab-pill-active":"tab-pill-inactive"}>
@@ -374,14 +374,14 @@ export default function DashboardPage() {
                   <span className="algo-chip">🎯 AI-powered</span>
                 </div>
                 {!profile.hasData ? (
-                  <div className="text-center py-12">
+                  <div className="text-center py-9">
                     <p className="text-4xl mb-3">🧠</p>
                     <p className="font-semibold text-gray-700 mb-1">No profile yet</p>
                     <p className="text-gray-400 text-sm max-w-sm mx-auto">Browse events and businesses to build your personalized interest profile. The more you explore, the better your recommendations get.</p>
                     <Link href="/events" className="btn-primary !px-6 !py-2.5 mt-4 inline-flex">Start exploring</Link>
                   </div>
                 ) : (
-                  <div className="grid sm:grid-cols-3 gap-9">
+                  <div className="grid sm:grid-cols-3 gap-6">
                     <div>
                       <h3 className="text-sm font-semibold text-gray-600 mb-3 uppercase tracking-wide">Top categories</h3>
                       <div className="space-y-2">

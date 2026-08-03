@@ -21,8 +21,8 @@ export default function AdminTestimonialsPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">Testimonials</h1></div></div>
-      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[7%] py-8"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">Testimonials</h1></div></div>
+      <div className="max-w-7xl mx-auto px-[7%] py-7">
         {fetching ? <p className="text-gray-400 text-sm">Loading…</p>
         : items.length===0 ? <div className="card-base p-12 text-center"><p className="text-4xl mb-3">💬</p><p className="font-semibold text-gray-700">No testimonials awaiting review.</p></div>
         : <div className="space-y-4">{items.map(t => (

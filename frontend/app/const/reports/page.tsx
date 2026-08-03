@@ -29,8 +29,8 @@ export default function AdminReportsPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">User Reports</h1><p className="text-white/70 text-sm mt-1">Flagged content, spam, and abuse reported by the community.</p></div></div>
-      <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[7%] py-8"><div className="max-w-7xl mx-auto"><h1 className="font-extrabold text-2xl">User Reports</h1><p className="text-white/70 text-sm mt-1">Flagged content, spam, and abuse reported by the community.</p></div></div>
+      <div className="max-w-7xl mx-auto px-[7%] py-7">
         <div className="flex gap-2 mb-6">
           <button onClick={() => setTab("event")} className={tab==="event"?"tab-pill-active":"tab-pill-inactive"}>🎪 Event reports</button>
           <button onClick={() => setTab("business")} className={tab==="business"?"tab-pill-active":"tab-pill-inactive"}>🏪 Business reports</button>

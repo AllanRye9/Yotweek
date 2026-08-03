@@ -50,14 +50,14 @@ export default function AdminActivityLogPage() {
   return (
     <AdminGuard>
       <div className="animate-fade-in">
-        <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-6 sm:px-9 py-11">
+        <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[7%] py-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="font-extrabold text-2xl">Activity Log</h1>
             <p className="text-white/70 text-sm mt-1">Every moderation action, who did it, and when.</p>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-9">
+        <div className="max-w-7xl mx-auto px-[7%] py-7">
           <div className="flex flex-wrap gap-2 mb-6">
             <select value={targetType} onChange={e => { setTargetType(e.target.value); setPage(1); }} className="input-base !w-auto">
               <option value="">All content types</option>

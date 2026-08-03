@@ -68,7 +68,7 @@ export default function CreateCommunityPage() {
         </div>
       </div>
 
-      <form onSubmit={submit} className="page-shell py-9 max-w-2xl space-y-5">
+      <form onSubmit={submit} className="page-shell py-7 max-w-2xl space-y-5">
         <label className="block">
           <span className="block text-sm font-semibold text-gray-700 mb-1.5">Community name<span className="text-red-500 ml-0.5">*</span></span>
           <input required minLength={3} value={form.name} onChange={e => u("name", e.target.value)} className="input-base" placeholder="e.g. Gulu Creatives" />

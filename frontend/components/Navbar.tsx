@@ -26,9 +26,15 @@ export const CATEGORIES = [
   { key: "EXHIBITION",        label: "🖼️ Exhibitions" },
 ];
 
-// Build the category bar from CATEGORIES (skip "All") plus extra static links
+// Build the category bar from CATEGORIES (skip "All") plus extra static links.
+// Trimmed to the handful of highest-traffic categories plus a "More" link —
+// the full category list stays one tap away on /events (which renders its
+// own interactive version of the same filters), so nothing is lost, but the
+// bar itself stays short enough to read at a glance instead of requiring a
+// long horizontal scroll.
+const PRIMARY_CATEGORY_KEYS = ["FESTIVAL", "WILDLIFE_SAFARI", "CULTURAL_HERITAGE", "CONCERT", "FOOD_DRINK"];
 const CATEGORIES_BAR = CATEGORIES
-  .filter(c => c.key !== "")
+  .filter(c => PRIMARY_CATEGORY_KEYS.includes(c.key))
   .map(c => ({
     href: `/events?category=${c.key}`,
     label: c.label,
@@ -36,12 +42,10 @@ const CATEGORIES_BAR = CATEGORIES
 
 const EXTRA_LINKS = [
   { href: "/communities", label: "🤝 Communities" },
-  { href: "/businesses",  label: "🏪 Businesses" },
-  { href: "/blog",        label: "✍️ Blog" },
   { href: "/events?priceType=FREE", label: "🆓 Free" },
 ];
 
-const FULL_BAR = [...EXTRA_LINKS, ...CATEGORIES_BAR];
+const FULL_BAR = [...EXTRA_LINKS, ...CATEGORIES_BAR, { href: "/events", label: "More →" }];
 
 // ---------- Explore dropdown links ----------
 const EXPLORE_LINKS = [
@@ -120,7 +124,7 @@ export function Navbar() {
   return (
     <>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? navBg : "bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700"}`}>
-        <div className="max-w-7xl mx-auto px-[10px] flex items-center h-14 sm:h-16 gap-3">
+        <div className="max-w-7xl mx-auto px-[7%] flex items-center h-14 sm:h-16 gap-3">
 
           {/* Hamburger */}
           <button className={`lg:hidden p-2 rounded-lg transition-colors ${scrolled ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"}`}
@@ -208,7 +212,7 @@ export function Navbar() {
                     </div>
                     <div className="max-h-72 overflow-y-auto divide-y divide-gray-50">
                       {notifs.length === 0
-                        ? <p className="text-center text-sm text-gray-400 py-9">All caught up!</p>
+                        ? <p className="text-center text-sm text-gray-400 py-7">All caught up!</p>
                         : notifs.map(n => (
                           <div key={n.id} className={`px-4 py-3 ${!n.read ? "bg-sky-50/50" : ""}`}>
                             <p className="text-xs text-gray-800">{n.message}</p>
@@ -288,7 +292,7 @@ export function Navbar() {
             directly below — showing both was a literal duplicate filter row. */}
         {!pathname.startsWith("/events") && (
           <div className={`hidden sm:block border-t overflow-x-auto no-scrollbar ${scrolled ? "bg-gray-50 border-gray-100" : "bg-blue-800/50 border-white/10"}`}>
-            <div className="max-w-7xl mx-auto px-[10px] flex gap-0.5 py-1">
+            <div className="max-w-7xl mx-auto px-[7%] flex gap-0.5 py-1">
               {FULL_BAR.map(c => (
                 <Link key={c.href} href={c.href}
                   className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded transition-colors ${scrolled ? "text-gray-600 hover:bg-sky-50 hover:text-sky-700" : "text-white/75 hover:text-white hover:bg-white/10"}`}>

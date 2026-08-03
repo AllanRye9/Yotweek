@@ -75,7 +75,7 @@ export default function CreateEventPage() {
     finally { setSubmitting(false); }
   }
 
-  if (loading || loadingExisting) return <div className="max-w-2xl mx-auto px-4 py-16 text-center text-gray-400">Loading…</div>;
+  if (loading || loadingExisting) return <div className="max-w-2xl mx-auto px-[7%] py-16 text-center text-gray-400">Loading…</div>;
   if (!user) return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="card-base p-10 text-center max-w-md">
@@ -94,7 +94,7 @@ export default function CreateEventPage() {
           <p className="text-white/70 text-sm">{editId ? "Update your event's details, photos, and video." : "All submissions are reviewed by our team before going live."}</p>
         </div>
       </div>
-      <div className="max-w-2xl mx-auto px-6 sm:px-9 py-12">
+      <div className="max-w-2xl mx-auto px-[7%] py-9">
         <div className="flex gap-2 mb-8">
           {[{n:1,label:"Event details"},{n:2,label:"Location & extras"}].map(s => (
             <button key={s.n} type="button" onClick={() => setStep(s.n)}

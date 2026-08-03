@@ -25,7 +25,7 @@ export default function PostPage() {
   }, [slug, router]);
 
   if (!post) return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-4 animate-pulse">
+    <div className="max-w-3xl mx-auto px-[7%] py-10 space-y-4 animate-pulse">
       <div className="h-8 shimmer bg-slate-100 rounded w-3/4" />
       <div className="aspect-video shimmer bg-slate-100 rounded-2xl" />
       {[...Array(6)].map((_,i) => <div key={i} className="h-4 shimmer bg-slate-100 rounded w-full" />)}
@@ -35,13 +35,13 @@ export default function PostPage() {
   return (
     <div className="animate-fade-in">
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-6 sm:px-9 py-2.5 flex items-center gap-2 text-xs text-gray-400">
+        <div className="max-w-7xl mx-auto px-[7%] py-2.5 flex items-center gap-2 text-xs text-gray-400">
           <Link href="/" className="hover:text-sky-600">Home</Link><span>/</span>
           <Link href="/blog" className="hover:text-sky-600">Blog</Link><span>/</span>
           <span className="text-gray-700 font-medium truncate">{post.title}</span>
         </div>
       </div>
-      <article className="max-w-3xl mx-auto px-6 sm:px-9 py-12">
+      <article className="max-w-3xl mx-auto px-[7%] py-9">
         {post.coverImageUrl && (
           <div className="aspect-video overflow-hidden rounded-2xl mb-7 bg-slate-100">
             <SafeImage src={post.coverImageUrl} alt={post.title} className="w-full h-full object-cover"
