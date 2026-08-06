@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import { CurrencyProvider } from "../context/CurrencyContext";
+import { ThemeProvider } from "../context/ThemeContext";
 import { ToastProvider } from "../components/Toast";
 import { Navbar } from "../components/Navbar";
 import { Footer } from "../components/Footer";
@@ -34,18 +35,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <IntlayerClientProvider defaultLocale={locale}>
         <body className="flex min-h-screen flex-col bg-slate-50 pb-16 lg:pb-0">
-          <AuthProvider>
-            <CurrencyProvider>
-              <ToastProvider>
-                <VisitorTracker />
-                <StatsTicker />
-                <Navbar />
-                <main className="flex-1">{children}</main>
-                <Footer />
-                <MobileBottomNav />
-              </ToastProvider>
-            </CurrencyProvider>
-          </AuthProvider>
+          <ThemeProvider>
+            <AuthProvider>
+              <CurrencyProvider>
+                <ToastProvider>
+                  <VisitorTracker />
+                  <StatsTicker />
+                  <Navbar />
+                  <main className="flex-1">{children}</main>
+                  <Footer />
+                  <MobileBottomNav />
+                </ToastProvider>
+              </CurrencyProvider>
+            </AuthProvider>
+          </ThemeProvider>
         </body>
       </IntlayerClientProvider>
     </html>

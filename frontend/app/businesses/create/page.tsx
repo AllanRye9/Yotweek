@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { api } from "../../../lib/api";
 import { useAuth } from "../../../context/AuthContext";
@@ -20,15 +20,33 @@ function flattenCategories(cats: Category[], depth = 0): { id: string; label: st
 
 export default function CreateBusinessPage() {
   const { user, loading } = useAuth(); const router = useRouter(); const toast = useToast();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get("edit");
   const [form, setForm] = useState(INIT); const [submitting, setSubmitting] = useState(false);
   const [galleryUrls, setGalleryUrls] = useState<string[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingExisting, setLoadingExisting] = useState(!!editId);
   function u(k: string, v: string) { setForm(f => ({...f,[k]:v})); }
 
   useEffect(() => {
     api.get("/categories").then(r => setCategories(r.data.categories || r.data)).catch(() => {});
   }, []);
   const flatCategories = flattenCategories(categories);
+
+  useEffect(() => {
+    if (!editId) return;
+    api.get(`/businesses/${editId}`).then(r => {
+      const b = r.data.business;
+      setForm({
+        name: b.name, description: b.description || "", categoryId: b.category?.id || b.categoryId || "",
+        city: b.city || "", country: b.country || "Uganda", address: b.address || "", phone: b.phone || "",
+        email: b.email || "", website: b.website || "", priceRange: b.priceRange || "MODERATE",
+        latitude: b.latitude != null ? String(b.latitude) : "", longitude: b.longitude != null ? String(b.longitude) : "",
+        tags: (b.tags || []).join(","), coverImageUrl: b.coverImageUrl || "", logoUrl: b.logoUrl || "",
+      });
+      setGalleryUrls(b.galleryUrls || []);
+    }).catch(() => toast.error("Could not load this business.")).finally(() => setLoadingExisting(false));
+  }, [editId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -43,19 +61,30 @@ export default function CreateBusinessPage() {
         logoUrl: form.logoUrl.trim() || undefined,
         galleryUrls,
       };
-      await api.post("/businesses", payload);
-      toast.success("Submitted for review!"); router.push("/dashboard");
+      if (editId) {
+        await api.put(`/businesses/${editId}`, payload);
+        toast.success("Business updated.");
+        router.push(user?.role === "ADMIN" ? "/const/businesses" : "/dashboard?tab=businesses");
+      } else {
+        await api.post("/businesses", payload);
+        toast.success("Submitted for review!"); router.push("/dashboard?tab=businesses");
+      }
     } catch (err: any) { toast.error(err?.response?.data?.error || err?.response?.data?.errors?.[0]?.msg || "Could not submit."); }
     finally { setSubmitting(false); }
   }
 
-  if (loading) return null;
+  if (loading || loadingExisting) return <div className="max-w-2xl mx-auto px-[10%] py-16 text-center text-gray-400">Loading…</div>;
   if (!user) return <div className="min-h-[60vh] flex items-center justify-center"><div className="card-base p-10 text-center max-w-md"><p style={{fontSize:"3rem"}} className="mb-4">🏪</p><h1 className="font-extrabold text-2xl mb-4">Sign in to list a business</h1><Link href="/auth/login" className="btn-primary !px-8 !py-3 inline-flex">Sign in</Link></div></div>;
 
   return (
     <div className="animate-fade-in">
-      <div className="page-header"><div className="max-w-2xl mx-auto"><h1 className="font-extrabold text-2xl sm:text-3xl mb-1">List a business</h1><p className="text-white/70 text-sm">Reviewed by our team before going live.</p></div></div>
-      <div className="max-w-2xl mx-auto px-[7%] py-9">
+      <div className="page-header"><div className="max-w-2xl mx-auto"><h1 className="font-extrabold text-2xl sm:text-3xl mb-1">{editId ? "Edit business" : "List a business"}</h1><p className="text-white/70 text-sm">{editId ? "Update your business's details and photos." : "Reviewed by our team before going live."}</p></div></div>
+      <div className="max-w-2xl mx-auto px-[10%] py-9">
+        {editId && (
+          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4 text-xs text-amber-700 flex gap-2 mb-5">
+            <span>⚠️</span><p>Changes to a live listing go back for admin re-approval before showing publicly again.</p>
+          </div>
+        )}
         <form onSubmit={submit} className="card-base p-6 space-y-5">
           {[
             { label:"Business name", key:"name", required:true, placeholder:"e.g. Acholi Inn" },
@@ -112,7 +141,7 @@ export default function CreateBusinessPage() {
               onGalleryChange={setGalleryUrls}
             />
           </div>
-          <button type="submit" disabled={submitting} className="btn-primary w-full !py-3 !rounded-xl !justify-center">{submitting?"Submitting…":"Submit for review"}</button>
+          <button type="submit" disabled={submitting} className="btn-primary w-full !py-3 !rounded-xl !justify-center">{submitting ? "Saving…" : editId ? "Save changes" : "Submit for review"}</button>
         </form>
       </div>
     </div>

@@ -33,7 +33,7 @@ export async function Footer() {
 
   return (
     <footer className="bg-gradient-to-br from-slate-900 via-sky-950 to-indigo-950 text-slate-300">
-      <div className="max-w-7xl mx-auto px-[7%] py-10">
+      <div className="max-w-7xl mx-auto px-[10%] py-10">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-6 md:gap-8">
           <div className="col-span-2 md:col-span-2">
             <Link href="/" className="flex items-center gap-2.5 mb-4 w-fit hover:opacity-80 transition-opacity">
@@ -57,7 +57,7 @@ export async function Footer() {
         </div>
       </div>
       <div className="border-t border-white/5">
-        <div className="max-w-7xl mx-auto px-[7%] py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+        <div className="max-w-7xl mx-auto px-[10%] py-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
           <p>© {new Date().getFullYear()} yotweek. {content.copyrightNote}</p>
           <p>{content.poweredByNote}</p>
         </div>

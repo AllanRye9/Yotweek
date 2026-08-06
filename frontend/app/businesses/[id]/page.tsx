@@ -40,7 +40,7 @@ export default function BusinessDetailPage() {
   }
 
   if (!business) return (
-    <div className="max-w-7xl mx-auto px-[7%] py-10 space-y-4 animate-pulse">
+    <div className="max-w-7xl mx-auto px-[10%] py-10 space-y-4 animate-pulse">
       <div className="aspect-video shimmer rounded-2xl bg-slate-100" />
       <div className="card-base p-6 space-y-3">{[...Array(4)].map((_,i) => <div key={i} className="h-4 shimmer bg-slate-100 rounded w-3/4" />)}</div>
     </div>
@@ -49,14 +49,14 @@ export default function BusinessDetailPage() {
   return (
     <div className="animate-fade-in">
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-7xl mx-auto px-[7%] py-2.5 flex items-center gap-2 text-xs text-gray-400">
+        <div className="max-w-7xl mx-auto px-[10%] py-2.5 flex items-center gap-2 text-xs text-gray-400">
           <Link href="/" className="hover:text-sky-600">Home</Link><span>/</span>
           <Link href="/businesses" className="hover:text-sky-600">Businesses</Link><span>/</span>
           <span className="text-gray-700 font-medium truncate">{business.name}</span>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-[7%] py-7">
+      <div className="max-w-7xl mx-auto px-[10%] py-7">
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-5">
             {/* Cover */}

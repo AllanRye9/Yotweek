@@ -76,7 +76,7 @@ export default function AdminAnalyticsPage() {
   return (
     <AdminGuard>
       <div className="animate-fade-in">
-        <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[7%] py-8">
+        <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[10%] py-8">
           <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
             <div>
               <h1 className="font-extrabold text-2xl">Analytics</h1>
@@ -93,7 +93,7 @@ export default function AdminAnalyticsPage() {
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-[7%] py-7">
+        <div className="max-w-7xl mx-auto px-[10%] py-7">
           {loading || !data ? (
             <p className="text-gray-400 text-sm">Loading…</p>
           ) : (

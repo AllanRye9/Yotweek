@@ -125,14 +125,14 @@ export default function AdminHighlightsPage() {
   return (
     <AdminGuard>
     <div className="animate-fade-in">
-      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[7%] py-8">
+      <div className="bg-gradient-to-r from-violet-700 to-indigo-700 text-white px-[10%] py-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="font-extrabold text-2xl">Highlight Banner</h1>
           <p className="text-white/70 text-sm mt-1">Manage the promotional image/video banner shown below the homepage hero.</p>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-[7%] py-7 grid gap-6 lg:grid-cols-[380px_1fr]">
+      <div className="max-w-7xl mx-auto px-[10%] py-7 grid gap-6 lg:grid-cols-[380px_1fr]">
         {/* Add / edit form */}
         <form onSubmit={submit} className="card-base p-5 h-fit space-y-3">
           <h2 className="font-bold text-gray-900 mb-1">{editingId ? "Edit slide" : "Add a new slide"}</h2>

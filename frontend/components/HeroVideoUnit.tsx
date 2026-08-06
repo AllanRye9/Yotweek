@@ -79,77 +79,85 @@ export function HeroVideoUnit() {
   const line2Words = String(content.headlineLine2).split(" ");
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-br from-sky-700 via-blue-700 to-indigo-800 min-h-[240px] sm:min-h-[280px] max-h-[420px] flex items-center">
-      {/* Slideshow layer: every slide is absolutely positioned and
-          stacked. The active slide sits on top (z-2, opaque) and fades
-          in; the previous slide stays fully opaque just beneath it
-          (z-1) so there's never a blackout gap during the crossfade —
-          non-active, non-previous slides are hidden entirely (z-0,
-          opacity 0). Object-cover fills the hero edge-to-edge with no
-          distortion (crops overflow rather than stretching). */}
-      {hasVideo && slides.map((slide, i) => {
-        const isActive = i === idx;
-        const isPrev = i === prevIdx;
-        if (!isActive && !isPrev) return null;
-        const ytId = getYouTubeId(slide.videoUrl);
+    <section className="relative overflow-hidden min-h-[240px] sm:min-h-[280px] max-h-[420px] flex items-center"
+      style={{ backgroundImage: "linear-gradient(to bottom right, rgb(var(--brand-700)), rgb(var(--brand-600)), rgb(var(--accent-700)))" }}>
+      {/* Slideshow layer — inset by the same left/right margin as the
+          rest of the page (page-shell's px-[10%]) rather than bleeding
+          edge-to-edge, so the hero visually lines up with every other
+          section on the site. The brand-gradient background above still
+          shows through in the margin strips and behind rounded corners. */}
+      <div className="absolute inset-y-0 left-[10%] right-[10%] rounded-2xl overflow-hidden">
+        {/* Every slide is absolutely positioned and stacked. The active
+            slide sits on top (z-2, opaque) and fades in; the previous
+            slide stays fully opaque just beneath it (z-1) so there's
+            never a blackout gap during the crossfade — non-active,
+            non-previous slides are hidden entirely (z-0, opacity 0).
+            Object-cover fills the frame with no distortion (crops
+            overflow rather than stretching). */}
+        {hasVideo && slides.map((slide, i) => {
+          const isActive = i === idx;
+          const isPrev = i === prevIdx;
+          if (!isActive && !isPrev) return null;
+          const ytId = getYouTubeId(slide.videoUrl);
 
-        return (
-          <div
-            key={slide.id}
-            className="absolute inset-0"
-            style={{
-              zIndex: isActive ? 2 : 1,
-              opacity: 1,
-              transition: isActive ? "opacity 700ms ease-in-out" : undefined,
-            }}
-            aria-hidden={!isActive}
-          >
-            {isActive ? (
-              ytId ? (
-                <iframe
-                  src={youTubeEmbedUrl(ytId)}
-                  title={slide.title}
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                  style={{ border: 0 }}
-                  allow="autoplay; encrypted-media; picture-in-picture"
-                />
+          return (
+            <div
+              key={slide.id}
+              className="absolute inset-0"
+              style={{
+                zIndex: isActive ? 2 : 1,
+                opacity: 1,
+                transition: isActive ? "opacity 700ms ease-in-out" : undefined,
+              }}
+              aria-hidden={!isActive}
+            >
+              {isActive ? (
+                ytId ? (
+                  <iframe
+                    src={youTubeEmbedUrl(ytId)}
+                    title={slide.title}
+                    className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    style={{ border: 0 }}
+                    allow="autoplay; encrypted-media; picture-in-picture"
+                  />
+                ) : (
+                  <video
+                    src={slide.videoUrl}
+                    poster={slide.thumbnailUrl || undefined}
+                    autoPlay muted loop={slides.length < 2} playsInline
+                    onEnded={slides.length > 1 ? next : undefined}
+                    onError={() => { if (slides.length > 1) next(); }}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                )
+              ) : slide.thumbnailUrl ? (
+                // Outgoing slide: a frozen poster frame rather than a second
+                // live video/iframe playing underneath — keeps the crossfade
+                // gap-free without doubling up on playing media.
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={slide.thumbnailUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
               ) : (
-                <video
-                  src={slide.videoUrl}
-                  poster={slide.thumbnailUrl || undefined}
-                  autoPlay muted loop={slides.length < 2} playsInline
-                  onEnded={slides.length > 1 ? next : undefined}
-                  onError={() => { if (slides.length > 1) next(); }}
-                  className="absolute inset-0 w-full h-full object-cover"
-                />
-              )
-            ) : slide.thumbnailUrl ? (
-              // Outgoing slide: a frozen poster frame rather than a second
-              // live video/iframe playing underneath — keeps the crossfade
-              // gap-free without doubling up on playing media.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={slide.thumbnailUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-            ) : (
-              <div className="absolute inset-0 bg-slate-900" />
-            )}
-          </div>
-        );
-      })}
+                <div className="absolute inset-0 bg-slate-900" />
+              )}
+            </div>
+          );
+        })}
 
-      {/* Scrim: kept deliberately light so the footage itself stays the
-          star — just enough to keep white text legible, concentrated at
-          the very top/bottom edges rather than washing out the whole
-          frame. */}
-      <div className={`absolute inset-0 z-[3] ${hasVideo ? "bg-gradient-to-b from-black/35 via-black/10 to-black/45" : ""}`} />
-      <div className={`absolute inset-0 z-[3] ${hasVideo ? "bg-black/10" : ""}`} />
+        {/* Scrim: kept deliberately light so the footage itself stays the
+            star — just enough to keep white text legible, concentrated at
+            the very top/bottom edges rather than washing out the whole
+            frame. */}
+        <div className={`absolute inset-0 z-[3] ${hasVideo ? "bg-gradient-to-b from-black/35 via-black/10 to-black/45" : ""}`} />
+        <div className={`absolute inset-0 z-[3] ${hasVideo ? "bg-black/10" : ""}`} />
+      </div>
       <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-sunset-400/10 animate-float pointer-events-none" />
-      <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-sky-400/10 animate-float pointer-events-none" style={{ animationDelay: "2s" }} />
+      <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full animate-float pointer-events-none" style={{ animationDelay: "2s", backgroundColor: "rgb(var(--brand-400) / 0.1)" }} />
 
       {/* Text — reveals bit by bit on load/mount, not per-slide, so it
           doesn't re-animate distractingly every time the background clip
           rotates. */}
       <motion.div
-        className="relative z-10 max-w-3xl mx-auto px-[7%] py-16 text-center w-full"
+        className="relative z-10 max-w-3xl mx-auto px-[10%] py-16 text-center w-full"
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.28 } } }}

@@ -39,7 +39,7 @@ export default function ItineraryPage() {
     catch { toast.error("Could not remove stop."); }
   }
 
-  if (loading) return <div className="max-w-7xl mx-auto px-[7%] py-16 text-center text-gray-400">Loading…</div>;
+  if (loading) return <div className="max-w-7xl mx-auto px-[10%] py-16 text-center text-gray-400">Loading…</div>;
   if (!user) return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="card-base p-10 text-center max-w-md">
@@ -64,7 +64,7 @@ export default function ItineraryPage() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-[7%] py-7">
+      <div className="max-w-7xl mx-auto px-[10%] py-7">
         {showForm && (
           <form onSubmit={create} className="card-base p-5 mb-6 animate-fade-up">
             <h2 className="font-bold text-gray-900 mb-4">New itinerary</h2>

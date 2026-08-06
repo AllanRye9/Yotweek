@@ -57,7 +57,7 @@ function Content() {
 
   return (
     <div className="animate-fade-in">
-      <div className="max-w-7xl mx-auto px-[7%] py-7">
+      <div className="max-w-7xl mx-auto px-[10%] py-7">
         {/* Category pills – using imported CATEGORIES */}
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
           {CATEGORIES.map(c => (
@@ -139,7 +139,7 @@ function Content() {
 
 export default function EventsPage() {
   return (
-    <Suspense fallback={<div className="max-w-7xl mx-auto px-[7%] py-10"><div className="listing-grid">{[...Array(12)].map((_, i) => <SkeletonCard key={i} />)}</div></div>}>
+    <Suspense fallback={<div className="max-w-7xl mx-auto px-[10%] py-10"><div className="listing-grid">{[...Array(12)].map((_, i) => <SkeletonCard key={i} />)}</div></div>}>
       <Content />
     </Suspense>
   );

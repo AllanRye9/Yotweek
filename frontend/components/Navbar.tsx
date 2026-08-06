@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { api } from "../lib/api";
 import { CurrencySelector } from "./CurrencySelector";
 import { LocaleSwitcher } from "./LocaleSwitcher";
+import { ThemeSelector } from "./ThemeSelector";
 import { useIntlayer } from "next-intlayer";
 
 // ---------- Shared categories (source of truth) ----------
@@ -124,7 +125,7 @@ export function Navbar() {
   return (
     <>
       <header className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? navBg : "bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700"}`}>
-        <div className="max-w-7xl mx-auto px-[7%] flex items-center h-14 sm:h-16 gap-3">
+        <div className="max-w-7xl mx-auto px-[10%] flex items-center h-14 sm:h-16 gap-3">
 
           {/* Hamburger */}
           <button className={`lg:hidden p-2 rounded-lg transition-colors ${scrolled ? "text-gray-700 hover:bg-gray-100" : "text-white hover:bg-white/10"}`}
@@ -185,7 +186,7 @@ export function Navbar() {
               )}
             </div>
 
-            <Link href="/events/create" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${scrolled ? "bg-sky-600 text-white hover:bg-sky-700" : "bg-white/20 text-white border border-white/30 hover:bg-white/30"}`}>
+            <Link href="/events/create" className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${scrolled ? "text-white hover:brightness-110" : "bg-white/20 text-white border border-white/30 hover:bg-white/30"}`} style={scrolled ? { backgroundColor: "rgb(var(--brand-600))" } : undefined}>
               + List
             </Link>
 
@@ -194,6 +195,9 @@ export function Navbar() {
 
             {/* Language */}
             <LocaleSwitcher dark={!scrolled} />
+
+            {/* Page color theme */}
+            <ThemeSelector dark={!scrolled} />
 
             {/* Notifications */}
             {user && (
@@ -292,7 +296,7 @@ export function Navbar() {
             directly below — showing both was a literal duplicate filter row. */}
         {!pathname.startsWith("/events") && (
           <div className={`hidden sm:block border-t overflow-x-auto no-scrollbar ${scrolled ? "bg-gray-50 border-gray-100" : "bg-blue-800/50 border-white/10"}`}>
-            <div className="max-w-7xl mx-auto px-[7%] flex gap-0.5 py-1">
+            <div className="max-w-7xl mx-auto px-[10%] flex gap-0.5 py-1">
               {FULL_BAR.map(c => (
                 <Link key={c.href} href={c.href}
                   className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded transition-colors ${scrolled ? "text-gray-600 hover:bg-sky-50 hover:text-sky-700" : "text-white/75 hover:text-white hover:bg-white/10"}`}>
@@ -364,6 +368,12 @@ export function Navbar() {
               <span style={{fontSize:"1.3rem",lineHeight:1,width:"1.6rem",textAlign:"center",display:"inline-block"}}>🌐</span> Language
             </span>
             <LocaleSwitcher />
+          </div>
+          <div className="flex items-center justify-between gap-3 px-5 py-3.5 border-b border-gray-50">
+            <span className="flex items-center gap-3 text-sm font-medium text-gray-700">
+              <span style={{fontSize:"1.3rem",lineHeight:1,width:"1.6rem",textAlign:"center",display:"inline-block"}}>🎨</span> Page theme
+            </span>
+            <ThemeSelector />
           </div>
           {user ? (
             <div className="px-5 py-4">

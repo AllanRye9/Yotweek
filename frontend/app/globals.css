@@ -2,12 +2,62 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Theme palettes ────────────────────────────────────────────────
+   Page-wide "brand" color is driven by CSS custom properties rather
+   than hardcoded Tailwind color classes, so the ThemeSelector can
+   swap the whole site's accent scheme by just flipping a data-theme
+   attribute on <html>. "ocean" is the original sky/indigo palette and
+   remains the default when no theme has been chosen yet. */
+:root,
+[data-theme="ocean"] {
+  --brand-50:  240 249 255;  --brand-100: 224 242 254;
+  --brand-400:  56 189 248;  --brand-500:  14 165 233;
+  --brand-600:   2 132 199;  --brand-700:   3 105 161;
+  --accent-500: 99 102 241;  --accent-600:  79 70 229;  --accent-700: 67 56 202;
+  --brand-glow: 14 165 233;
+}
+[data-theme="sunset"] {
+  --brand-50:  255 244 237;  --brand-100: 255 230 213;
+  --brand-400: 251 138  60;  --brand-500: 249 113  26;
+  --brand-600: 234  90  16;  --brand-700: 194  67  16;
+  --accent-500: 244  63  94; --accent-600: 225  29  72; --accent-700: 190  18  60;
+  --brand-glow: 249 113 26;
+}
+[data-theme="forest"] {
+  --brand-50:  236 253 245;  --brand-100: 209 250 229;
+  --brand-400:  52 211 153;  --brand-500:  16 185 129;
+  --brand-600:   5 150 105;  --brand-700:   4 120  87;
+  --accent-500: 20 184 166;  --accent-600: 13 148 136;  --accent-700: 15 118 110;
+  --brand-glow: 16 185 129;
+}
+[data-theme="berry"] {
+  --brand-50:  245 243 255;  --brand-100: 237 233 254;
+  --brand-400: 167 139 250;  --brand-500: 139  92 246;
+  --brand-600: 124  58 237;  --brand-700: 109  40 217;
+  --accent-500: 217 70 239;  --accent-600: 192  38 211;  --accent-700: 162  28 175;
+  --brand-glow: 139 92 246;
+}
+[data-theme="slate"] {
+  --brand-50:  248 250 252;  --brand-100: 241 245 249;
+  --brand-400: 148 163 184;  --brand-500: 100 116 139;
+  --brand-600:  71  85 105;  --brand-700:  51  65  85;
+  --accent-500: 59 130 246;  --accent-600: 37  99 235;  --accent-700: 29  78 216;
+  --brand-glow: 71 85 105;
+}
+
 /* ── Fonts ─────────────────────────────────────────────────────── */
 @layer base {
   html { font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
   *, *::before, *::after { box-sizing: border-box; }
   body { @apply bg-slate-50 text-gray-900 antialiased; }
   h1,h2,h3,h4,h5,h6 { @apply font-bold tracking-tight; }
+  /* Images/videos default to inline, which can leave stray baseline
+     whitespace and, inside absolutely-positioned wrappers on some
+     browser/zoom combinations, an inconsistent rendered box between a
+     narrow (mobile) and wide (desktop) viewport. Blocking them out and
+     capping to the parent's width keeps every listing photo/thumbnail
+     rendering identically at every breakpoint. */
+  img, video { @apply block max-w-full; }
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────── */
@@ -27,23 +77,30 @@
   /* Cards */
   .card-base   { @apply bg-white rounded-2xl border border-gray-100 shadow-card; }
   .card-glass  { @apply bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-card; }
-  .card-hover  { @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover hover:border-sky-100; }
+  .card-hover  { @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-card-hover; }
+  .card-hover:hover { border-color: rgb(var(--brand-100)); }
 
   /* Buttons */
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl
-      bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-600
-      px-5 py-2.5 text-sm font-semibold text-white shadow-glow
+      px-5 py-2.5 text-sm font-semibold text-white
       transition-all duration-200 active:scale-95
-      hover:shadow-glow-lg hover:brightness-105
+      hover:brightness-105
       disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100;
+    background-image: linear-gradient(to right, rgb(var(--brand-600)), rgb(var(--brand-500)), rgb(var(--accent-600)));
+    box-shadow: 0 0 24px rgb(var(--brand-glow) / 0.28);
   }
+  .btn-primary:hover { box-shadow: 0 0 48px rgb(var(--brand-glow) / 0.35); }
   .btn-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl
       bg-white border border-gray-200
       px-5 py-2.5 text-sm font-semibold text-gray-700
-      transition-all duration-200 active:scale-95
-      hover:border-sky-300 hover:text-sky-700 hover:bg-sky-50;
+      transition-all duration-200 active:scale-95;
+  }
+  .btn-secondary:hover {
+    border-color: rgb(var(--brand-400));
+    color: rgb(var(--brand-700));
+    background-color: rgb(var(--brand-50));
   }
   .btn-ghost {
     @apply inline-flex items-center gap-2 rounded-xl px-4 py-2
@@ -65,9 +122,12 @@
       px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400
       outline-none
       transition-[border-color,box-shadow,transform] duration-200 ease-out
-      hover:border-gray-300
-      focus:border-sky-400 focus:ring-4 focus:ring-sky-100/70 focus:shadow-card
+      hover:border-gray-300 focus:shadow-card
       disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed disabled:hover:border-gray-200;
+  }
+  .input-base:focus {
+    border-color: rgb(var(--brand-400));
+    box-shadow: 0 0 0 4px rgb(var(--brand-500) / 0.12);
   }
   /* Native <select> — same shell as input-base, plus a custom chevron so it
      doesn't fall back to each OS/browser's inconsistent default arrow. */
@@ -101,22 +161,26 @@
   }
   .field-float > .input-base:focus + label,
   .field-float > .input-base:not(:placeholder-shown) + label {
-    @apply -top-2 left-3 text-[11px] font-semibold text-sky-600 bg-white px-1 scale-100;
+    @apply -top-2 left-3 text-[11px] font-semibold bg-white px-1 scale-100;
+    color: rgb(var(--brand-600));
   }
 
   /* Badges */
   .badge       { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold; }
   .badge-free  { @apply badge bg-emerald-100 text-emerald-700; }
-  .badge-paid  { @apply badge bg-sky-100 text-sky-700; }
+  .badge-paid  { @apply badge; background-color: rgb(var(--brand-100)); color: rgb(var(--brand-700)); }
   .badge-intl  { @apply badge bg-violet-100 text-violet-700; }
-  .badge-verif { @apply badge bg-sky-100 text-sky-700; }
+  .badge-verif { @apply badge; background-color: rgb(var(--brand-100)); color: rgb(var(--brand-700)); }
   .badge-live  { @apply badge bg-green-100 text-green-700; }
 
-  /* Layout — 7% side margin, consistent across every breakpoint (scales
+  /* Layout — 10% side margin, consistent across every breakpoint (scales
      naturally with viewport width instead of jumping at fixed px steps),
      capped at max-w-7xl so lines stay readable on very wide screens. */
-  .page-shell  { @apply max-w-7xl mx-auto px-[7%]; }
-  .page-header { @apply bg-gradient-to-r from-sky-700 via-blue-700 to-indigo-700 text-white px-[7%] py-[3.75rem]; }
+  .page-shell  { @apply max-w-7xl mx-auto px-[10%]; }
+  .page-header {
+    @apply text-white px-[10%] py-[3.75rem];
+    background-image: linear-gradient(to right, rgb(var(--brand-700)), rgb(var(--brand-600)), rgb(var(--accent-700)));
+  }
 
   /* Grid – adapts from 1→2→3→4 cols */
   .listing-grid {
@@ -171,16 +235,21 @@
     @apply shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all border;
   }
   .tab-pill-active {
-    @apply tab-pill bg-sky-600 text-white border-sky-600 shadow-glow;
+    @apply tab-pill text-white;
+    background-color: rgb(var(--brand-600));
+    border-color: rgb(var(--brand-600));
+    box-shadow: 0 0 24px rgb(var(--brand-glow) / 0.28);
   }
   .tab-pill-inactive {
-    @apply tab-pill bg-white text-gray-600 border-gray-200 hover:border-sky-300 hover:text-sky-600;
+    @apply tab-pill bg-white text-gray-600 border-gray-200;
   }
+  .tab-pill-inactive:hover { border-color: rgb(var(--brand-400)); color: rgb(var(--brand-600)); }
 
   /* Algo source chip */
   .algo-chip {
-    @apply inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-violet-500 to-sky-500
+    @apply inline-flex items-center gap-1 rounded-full
       px-2.5 py-0.5 text-[10px] font-bold text-white;
+    background-image: linear-gradient(to right, rgb(var(--accent-500)), rgb(var(--brand-500)));
   }
 
   /* Section title row */

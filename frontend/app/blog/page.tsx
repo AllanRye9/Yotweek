@@ -15,7 +15,7 @@ export default function BlogPage() {
 
   return (
     <div className="animate-fade-in">
-      <div className="max-w-7xl mx-auto px-[7%] py-9">
+      <div className="max-w-7xl mx-auto px-[10%] py-9">
         {loading ? (
           <div className="listing-grid-3">{[...Array(6)].map((_,i) => <SkeletonCard key={i} />)}</div>
         ) : posts.length===0 ? (

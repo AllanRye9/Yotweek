@@ -45,7 +45,7 @@ export default function ProfilePage() {
     }
   }
 
-  if (loading || !user) return <div className="max-w-2xl mx-auto px-[7%] py-16 text-center text-gray-400">Loading…</div>;
+  if (loading || !user) return <div className="max-w-2xl mx-auto px-[10%] py-16 text-center text-gray-400">Loading…</div>;
 
   return (
     <div className="animate-fade-in">
@@ -56,7 +56,7 @@ export default function ProfilePage() {
         </div>
       </div>
 
-      <form onSubmit={save} className="max-w-2xl mx-auto px-[7%] py-8 space-y-5">
+      <form onSubmit={save} className="max-w-2xl mx-auto px-[10%] py-8 space-y-5">
         <div className="card-base p-5 sm:p-6 space-y-5">
           <LogoUploadInput logoUrl={form.avatarUrl} onChange={v => u("avatarUrl", v)} />
 

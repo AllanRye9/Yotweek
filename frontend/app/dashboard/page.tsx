@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, useMemo } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { api } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
@@ -25,16 +26,44 @@ const SP: Record<string,string> = {
 export default function DashboardPage() {
   const { user, loading } = useAuth();
   const toast = useToast();
+  const searchParams = useSearchParams();
   const { currency: displayCurrency, convert } = useCurrency();
   const [myEvents, setMyEvents] = useState<any[]>([]);
+  const [myBusinesses, setMyBusinesses] = useState<any[]>([]);
   const [bookings, setBookings] = useState<any[]>([]);
   const [savedEvents, setSavedEvents] = useState<any[]>([]);
   const [payouts, setPayouts] = useState<any>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(true);
-  const [tab, setTab] = useState<"overview"|"listings"|"bookings"|"saved"|"interests"|"payouts"|"videos">("overview");
+  const [tab, setTab] = useState<"overview"|"listings"|"businesses"|"bookings"|"saved"|"interests"|"payouts"|"videos">("overview");
   const profile = buildProfile();
   const canUploadVideos = user?.role === "ADMIN" || user?.isVerifiedOrganizer;
+
+  // Deep-link support: /dashboard?tab=businesses (used when redirecting back
+  // here after creating/editing/deleting a business listing).
+  useEffect(() => {
+    const t = searchParams.get("tab");
+    if (t && ["overview","listings","businesses","bookings","saved","interests","payouts","videos"].includes(t)) {
+      setTab(t as any);
+    }
+  }, [searchParams]);
+
+  async function deleteEvent(id: string) {
+    if (!confirm("Permanently delete this event listing? This can't be undone.")) return;
+    try {
+      await api.delete(`/events/${id}`);
+      toast.success("Event deleted.");
+      setMyEvents(evs => evs.filter(e => e.id !== id));
+    } catch (err: any) { toast.error(err?.response?.data?.error || "Could not delete this event."); }
+  }
+  async function deleteBusiness(id: string) {
+    if (!confirm("Permanently delete this business listing? This can't be undone.")) return;
+    try {
+      await api.delete(`/businesses/${id}`);
+      toast.success("Business deleted.");
+      setMyBusinesses(bs => bs.filter(b => b.id !== id));
+    } catch (err: any) { toast.error(err?.response?.data?.error || "Could not delete this business."); }
+  }
 
   const VIDEO_EMPTY = { title: "", caption: "", videoUrl: "", timing: "UPCOMING" as "PAST"|"UPCOMING" };
   const [videoForm, setVideoForm] = useState(VIDEO_EMPTY);
@@ -79,6 +108,7 @@ export default function DashboardPage() {
     if (!user) return;
     Promise.all([
       api.get("/events/organizer/mine").then(r => setMyEvents(r.data.events)),
+      api.get("/businesses/owner/mine").then(r => setMyBusinesses(r.data.businesses)).catch(() => {}),
       api.get("/bookings/mine").then(r => setBookings(r.data.bookings)),
       api.get("/users/me/saved-events").then(r => setSavedEvents(r.data.savedEvents)),
       api.get("/notifications").then(r => setNotifications(r.data.notifications ?? [])).catch(() => {}),
@@ -92,8 +122,8 @@ export default function DashboardPage() {
     const totalBookingsReceived = myEvents.reduce((sum, e) => sum + (e._count?.bookings || 0), 0);
     const totalViews = myEvents.reduce((sum, e) => sum + (e.viewCount || 0), 0);
     const totalTicketsSold = myEvents.reduce((sum, e) => sum + (e.ticketsSold || 0), 0);
-    const pendingCount = myEvents.filter(e => e.status === "PENDING").length;
-    const flaggedCount = myEvents.filter(e => e.isFlagged).length;
+    const pendingCount = myEvents.filter(e => e.status === "PENDING").length + myBusinesses.filter((b:any) => b.status === "PENDING").length;
+    const flaggedCount = myEvents.filter(e => e.isFlagged).length + myBusinesses.filter((b:any) => b.isFlagged).length;
 
     const statusCounts: Record<string, number> = {};
     myEvents.forEach(e => { statusCounts[e.status] = (statusCounts[e.status] || 0) + 1; });
@@ -113,7 +143,7 @@ export default function DashboardPage() {
     const revenueTrend = Object.entries(revenueByMonth).map(([month, amount]) => ({ month, Revenue: amount }));
 
     return { totalListings, totalBookingsReceived, totalViews, totalTicketsSold, pendingCount, flaggedCount, statusPie, topEvents, revenueTrend };
-  }, [myEvents, payouts]);
+  }, [myEvents, myBusinesses, payouts]);
 
   const unreadNotifCount = notifications.filter(n => !n.read).length;
   const isOrganizerRole = user?.role !== "USER";
@@ -121,7 +151,7 @@ export default function DashboardPage() {
     PENDING: "#f59e0b", APPROVED: "#10b981", REJECTED: "#ef4444", HIDDEN: "#94a3b8",
   };
 
-  if (loading) return <div className="max-w-7xl mx-auto px-[7%] py-16 text-center text-gray-400">Loading…</div>;
+  if (loading) return <div className="max-w-7xl mx-auto px-[10%] py-16 text-center text-gray-400">Loading…</div>;
   if (!user) return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="card-base p-10 text-center max-w-md">
@@ -134,7 +164,8 @@ export default function DashboardPage() {
 
   const TABS = [
     { key:"overview", label:"Overview", icon:"📈", count: unreadNotifCount > 0 ? unreadNotifCount : null },
-    { key:"listings", label:"My Listings", icon:"🎪", count:myEvents.length },
+    { key:"listings", label:"My Events", icon:"🎪", count:myEvents.length },
+    { key:"businesses", label:"My Businesses", icon:"🏪", count:myBusinesses.length },
     { key:"bookings", label:"Bookings", icon:"🎫", count:bookings.length },
     { key:"saved",    label:"Saved", icon:"❤️", count:savedEvents.length },
     { key:"interests",label:"My Interests", icon:"🎯", count:null },
@@ -162,7 +193,7 @@ export default function DashboardPage() {
       </div>
 
       {payouts && (
-        <div className="max-w-7xl mx-auto px-[7%] -mt-4 mb-4 relative z-10">
+        <div className="max-w-7xl mx-auto px-[10%] -mt-4 mb-4 relative z-10">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="card-base p-4 text-center"><p className="text-xs text-gray-400 mb-1">Total payout</p><p className="font-extrabold text-xl text-emerald-600">{Number(payouts.totalPayout).toLocaleString()}</p></div>
             <div className="card-base p-4 text-center"><p className="text-xs text-gray-400 mb-1">Platform fees</p><p className="font-extrabold text-xl text-gray-700">{Number(payouts.totalCommission).toLocaleString()}</p></div>
@@ -171,7 +202,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto px-[7%] py-7">
+      <div className="max-w-7xl mx-auto px-[10%] py-7">
         <div className="flex gap-2 overflow-x-auto no-scrollbar mb-6 pb-1">
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key as any)} className={tab===t.key?"tab-pill-active":"tab-pill-inactive"}>
@@ -191,7 +222,8 @@ export default function DashboardPage() {
                   <Link href="/events/create" className="btn-primary !px-4 !py-2 !text-sm">➕ List an event</Link>
                   <Link href="/businesses/create" className="btn-secondary !px-4 !py-2 !text-sm">🏪 List a business</Link>
                   <Link href="/events" className="btn-ghost !px-4 !py-2 !text-sm">🎪 Browse events</Link>
-                  {isOrganizerRole && <button onClick={() => setTab("listings")} className="btn-ghost !px-4 !py-2 !text-sm">📋 Manage listings</button>}
+                  {isOrganizerRole && <button onClick={() => setTab("listings")} className="btn-ghost !px-4 !py-2 !text-sm">📋 Manage events</button>}
+                  {isOrganizerRole && <button onClick={() => setTab("businesses")} className="btn-ghost !px-4 !py-2 !text-sm">🏪 Manage businesses</button>}
                   {isOrganizerRole && <button onClick={() => setTab("payouts")} className="btn-ghost !px-4 !py-2 !text-sm">💰 View payouts</button>}
                 </div>
 
@@ -199,9 +231,9 @@ export default function DashboardPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {isOrganizerRole ? (
                     <>
-                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎪 Listings</p><p className="font-extrabold text-2xl text-gray-900">{stats.totalListings}</p></div>
-                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎫 Bookings received</p><p className="font-extrabold text-2xl text-sky-600">{stats.totalBookingsReceived}</p></div>
-                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">👁 Total views</p><p className="font-extrabold text-2xl text-gray-900">{stats.totalViews.toLocaleString()}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎪 Events</p><p className="font-extrabold text-2xl text-gray-900">{stats.totalListings}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🏪 Businesses</p><p className="font-extrabold text-2xl text-gray-900">{myBusinesses.length}</p></div>
+                      <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">🎫 Bookings received</p><p className="font-extrabold text-2xl" style={{ color: "rgb(var(--brand-600))" }}>{stats.totalBookingsReceived}</p></div>
                       <div className="card-base p-4"><p className="text-xs text-gray-400 mb-1">💰 Total payout</p><p className="font-extrabold text-2xl text-emerald-600">{payouts ? Number(payouts.totalPayout).toLocaleString() : "—"}</p></div>
                     </>
                   ) : (
@@ -318,6 +350,7 @@ export default function DashboardPage() {
               <div className="card-base p-12 text-center"><p className="text-4xl mb-3">🎪</p><p className="font-semibold text-gray-700 mb-4">No listings yet</p><Link href="/events/create" className="btn-primary !px-6 !py-2.5">Post your first event</Link></div>
             ) : (
               <div className="space-y-3">
+                <div className="flex justify-end"><Link href="/events/create" className="btn-primary !px-4 !py-2 !text-sm">➕ New event</Link></div>
                 {myEvents.map(e => (
                   <div key={e.id} className="card-base p-4 flex flex-wrap items-center gap-4">
                     <div className="flex-1 min-w-0">
@@ -334,6 +367,36 @@ export default function DashboardPage() {
                     <div className="flex items-center gap-2 shrink-0">
                       <Link href={`/events/${e.id}`} className="btn-secondary !px-3 !py-1.5 !text-xs">View</Link>
                       <Link href={`/events/create?edit=${e.id}`} className="btn-primary !px-3 !py-1.5 !text-xs">✏️ Edit</Link>
+                      <button onClick={() => deleteEvent(e.id)} className="btn-danger !px-3 !py-1.5 !text-xs">🗑</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+
+            {tab==="businesses" && (myBusinesses.length===0 ? (
+              <div className="card-base p-12 text-center"><p className="text-4xl mb-3">🏪</p><p className="font-semibold text-gray-700 mb-4">No businesses yet</p><Link href="/businesses/create" className="btn-primary !px-6 !py-2.5">List your first business</Link></div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-end"><Link href="/businesses/create" className="btn-primary !px-4 !py-2 !text-sm">➕ New business</Link></div>
+                {myBusinesses.map((b: any) => (
+                  <div key={b.id} className="card-base p-4 flex flex-wrap items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap gap-2 items-center mb-1">
+                        <h3 className="font-bold text-gray-900 truncate">{b.name}</h3>
+                        <span className={`badge ${SP[b.status]||"bg-gray-100 text-gray-600"}`}>{b.status}</span>
+                        {b.isFeaturedPartner && <span className="badge bg-emerald-100 text-emerald-700">🤝 Partner</span>}
+                      </div>
+                      <p className="text-xs text-gray-400">{b.category?.name ? `${b.category.name} · ` : ""}{b.city}, {b.country}</p>
+                      {b.isFlagged && <p className="text-xs text-amber-600 mt-0.5">⚠️ {b.flagReason}</p>}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-gray-400 shrink-0">
+                      <span>👁 {b.viewCount ?? 0}</span><span>⭐ {b._count?.reviews ?? 0}</span>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <Link href={`/businesses/${b.id}`} className="btn-secondary !px-3 !py-1.5 !text-xs">View</Link>
+                      <Link href={`/businesses/create?edit=${b.id}`} className="btn-primary !px-3 !py-1.5 !text-xs">✏️ Edit</Link>
+                      <button onClick={() => deleteBusiness(b.id)} className="btn-danger !px-3 !py-1.5 !text-xs">🗑</button>
                     </div>
                   </div>
                 ))}
