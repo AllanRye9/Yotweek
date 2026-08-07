@@ -108,16 +108,16 @@ export default function CreateEventPage() {
             <div className="card-base p-6 space-y-5 animate-fade-up">
               <Field label="Title" required><input required value={form.title} onChange={e=>u("title",e.target.value)} className="input-base" placeholder="e.g. Gulu Cultural Festival 2026" /></Field>
               <Field label="Description" required hint="Describe what attendees can expect."><textarea required rows={5} value={form.description} onChange={e=>u("description",e.target.value)} className="textarea-base" placeholder="Tell people about this event…" /></Field>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Category" required><select value={form.category} onChange={e=>u("category",e.target.value)} className="select-base">{CATS.map(c=><option key={c} value={c}>{c.replace(/_/g," ")}</option>)}</select></Field>
                 <Field label="Scope" required><select value={form.scope} onChange={e=>u("scope",e.target.value)} className="select-base"><option value="LOCAL">📍 Local</option><option value="INTERNATIONAL">🌍 International</option></select></Field>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Pricing" required><select value={form.priceType} onChange={e=>u("priceType",e.target.value)} className="select-base"><option value="FREE">🆓 Free</option><option value="PAID">🎫 Paid</option></select></Field>
                 {form.priceType==="PAID" && <Field label={`Price (${form.currency})`} required><input required type="number" min="0" step="0.01" value={form.price} onChange={e=>u("price",e.target.value)} className="input-base" /></Field>}
               </div>
               {form.priceType==="PAID" && <Field label="Currency"><select value={form.currency} onChange={e=>u("currency",e.target.value)} className="select-base">{["UGX","KES","USD","AED","GBP","EUR"].map(c=><option key={c}>{c}</option>)}</select></Field>}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Start date & time" required><input required type="datetime-local" value={form.startDate} onChange={e=>u("startDate",e.target.value)} className="input-base" /></Field>
                 <Field label="End date (optional)"><input type="datetime-local" value={form.endDate} onChange={e=>u("endDate",e.target.value)} className="input-base" /></Field>
               </div>
@@ -128,11 +128,11 @@ export default function CreateEventPage() {
             <div className="card-base p-6 space-y-5 animate-fade-up">
               <Field label="Venue name"><input value={form.venueName} onChange={e=>u("venueName",e.target.value)} className="input-base" placeholder="e.g. Pece Stadium" /></Field>
               <Field label="Address"><input value={form.address} onChange={e=>u("address",e.target.value)} className="input-base" /></Field>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="City" required><input required value={form.city} onChange={e=>u("city",e.target.value)} className="input-base" placeholder="Gulu" /></Field>
                 <Field label="Country" required><input required value={form.country} onChange={e=>u("country",e.target.value)} className="input-base" /></Field>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Latitude" hint="Enables map & weather"><input type="number" step="any" value={form.latitude} onChange={e=>u("latitude",e.target.value)} className="input-base" placeholder="2.7746" /></Field>
                 <Field label="Longitude"><input type="number" step="any" value={form.longitude} onChange={e=>u("longitude",e.target.value)} className="input-base" placeholder="32.2989" /></Field>
               </div>

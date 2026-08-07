@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.744.0",
     "@prisma/client": "^5.22.0",
     "axios": "^1.13.6",
     "bcryptjs": "^2.4.3",

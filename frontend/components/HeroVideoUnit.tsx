@@ -79,14 +79,21 @@ export function HeroVideoUnit() {
   const line2Words = String(content.headlineLine2).split(" ");
 
   return (
-    <section className="relative overflow-hidden min-h-[240px] sm:min-h-[280px] max-h-[420px] flex items-center"
+    <section className="relative overflow-hidden min-h-[460px] sm:min-h-[520px] md:min-h-[580px] flex items-center"
       style={{ backgroundImage: "linear-gradient(to bottom right, rgb(var(--brand-700)), rgb(var(--brand-600)), rgb(var(--accent-700)))" }}>
+      {/* Note: height comes from min-h + content (flex items-center), not a
+          max-h cap. A max-h previously combined with overflow-hidden here
+          and cropped the eyebrow/headline/tagline/CTA stack whenever it grew
+          taller than the cap — e.g. on narrow viewports where the headline
+          wraps to two lines. overflow-hidden stays on the section so the
+          decorative blurred circles below don't bleed past its edges
+          horizontally; it no longer has anything to clip vertically. */}
       {/* Slideshow layer — inset by the same left/right margin as the
           rest of the page (page-shell's px-[10%]) rather than bleeding
           edge-to-edge, so the hero visually lines up with every other
           section on the site. The brand-gradient background above still
           shows through in the margin strips and behind rounded corners. */}
-      <div className="absolute inset-y-0 left-[10%] right-[10%] rounded-2xl overflow-hidden">
+      <div className="absolute inset-y-0 left-[6%] right-[6%] sm:left-[10%] sm:right-[10%] rounded-2xl overflow-hidden">
         {/* Every slide is absolutely positioned and stacked. The active
             slide sits on top (z-2, opaque) and fades in; the previous
             slide stays fully opaque just beneath it (z-1) so there's
@@ -157,7 +164,7 @@ export function HeroVideoUnit() {
           doesn't re-animate distractingly every time the background clip
           rotates. */}
       <motion.div
-        className="relative z-10 max-w-3xl mx-auto px-[10%] py-16 text-center w-full"
+        className="relative z-10 max-w-3xl mx-auto px-6 sm:px-[8%] md:px-[10%] py-10 sm:py-14 md:py-16 text-center w-full"
         initial="hidden"
         animate="show"
         variants={{ hidden: {}, show: { transition: { staggerChildren: 0.28 } } }}

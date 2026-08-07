@@ -73,7 +73,7 @@ export default function ProfilePage() {
             <p className="text-xs text-gray-400 mt-1">{form.bio.length}/300</p>
           </label>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block">
               <span className="block text-sm font-semibold text-gray-700 mb-1.5">Phone</span>
               <input value={form.phone} onChange={e => u("phone", e.target.value)} className="input-base" />

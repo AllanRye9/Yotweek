@@ -24,9 +24,8 @@ import eventVideoRoutes from "./routes/eventVideos";
 import postRoutes from "./routes/posts";
 import searchRoutes from "./routes/search";
 import recommendationRoutes from "./routes/recommendations";
-import uploadRoutes from "./routes/uploads";
+import uploadRoutes, { serveUploads } from "./routes/uploads";
 import communityRoutes from "./routes/communities";
-import { UPLOAD_DIR } from "./utils/uploadDir";
 
 import { errorHandler, notFound } from "./middleware/errorHandler";
 
@@ -111,10 +110,11 @@ app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/uploads", uploadRoutes);
 app.use("/api/communities", communityRoutes);
 
-// Uploaded images are served straight off disk. `immutable` is safe because
-// filenames are content-addressed with a random suffix (see routes/uploads.ts)
-// — a given filename's bytes never change, so it can be cached forever.
-app.use("/uploads", express.static(UPLOAD_DIR, { maxAge: "30d", immutable: true }));
+// Uploaded images/videos are proxied from the Railway Bucket (or, in local
+// dev without a bucket configured, straight off disk). `immutable` caching
+// is safe either way because filenames are content-addressed with a random
+// suffix (see routes/uploads.ts) — a given filename's bytes never change.
+app.use("/uploads", serveUploads);
 
 app.use(notFound);
 app.use(errorHandler);

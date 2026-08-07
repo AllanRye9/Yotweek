@@ -65,7 +65,7 @@ export default function RegisterPage() {
               <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Organization name <span className="text-red-500">*</span></label>
                 <input required value={form.organizationName} onChange={e => u("organizationName",e.target.value)} className="input-base" placeholder="Your organization" /></div>
             )}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">City</label><input value={form.city} onChange={e => u("city",e.target.value)} className="input-base" placeholder="Gulu" /></div>
               <div><label className="block text-sm font-semibold text-gray-700 mb-1.5">Country</label><input value={form.country} onChange={e => u("country",e.target.value)} className="input-base" /></div>
             </div>

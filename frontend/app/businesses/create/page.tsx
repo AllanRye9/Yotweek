@@ -123,7 +123,7 @@ export default function CreateBusinessPage() {
               <option value="BUDGET">$ Budget</option><option value="MODERATE">$$ Moderate</option><option value="EXPENSIVE">$$$ Expensive</option><option value="LUXURY">$$$$ Luxury</option>
             </select>
           </label>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <label className="block"><span className="block text-sm font-semibold text-gray-700 mb-1.5">Latitude</span><input type="number" step="any" value={form.latitude} onChange={e=>u("latitude",e.target.value)} className="input-base" /></label>
             <label className="block"><span className="block text-sm font-semibold text-gray-700 mb-1.5">Longitude</span><input type="number" step="any" value={form.longitude} onChange={e=>u("longitude",e.target.value)} className="input-base" /></label>
           </div>
